@@ -38,11 +38,14 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/install.sh | bash
 ```
 
-The installer will:
-- Check for Node.js 18+, Docker, and git (offers to install if missing)
-- Clone the repository to `~/.gemini-phone-cli`
-- Install dependencies
-- Create the `gemini-phone` command (symlinks to `~/.local/bin` or `/usr/local/bin` and updates `PATH`)
+The installer performs the following steps:
+
+1. **System Checks**: Verifies Node.js 18+, Docker, and git are installed (and offers to install them).
+2. **Cloning**: Clones the repository to `~/.gemini-phone-cli`.
+3. **Dependencies**: Installs local CLI dependencies.
+4. **Command Creation**: Sets up the `gemini-phone` command locally.
+   - **Linux**: Creates a symlink at `~/.local/bin/gemini-phone`. If needed, it adds `export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc`.
+   - **macOS**: Creates a symlink at `/usr/local/bin/gemini-phone` (may require password for sudo).
 
 ### 2. Setup
 
