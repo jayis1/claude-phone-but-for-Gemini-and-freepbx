@@ -266,7 +266,7 @@ export async function startContainers() {
   const dockerComposePath = getDockerComposePath();
 
   if (!fs.existsSync(dockerComposePath)) {
-    throw new Error('Docker configuration not found. Run "claude-phone setup" first.');
+    throw new Error('Docker configuration not found. Run "gemini-phone setup" first.');
   }
 
   const compose = getComposeCommand();

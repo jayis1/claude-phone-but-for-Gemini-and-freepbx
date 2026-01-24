@@ -176,7 +176,7 @@ async function startVoiceServer(config, isPiMode) {
       console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "claude-phone setup" again'));
+      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }
@@ -194,7 +194,7 @@ async function startVoiceServer(config, isPiMode) {
   console.log(chalk.gray('Services:'));
   console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app`));
   if (apiServerIp) {
-    console.log(chalk.gray(`  • API server: http://${apiServerIp}:${config.server.claudeApiPort}`));
+    console.log(chalk.gray(`  • API server: http://${apiServerIp}:${config.server.geminiApiPort}`));
   }
   console.log(chalk.gray(`  • Voice app API: http://localhost:${config.server.httpPort}\n`));
   console.log(chalk.gray('Ready to receive calls on:'));
@@ -299,7 +299,7 @@ async function startBoth(config, isPiMode) {
       console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "claude-phone setup" again'));
+      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }

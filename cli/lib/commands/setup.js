@@ -451,7 +451,7 @@ async function setupBoth(config) {
  */
 async function setupPi(config) {
   console.log(chalk.bold.yellow('\n🥧 Raspberry Pi Split-Mode Setup\n'));
-  console.log(chalk.gray('In this mode, the Pi runs voice-app (Docker) and your API server runs claude-api-server.\n'));
+  console.log(chalk.gray('In this mode, the Pi runs voice-app (Docker) and your API server runs gemini-api-server.\n'));
 
   // AC23: Handle existing standard config migration
   if (config.deployment && config.deployment.mode === 'standard') {

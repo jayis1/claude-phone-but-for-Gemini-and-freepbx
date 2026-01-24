@@ -9,7 +9,7 @@ import { stopServer, isServerRunning } from '../process-manager.js';
  * @returns {Promise<void>}
  */
 export async function stopCommand() {
-  console.log(chalk.bold.cyan('\n⏹️  Stopping Claude Phone\n'));
+  console.log(chalk.bold.cyan('\n⏹️  Stopping Gemini Phone\n'));
 
   // Check if configured
   if (!configExists()) {
