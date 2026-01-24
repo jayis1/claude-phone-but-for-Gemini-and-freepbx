@@ -274,6 +274,12 @@ main() {
 
   npm install --silent --production
 
+  # Install API Server dependencies
+  echo ""
+  echo "Installing API Server dependencies..."
+  cd "$INSTALL_DIR/gemini-api-server"
+  npm install --silent --production
+
   # Create symlink
   echo ""
   if [ -L "$BIN_DIR/gemini-phone" ]; then
