@@ -42,7 +42,7 @@ The installer will:
 - Check for Node.js 18+, Docker, and git (offers to install if missing)
 - Clone the repository to `~/.gemini-phone-cli`
 - Install dependencies
-- Create the `gemini-phone` command
+- Create the `gemini-phone` command (symlinks to `~/.local/bin` or `/usr/local/bin` and updates `PATH`)
 
 ### 2. Setup
 
