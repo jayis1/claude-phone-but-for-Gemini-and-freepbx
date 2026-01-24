@@ -58,6 +58,26 @@ function createHttpServer(audioDir, port = 3000) {
     }
   }));
 
+  // Root route - Status page
+  app.get('/', (req, res) => {
+    res.send(`
+      <html>
+        <head><title>Gemini Phone</title></head>
+        <body style="font-family: sans-serif; padding: 2rem; max-width: 600px; margin: 0 auto;">
+          <h1>Gemini Phone Voice Server</h1>
+          <p>✅ Voice Interface is running</p>
+          <hr>
+          <p><strong>System Status:</strong></p>
+          <ul>
+            <li>Port: ${port}</li>
+            <li>Audio Directory: ${audioDir}</li>
+            <li>Time: ${new Date().toISOString()}</li>
+          </ul>
+        </body>
+      </html>
+    `);
+  });
+
   // Health check endpoint
   app.get('/health', (req, res) => {
     res.json({
