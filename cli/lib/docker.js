@@ -231,8 +231,9 @@ export function generateEnvFile(config) {
     'AUDIO_DIR=/app/audio',
     '',
     '# Outbound Call Settings',
-    'MAX_CONVERSATION_TURNS=10',
-    'OUTBOUND_RING_TIMEOUT=30',
+    `DEFAULT_CALLER_ID=${config.outbound?.callerId || ''}`,
+    `MAX_CONVERSATION_TURNS=${config.outbound?.maxTurns || 10}`,
+    `OUTBOUND_RING_TIMEOUT=${config.outbound?.ringTimeout || 30}`,
     ''
   ];
 

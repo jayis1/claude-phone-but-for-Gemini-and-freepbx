@@ -9,6 +9,24 @@ main() {
   # Capture where we started, so we can find .env files
   START_DIR="$(pwd)"
 
+  # READ .ENV FIRST: Before we cd or wipe anything
+  GEMINI_KEY=""
+  ENV_FILE=""
+  if [ -f "$START_DIR/.env" ]; then
+    ENV_FILE="$START_DIR/.env"
+  elif [ -f "$HOME/.env" ]; then
+    ENV_FILE="$HOME/.env"
+  fi
+
+  if [ -n "$ENV_FILE" ]; then
+    # We use a temp var here so we don't accidentally export it yet
+    DETECTED_KEY=$(grep "^GEMINI_API_KEY=" "$ENV_FILE" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$DETECTED_KEY" ]; then
+      echo "✓ Found GEMINI_API_KEY in .env"
+      GEMINI_KEY="$DETECTED_KEY"
+    fi
+  fi
+
   # Ensure we are in a safe directory (HOME) to avoid CWD deletion errors
   cd "$HOME" || exit 1
 
@@ -340,22 +358,7 @@ main() {
   echo ""
 
   # Setup Gemini API Key
-  
-  # Check if GEMINI_API_KEY is defined in .env (in start dir or home)
-  ENV_FILE=""
-  if [ -f "$START_DIR/.env" ]; then
-    ENV_FILE="$START_DIR/.env"
-  elif [ -f "$HOME/.env" ]; then
-    ENV_FILE="$HOME/.env"
-  fi
-
-  if [ -n "$ENV_FILE" ]; then
-    ENV_KEY=$(grep "^GEMINI_API_KEY=" "$ENV_FILE" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
-    if [ -n "$ENV_KEY" ]; then
-      echo "✓ Found GEMINI_API_KEY in .env"
-      GEMINI_KEY="$ENV_KEY"
-    fi
-  fi
+  # (GEMINI_KEY was detected at start of script)
 
   if [ -z "$GEMINI_KEY" ]; then
     echo "Would you like to configure your Gemini API Key now?"
