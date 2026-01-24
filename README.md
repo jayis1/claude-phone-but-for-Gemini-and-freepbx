@@ -219,28 +219,15 @@ apt-get install -y nodejs
 
 Then run the installer again.
 
-### Manual Gemini CLI Installation
+### Gemini CLI
 
-The installer assumes Gemini CLI is managed separately. If `gemini-phone doctor` reports it is missing, install it manually:
+The installer will automatically install the Gemini CLI (@google/gemini-cli) if it's not found.
 
-1. **Install**: Follow instructions at [geminicli.com](https://geminicli.com/docs/get-started/installation/)
+If you prefer to install it manually:
 
-   ```bash
-   # Example for many systems (verify on official site):
-   npx https://github.com/google-gemini/gemini-cli
-   ```
-
-2. **Authenticate**:
-
-   ```bash
-   gemini auth login
-   ```
-
-3. **Verify**:
-
-   ```bash
-   gemini --version
-   ```
+```bash
+npm install -g @google/gemini-cli
+```
 
 ### Alternative: Run via Docker
 
