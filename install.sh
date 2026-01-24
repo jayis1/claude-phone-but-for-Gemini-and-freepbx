@@ -207,7 +207,6 @@ else
       exit 1
     fi
   else
-  else
     echo "✓ Node.js $(node -v)"
   fi
 fi
