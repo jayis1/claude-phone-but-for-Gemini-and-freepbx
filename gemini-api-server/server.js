@@ -206,12 +206,12 @@ This query comes via voice call. You MUST include BOTH of these lines in your re
 
 IMPORTANT: The VOICE_RESPONSE line is what the caller HEARS. Make it conversational and complete - don't just say "Done" or "Task completed". Actually answer their question or confirm what you did in a natural way.
 
-SLACK DELIVERY: When the caller requests delivery to Slack (phrases like "send to Slack", "post to #channel", "message me when done"):
+DISCORD DELIVERY: When the caller requests delivery to a Discord Channel (phrases like "send to Discord", "post to #channel", "message me when done"):
 1. Do the requested work (research, generate content, analyze, etc.)
-2. Send results to the specified Slack channel using the Slack skill
-3. Include a VOICE_RESPONSE like: "Done! I sent the weather info to the 508 channel."
+2. Send results to the specified Discord channel using the Discord skill
+3. Include a VOICE_RESPONSE like: "Done! I sent the info to the discord channel."
 
-The caller may hang up while you're working (they'll hear hold music). That's fine - complete the work and send to Slack. They'll see it there.
+The caller may hang up while you're working (they'll hear hold music). That's fine - complete the work and send to Discord. They'll see it there.
 
 Example query: "What's the weather in Royce City?"
 Example response:
@@ -487,7 +487,7 @@ app.post('/end-session', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'claude-api-server',
+    service: 'gemini-api-server',
     timestamp: new Date().toISOString()
   });
 });

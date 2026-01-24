@@ -107,9 +107,7 @@ export function generateDockerCompose(config) {
   const freeswitchImage = 'drachtio/drachtio-freeswitch-mrf:latest';
   const platformLine = isPiMode ? '\n    platform: linux/arm64' : '';
 
-  return `version: '3.8'
-
-# CRITICAL: All containers must use network_mode: host
+  return `# CRITICAL: All containers must use network_mode: host
 # Docker bridge networking causes FreeSWITCH to advertise internal IPs
 # in SDP, making RTP unreachable from external callers.
 
@@ -138,7 +136,7 @@ services:
       --rtp-range-end 30100
     # RTP ports 30000-30100 avoid conflict with 3CX SBC (uses 20000-20099)
     environment:
-      - EXTERNAL_IP=${externalIp}
+      - EXTERNAL_IP=\${EXTERNAL_IP:-127.0.0.1}
 
   voice-app:
     build: ${config.paths.voiceApp}
