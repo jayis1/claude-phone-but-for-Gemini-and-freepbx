@@ -217,7 +217,6 @@ if ! command -v npm &> /dev/null; then
   read -p "  Install npm automatically? (Y/n) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     install_npm
   else
     echo "  npm is required for the CLI dependencies."
