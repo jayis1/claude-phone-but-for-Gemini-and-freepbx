@@ -238,7 +238,7 @@ async function runApiServerChecks(config) {
     passedCount++;
   } else {
     geminiSpinner.fail(chalk.red(`Gemini CLI not found: ${geminiResult.error}`));
-    console.log(chalk.gray('  → Install Gemini CLI: npm install -g @anthropic-ai/gemini\n'));
+    console.log(chalk.gray('  → Install Gemini CLI: npx https://github.com/google-gemini/gemini-cli\n'));
   }
   checks.push({ name: 'Gemini CLI', passed: geminiResult.installed });
 

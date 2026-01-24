@@ -356,7 +356,7 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
 
       // 3. Query Gemini
       logger.info('Querying Gemini', { callUuid });
-      const geminiResponse = await geminiBridge.query(
+      const geminiResponse = await claudeBridge.query(
         transcript,
         { callId: callUuid, devicePrompt: devicePrompt }
       );

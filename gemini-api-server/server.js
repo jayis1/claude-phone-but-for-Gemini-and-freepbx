@@ -114,7 +114,7 @@ console.log('[STARTUP] API keys loaded:', apiKeys.join(', '));
 const sessions = new Map();
 
 // Model selection - Sonnet for balanced speed/quality
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
 
 function parseGeminiStdout(stdout) {
   // Claude Code CLI may output JSONL; when it does, extract the `result` message.
@@ -377,7 +377,7 @@ app.post('/ask-structured', async (req, res) => {
   });
 
   console.log(`[${timestamp}] STRUCTURED QUERY: "${String(prompt).substring(0, 100)}..."`);
-  console.log(`[${timestamp}] MODEL: ${CLAUDE_MODEL}`);
+  console.log(`[${timestamp}] MODEL: ${GEMINI_MODEL}`);
   console.log(`[${timestamp}] SESSION: callId=${callId || 'none'}, existing=${callId ? (sessions.has(callId) ? 'yes' : 'no') : 'none'}`);
 
   try {

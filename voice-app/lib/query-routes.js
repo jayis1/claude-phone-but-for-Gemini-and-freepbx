@@ -262,7 +262,7 @@ router.post('/query', async (req, res) => {
       logger.info('Using /ask-structured endpoint for JSON format');
 
       const structuredResponse = await axios.post(
-        `${CLAUDE_API_URL}/ask-structured`,
+        `${GEMINI_API_URL}/ask-structured`,
         {
           prompt: fullPrompt,
           callId,
