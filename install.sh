@@ -336,15 +336,27 @@ main() {
   echo ""
 
   # Setup Gemini API Key
-  echo "Would you like to configure your Gemini API Key now?"
-  # Use /dev/tty for input to avoid consuming script stdin when piped
-  if [ -t 0 ]; then
-    read -p "Enter API Key (leave blank to skip): " GEMINI_KEY
-  elif [ -c /dev/tty ]; then
-    read -p "Enter API Key (leave blank to skip): " GEMINI_KEY < /dev/tty
-  else
-    echo "Skipping API Key setup (non-interactive mode)"
-    GEMINI_KEY=""
+  
+  # Check if GEMINI_API_KEY is defined in .env
+  if [ -f ".env" ]; then
+    ENV_KEY=$(grep "^GEMINI_API_KEY=" .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$ENV_KEY" ]; then
+      echo "✓ Found GEMINI_API_KEY in .env"
+      GEMINI_KEY="$ENV_KEY"
+    fi
+  fi
+
+  if [ -z "$GEMINI_KEY" ]; then
+    echo "Would you like to configure your Gemini API Key now?"
+    # Use /dev/tty for input to avoid consuming script stdin when piped
+    if [ -t 0 ]; then
+      read -p "Enter API Key (leave blank to skip): " GEMINI_KEY
+    elif [ -c /dev/tty ]; then
+      read -p "Enter API Key (leave blank to skip): " GEMINI_KEY < /dev/tty
+    else
+      echo "Skipping API Key setup (non-interactive mode)"
+      GEMINI_KEY=""
+    fi
   fi
 
   if [ -n "$GEMINI_KEY" ]; then
