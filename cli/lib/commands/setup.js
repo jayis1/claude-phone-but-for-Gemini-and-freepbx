@@ -726,153 +726,140 @@ function createDefaultConfig() {
  * @returns {Promise<object>} Updated config
  */
 async function setupAPIKeys(config) {
-  config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: true };
-}
+  // -----------------------------------------------------------
+  // 1. ElevenLabs API Key
+  // -----------------------------------------------------------
 
-// Auto-skip logic for API Keys if present and valid
-// (Assuming previously validated or will be validated now)
-if (config._fromEnv && config.api.elevenlabs.apiKey) {
-  const result = await validateElevenLabsKey(config.api.elevenlabs.apiKey);
-  if (result.valid) {
-    console.log(chalk.green('✓ Found valid ElevenLabs API key in .env'));
-    config.api.elevenlabs.validated = true;
-    // Skip the prompt below if we have valid key
-  } else {
-    console.log(chalk.yellow('⚠️  ElevenLabs key in .env is invalid. Please enter manually.'));
-  }
-}
-
-// Ask for key only if NOT validated
-if (!config.api.elevenlabs.validated) {
-  const elevenLabsAnswers = await inquirer.prompt([
-    {
-      type: 'password',
-      name: 'apiKey',
-      message: 'ElevenLabs API key:',
-      default: config.api.elevenlabs.apiKey,
-      validate: (input) => {
-        if (!input || input.trim() === '') {
-          return 'API key is required';
-        }
-        return true;
-      }
-    }
-  ]);
-  // ... validation logic (existing) ...
-  const elevenLabsKey = elevenLabsAnswers.apiKey;
-  const spinner = ora('Validating ElevenLabs API key...').start();
-  const elevenLabsResult = await validateElevenLabsKey(elevenLabsKey);
-  if (!elevenLabsResult.valid) {
-    spinner.fail(`Invalid ElevenLabs API key: ${elevenLabsResult.error}`);
-    // ... error handling ...
-    const { continueAnyway } = await inquirer.prompt([{ type: 'confirm', name: 'continueAnyway', message: 'Continue anyway?', default: false }]);
-    if (!continueAnyway) throw new Error('Setup cancelled due to invalid API key');
-    config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: false };
-  } else {
-    spinner.succeed('ElevenLabs API key validated');
-    config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: true };
-  }
-}
-
-// Ask for default voice ID immediately after API key
-const voiceIdAnswers = await inquirer.prompt([
-  {
-    type: 'input',
-    name: 'voiceId',
-    message: 'ElevenLabs default voice ID (for all devices):',
-    default: config.api.elevenlabs.defaultVoiceId || '',
-    validate: (input) => {
-      if (!input || input.trim() === '') {
-        return 'Voice ID is required';
-      }
-      return true;
+  // Auto-skip logic for ElevenLabs
+  if (config._fromEnv && config.api.elevenlabs.apiKey) {
+    const result = await validateElevenLabsKey(config.api.elevenlabs.apiKey);
+    if (result.valid) {
+      console.log(chalk.green('✓ Found valid ElevenLabs API key in .env'));
+      config.api.elevenlabs.validated = true;
+    } else {
+      console.log(chalk.yellow('⚠️  ElevenLabs key in .env is invalid. Please enter manually.'));
     }
   }
-]);
 
-const defaultVoiceId = voiceIdAnswers.voiceId;
-const voiceSpinner = ora('Validating ElevenLabs voice ID...').start();
+  // Ask for key if NOT validated
+  let elevenLabsKey = config.api.elevenlabs.apiKey;
 
-const voiceValidation = await validateVoiceId(elevenLabsKey, defaultVoiceId);
-if (!voiceValidation.valid) {
-  voiceSpinner.fail(`Voice ID validation failed: ${voiceValidation.error}`);
-  console.log(chalk.yellow('\n⚠️  You can continue setup, but the voice ID may not work.'));
-  const { continueAnyway } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'continueAnyway',
-      message: 'Continue anyway?',
-      default: false
-    }
-  ]);
-
-  if (!continueAnyway) {
-    throw new Error('Setup cancelled due to invalid voice ID');
-  }
-
-  config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
-} else {
-  voiceSpinner.succeed(`Voice ID validated: ${voiceValidation.name}`);
-  config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
-}
-
-// Auto-skip logic for OpenAI (Whisper)
-let skipOpenAI = false;
-if (config._fromEnv && config.api.openai.apiKey) {
-  const result = await validateOpenAIKey(config.api.openai.apiKey);
-  if (result.valid) {
-    console.log(chalk.green('✓ Found valid OpenAI API key in .env'));
-    config.api.openai.validated = true;
-    skipOpenAI = true;
-  } else {
-    console.log(chalk.yellow('⚠️  OpenAI key in .env is invalid. Please enter manually.'));
-  }
-}
-
-if (!skipOpenAI) {
-  const openAIAnswers = await inquirer.prompt([
-    {
-      type: 'password',
-      name: 'apiKey',
-      message: 'OpenAI API key (for Whisper STT):',
-      default: config.api.openai.apiKey,
-      validate: (input) => {
-        if (!input || input.trim() === '') {
-          return 'API key is required';
-        }
-        return true;
-      }
-    }
-  ]);
-
-  const openAIKey = openAIAnswers.apiKey;
-  const openAISpinner = ora('Validating OpenAI API key...').start();
-
-  const openAIResult = await validateOpenAIKey(openAIKey);
-  if (!openAIResult.valid) {
-    openAISpinner.fail(`Invalid OpenAI API key: ${openAIResult.error}`);
-    console.log(chalk.yellow('\n⚠️  You can continue setup, but the key may not work.'));
-    const { continueAnyway } = await inquirer.prompt([
+  if (!config.api.elevenlabs.validated) {
+    const answers = await inquirer.prompt([
       {
-        type: 'confirm',
-        name: 'continueAnyway',
-        message: 'Continue anyway?',
-        default: false
+        type: 'password',
+        name: 'apiKey',
+        message: 'ElevenLabs API key:',
+        default: config.api.elevenlabs.apiKey,
+        validate: (input) => {
+          if (!input || input.trim() === '') return 'API key is required';
+          return true;
+        }
       }
     ]);
 
-    if (!continueAnyway) {
-      throw new Error('Setup cancelled due to invalid API key');
+    elevenLabsKey = answers.apiKey;
+    const spinner = ora('Validating ElevenLabs API key...').start();
+    const result = await validateElevenLabsKey(elevenLabsKey);
+
+    if (!result.valid) {
+      spinner.fail(`Invalid ElevenLabs API key: ${result.error}`);
+      console.log(chalk.yellow('\n⚠️  You can continue setup, but the key may not work.'));
+      const { continueAnyway } = await inquirer.prompt([{ type: 'confirm', name: 'continueAnyway', message: 'Continue anyway?', default: false }]);
+      if (!continueAnyway) throw new Error('Setup cancelled due to invalid API key');
+      config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: false };
+    } else {
+      spinner.succeed('ElevenLabs API key validated');
+      config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: true };
     }
-
-    config.api.openai = { apiKey: openAIKey, validated: false };
   } else {
-    openAISpinner.succeed('OpenAI API key validated');
-    config.api.openai = { apiKey: openAIKey, validated: true };
+    // Already validated from env, ensure config is set
+    // (config variable is already updated by the check above, but for clarity)
+    elevenLabsKey = config.api.elevenlabs.apiKey;
   }
-}
 
-return config;
+  // -----------------------------------------------------------
+  // 2. ElevenLabs Default Voice ID
+  // -----------------------------------------------------------
+
+  const voiceIdAnswers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'voiceId',
+      message: 'ElevenLabs default voice ID (for all devices):',
+      default: config.api.elevenlabs.defaultVoiceId || '',
+      validate: (input) => {
+        if (!input || input.trim() === '') return 'Voice ID is required';
+        return true;
+      }
+    }
+  ]);
+
+  const defaultVoiceId = voiceIdAnswers.voiceId;
+  const voiceSpinner = ora('Validating ElevenLabs voice ID...').start();
+
+  // Validate voice ID using the key we resolved above
+  const voiceValidation = await validateVoiceId(elevenLabsKey, defaultVoiceId);
+
+  if (!voiceValidation.valid) {
+    voiceSpinner.fail(`Voice ID validation failed: ${voiceValidation.error}`);
+    console.log(chalk.yellow('\n⚠️  You can continue setup, but the voice ID may not work.'));
+    const { continueAnyway } = await inquirer.prompt([{ type: 'confirm', name: 'continueAnyway', message: 'Continue anyway?', default: false }]);
+    if (!continueAnyway) throw new Error('Setup cancelled due to invalid voice ID');
+    config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
+  } else {
+    voiceSpinner.succeed(`Voice ID validated: ${voiceValidation.name}`);
+    config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
+  }
+
+  // -----------------------------------------------------------
+  // 3. OpenAI API Key (Whisper)
+  // -----------------------------------------------------------
+
+  // Auto-skip logic for OpenAI
+  let skipOpenAI = false;
+  if (config._fromEnv && config.api.openai.apiKey) {
+    const result = await validateOpenAIKey(config.api.openai.apiKey);
+    if (result.valid) {
+      console.log(chalk.green('✓ Found valid OpenAI API key in .env'));
+      config.api.openai.validated = true;
+      skipOpenAI = true;
+    } else {
+      console.log(chalk.yellow('⚠️  OpenAI key in .env is invalid. Please enter manually.'));
+    }
+  }
+
+  if (!skipOpenAI) {
+    const openAIAnswers = await inquirer.prompt([
+      {
+        type: 'password',
+        name: 'apiKey',
+        message: 'OpenAI API key (for Whisper STT):',
+        default: config.api.openai.apiKey,
+        validate: (input) => {
+          if (!input || input.trim() === '') return 'API key is required';
+          return true;
+        }
+      }
+    ]);
+
+    const openAIKey = openAIAnswers.apiKey;
+    const openAISpinner = ora('Validating OpenAI API key...').start();
+
+    const openAIResult = await validateOpenAIKey(openAIKey);
+    if (!openAIResult.valid) {
+      openAISpinner.fail(`Invalid OpenAI API key: ${openAIResult.error}`);
+      console.log(chalk.yellow('\n⚠️  You can continue setup, but the key may not work.'));
+      const { continueAnyway } = await inquirer.prompt([{ type: 'confirm', name: 'continueAnyway', message: 'Continue anyway?', default: false }]);
+      if (!continueAnyway) throw new Error('Setup cancelled due to invalid API key');
+      config.api.openai = { apiKey: openAIKey, validated: false };
+    } else {
+      openAISpinner.succeed('OpenAI API key validated');
+      config.api.openai = { apiKey: openAIKey, validated: true };
+    }
+  }
+
+  return config;
 }
 
 /**
