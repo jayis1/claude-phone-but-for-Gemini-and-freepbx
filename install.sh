@@ -326,7 +326,7 @@ echo ""
 
 # Setup Gemini API Key
 echo "Would you like to configure your Gemini API Key now?"
-read -p "Enter API Key (leave blank to skip): " GEMINI_KEY
+read -p "Enter API Key (leave blank to skip): " GEMINI_KEY < /dev/tty
 if [ -n "$GEMINI_KEY" ]; then
   echo ""
   echo "Saving GEMINI_API_KEY..."
