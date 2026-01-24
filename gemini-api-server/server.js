@@ -497,15 +497,145 @@ app.get('/health', (req, res) => {
  * Info endpoint
  */
 app.get('/', (req, res) => {
-  res.json({
-    service: 'Gemini HTTP API Server',
-    version: '1.0.0',
-    endpoints: {
-      'POST /ask': 'Send a prompt to Gemini',
-      'POST /ask-structured': 'Send a prompt and return validated JSON (n8n)',
-      'GET /health': 'Health check'
-    }
-  });
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Gemini API</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            :root {
+              --bg: #0f172a;
+              --card: #1e293b;
+              --text: #f8fafc;
+              --accent: #8b5cf6;
+              --accent-hover: #7c3aed;
+              --success: #10b981;
+              --border: #334155;
+            }
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              background-color: var(--bg);
+              color: var(--text);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              line-height: 1.6;
+            }
+            .card {
+              background: var(--card);
+              padding: 2.5rem;
+              border-radius: 16px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              border: 1px solid var(--border);
+              max-width: 450px;
+              width: 90%;
+              text-align: center;
+            }
+            h1 {
+              font-size: 1.8rem;
+              font-weight: 700;
+              background: linear-gradient(to right, #38bdf8, #818cf8);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              margin-bottom: 0.5rem;
+              margin-top: 0;
+            }
+            .status-badge {
+              display: inline-flex;
+              align-items: center;
+              background: rgba(16, 185, 129, 0.1);
+              color: var(--success);
+              padding: 0.25rem 0.75rem;
+              border-radius: 9999px;
+              font-weight: 500;
+              font-size: 0.875rem;
+              margin-bottom: 2rem;
+              border: 1px solid rgba(16, 185, 129, 0.2);
+            }
+            .status-badge::before {
+              content: "";
+              display: inline-block;
+              width: 8px;
+              height: 8px;
+              background-color: var(--success);
+              border-radius: 50%;
+              margin-right: 0.5rem;
+              box-shadow: 0 0 8px var(--success);
+            }
+            .info-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 1rem;
+              text-align: left;
+              margin-bottom: 2rem;
+            }
+            .info-item {
+              background: rgba(255, 255, 255, 0.03);
+              padding: 1rem;
+              border-radius: 8px;
+              border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .info-label {
+              font-size: 0.75rem;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: #94a3b8;
+              margin-bottom: 0.25rem;
+            }
+            .info-value {
+              font-weight: 600;
+              font-family: monospace;
+            }
+            .footer {
+              font-size: 0.875rem;
+              color: #64748b;
+              border-top: 1px solid var(--border);
+              padding-top: 1rem;
+            }
+            .endpoints {
+              text-align: left;
+              background: rgba(0,0,0,0.2);
+              padding: 1rem;
+              border-radius: 8px;
+              margin-bottom: 1rem;
+              font-size: 0.85rem;
+              color: #cbd5e1;
+            }
+            .endpoints div { margin-bottom: 0.25rem; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>Gemini API</h1>
+          <div class="status-badge">System Operational</div>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Port</div>
+              <div class="info-value">${PORT}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Model</div>
+              <div class="info-value">${GEMINI_MODEL}</div>
+            </div>
+          </div>
+
+          <div class="endpoints">
+            <div>POST /ask</div>
+            <div>POST /ask-structured</div>
+            <div>GET /health</div>
+          </div>
+
+          <div class="footer">
+            Server Time: ${new Date().toLocaleTimeString()}
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
 });
 
 // Start server
