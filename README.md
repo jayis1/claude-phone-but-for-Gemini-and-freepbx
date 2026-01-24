@@ -97,6 +97,7 @@ Best for: Mac or Linux server that's always on and has Gemini Code installed.
 ```
 
 **Setup:**
+
 ```bash
 gemini-phone setup    # Select "Both"
 gemini-phone start    # Launches Docker + API server
@@ -125,12 +126,14 @@ Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 ```
 
 **On your Pi (Voice Server):**
+
 ```bash
 gemini-phone setup    # Select "Voice Server", enter API server IP when prompted
 gemini-phone start    # Launches Docker containers
 ```
 
 **On your Mac/Linux (API Server):**
+
 ```bash
 gemini-phone api-server    # Starts Gemini API wrapper on port 3333
 ```
@@ -168,6 +171,7 @@ gemini-phone device add
 ```
 
 Example devices:
+
 - **Morpheus** (ext 9000) - General assistant
 - **Cephanie** (ext 9002) - Storage monitoring bot
 
@@ -205,6 +209,7 @@ gemini-phone logs      # View logs
 | Port conflict on startup | 3CX SBC using port 5060 | Setup auto-detects this; re-run setup |
 
 ### Manual Node.js Installation
+
 If the installer fails to install Node.js automatically (common on some restricted Debian/Ubuntu systems), run:
 
 ```bash
@@ -248,21 +253,22 @@ npm run lint:fix
 
 MIT
 
-
+**
 <!-- Fun Footer -->
-\`\`\`text
+```text
     .-----------------.
     |  Hi, I'm Gemini |
     |      Phone!     |
     |  .-----------.  |
-    |  |  /_\\  _  |  |
+    |  |  /*\\  _  |  |
     |  | |   | | | |  |
-    |  | \\_/  |_| |  |
+    |  | \\*/  |*| |  |
     |  '-----------'  |
     | [1] [2] [3] |\  |
     | [4] [5] [6] | | |
     | [7] [8] [9] | | |
     | [*] [0] [#] | | |
     '-------------' | |
-      |_________|__/
-\`\`\`
+      |*______**|**/
+
+```
