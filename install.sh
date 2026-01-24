@@ -277,9 +277,24 @@ main() {
   echo ""
   if [ -d "$INSTALL_DIR" ]; then
     echo "Updating existing installation..."
+    
+    # Backup .env if it exists inside the install dir
+    if [ -f "$INSTALL_DIR/.env" ]; then
+      cp "$INSTALL_DIR/.env" "/tmp/gemini-phone.env.backup"
+      HAS_BACKUP=true
+    else
+      HAS_BACKUP=false
+    fi
+
     cd "$INSTALL_DIR"
     git fetch origin main
     git reset --hard origin/main
+    
+    # Restore .env
+    if [ "$HAS_BACKUP" = true ]; then
+      cp "/tmp/gemini-phone.env.backup" "$INSTALL_DIR/.env"
+      echo "✓ Restored existing .env configuration"
+    fi
   else
     echo "Cloning Gemini Phone..."
     git clone "$REPO_URL" "$INSTALL_DIR"
