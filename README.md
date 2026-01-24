@@ -44,7 +44,9 @@ The installer performs the following steps:
 2. **Cloning**: Clones the repository to `~/.gemini-phone-cli`.
 3. **Dependencies**: Installs local CLI dependencies.
 4. **Command Setup**: Makes the `gemini-phone` command easy to use.
-   - **Linux**: Automatically creates a shortcut so you can run the program. It places this shortcut in `~/.local/bin` and updates your shell config (`~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`).
+   - **Linux**: Automatically creates a shortcut so you can run the program.
+     - **Non-root**: Shortcut in `~/.local/bin` (updates `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`).
+     - **Root**: Global shortcut in `/usr/local/bin`.
      *What this means for you:* You don't need to configure anything. Just open a new terminal window after installing, and you can type `gemini-phone` to get started.
    - **macOS**: Installs the command to `/usr/local/bin` (may require password for sudo).
 
