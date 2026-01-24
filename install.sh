@@ -158,7 +158,11 @@ main() {
         echo "📦 Docker Desktop required on macOS"
         echo "  Install from: https://www.docker.com/products/docker-desktop"
         echo ""
-        read -p "Press Enter after installing Docker Desktop..."
+        if [ -c /dev/tty ]; then
+          read -p "Press Enter after installing Docker Desktop..." < /dev/tty
+        else
+          echo "Non-interactive: Please ensure Docker Desktop is installed."
+        fi
         ;;
       *)
         echo "✗ Cannot auto-install Docker on this system"
@@ -243,9 +247,19 @@ main() {
       $SUDO usermod -aG docker $USER
       echo "  ⚠️  You need to log out and back in, OR run: newgrp docker"
       echo ""
-      read -p "Continue anyway? (Y/n) " -n 1 -r
-      echo
-      if [[ $REPLY =~ ^[Nn]$ ]]; then
+      echo "  ⚠️  You need to log out and back in, OR run: newgrp docker"
+      echo ""
+      
+      # FIX: Read from /dev/tty to avoid consuming script stdin when piped
+      if [ -c /dev/tty ]; then
+        read -p "Continue anyway? (Y/n) " -n 1 -r REPLY < /dev/tty
+        echo ""
+      else
+        echo "Non-interactive: Continuing automatically..."
+        REPLY="y"
+      fi
+
+      if [[ "$REPLY" =~ ^[Nn]$ ]]; then
         exit 1
       fi
     fi
