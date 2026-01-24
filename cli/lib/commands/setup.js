@@ -100,6 +100,15 @@ export async function setupCommand(options = {}) {
     existingConfig = await loadConfig();
   }
 
+  // Load .env from current directory if it exists
+  const localEnvConfig = loadLocalEnv();
+
+  if (localEnvConfig) {
+    console.log(chalk.cyan('\n📄 Detected local .env file. Using values to pre-fill configuration...'));
+    // Merge env values into base config (whether empty or existing)
+    existingConfig = mergeEnvWithConfig(existingConfig || createDefaultConfig(), localEnvConfig);
+  }
+
   // Prompt for installation type
   console.log(chalk.bold.cyan('\n📦 Installation Type\n'));
   const installationType = await promptInstallationType(
@@ -364,7 +373,11 @@ async function setupVoiceServer(config) {
   console.log(chalk.bold('\n🤖 Device Configuration'));
   config = await setupDevice(config);
 
-  // Step 5: Server Configuration (IP only, no API port)
+  // Step 5: Outbound Configuration
+  console.log(chalk.bold('\n📞 Outbound Configuration'));
+  config = await setupOutbound(config);
+
+  // Step 6: Server Configuration (IP only, no API port)
   console.log(chalk.bold('\n⚙️  Server Configuration'));
   const localIp = getLocalIP();
   const serverAnswers = await inquirer.prompt([
@@ -437,7 +450,11 @@ async function setupBoth(config) {
   console.log(chalk.bold('\n🤖 Device Configuration'));
   config = await setupDevice(config);
 
-  // Step 4: Server Configuration
+  // Step 4: Outbound Configuration
+  console.log(chalk.bold('\n📞 Outbound Configuration'));
+  config = await setupOutbound(config);
+
+  // Step 5: Server Configuration
   console.log(chalk.bold('\n⚙️  Server Configuration'));
   config = await setupServer(config);
 
@@ -625,7 +642,11 @@ async function setupPi(config) {
   console.log(chalk.bold('\n🤖 Device Configuration'));
   config = await setupDevice(config);
 
-  // Step 4: Server Configuration (Pi-specific)
+  // Step 4: Outbound Configuration
+  console.log(chalk.bold('\n📞 Outbound Configuration'));
+  config = await setupOutbound(config);
+
+  // Step 5: Server Configuration (Pi-specific)
   console.log(chalk.bold('\n⚙️  Server Configuration'));
   config = await setupPiServer(config);
 
@@ -687,6 +708,11 @@ function createDefaultConfig() {
       freeswitch: generateSecret()
     },
     devices: [],
+    outbound: {
+      callerId: '',
+      ringTimeout: 30,
+      maxTurns: 10
+    },
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
       geminiApiServer: path.join(getProjectRoot(), 'gemini-api-server')
@@ -700,7 +726,24 @@ function createDefaultConfig() {
  * @returns {Promise<object>} Updated config
  */
 async function setupAPIKeys(config) {
-  // ElevenLabs API Key
+  config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: true };
+}
+
+// Auto-skip logic for API Keys if present and valid
+// (Assuming previously validated or will be validated now)
+if (config._fromEnv && config.api.elevenlabs.apiKey) {
+  const result = await validateElevenLabsKey(config.api.elevenlabs.apiKey);
+  if (result.valid) {
+    console.log(chalk.green('✓ Found valid ElevenLabs API key in .env'));
+    config.api.elevenlabs.validated = true;
+    // Skip the prompt below if we have valid key
+  } else {
+    console.log(chalk.yellow('⚠️  ElevenLabs key in .env is invalid. Please enter manually.'));
+  }
+}
+
+// Ask for key only if NOT validated
+if (!config.api.elevenlabs.validated) {
   const elevenLabsAnswers = await inquirer.prompt([
     {
       type: 'password',
@@ -715,76 +758,78 @@ async function setupAPIKeys(config) {
       }
     }
   ]);
-
+  // ... validation logic (existing) ...
   const elevenLabsKey = elevenLabsAnswers.apiKey;
   const spinner = ora('Validating ElevenLabs API key...').start();
-
   const elevenLabsResult = await validateElevenLabsKey(elevenLabsKey);
   if (!elevenLabsResult.valid) {
     spinner.fail(`Invalid ElevenLabs API key: ${elevenLabsResult.error}`);
-    console.log(chalk.yellow('\n⚠️  You can continue setup, but the key may not work.'));
-    const { continueAnyway } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'continueAnyway',
-        message: 'Continue anyway?',
-        default: false
-      }
-    ]);
-
-    if (!continueAnyway) {
-      throw new Error('Setup cancelled due to invalid API key');
-    }
-
+    // ... error handling ...
+    const { continueAnyway } = await inquirer.prompt([{ type: 'confirm', name: 'continueAnyway', message: 'Continue anyway?', default: false }]);
+    if (!continueAnyway) throw new Error('Setup cancelled due to invalid API key');
     config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: false };
   } else {
     spinner.succeed('ElevenLabs API key validated');
     config.api.elevenlabs = { apiKey: elevenLabsKey, defaultVoiceId: '', validated: true };
   }
+}
 
-  // Ask for default voice ID immediately after API key
-  const voiceIdAnswers = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'voiceId',
-      message: 'ElevenLabs default voice ID (for all devices):',
-      default: config.api.elevenlabs.defaultVoiceId || '',
-      validate: (input) => {
-        if (!input || input.trim() === '') {
-          return 'Voice ID is required';
-        }
-        return true;
+// Ask for default voice ID immediately after API key
+const voiceIdAnswers = await inquirer.prompt([
+  {
+    type: 'input',
+    name: 'voiceId',
+    message: 'ElevenLabs default voice ID (for all devices):',
+    default: config.api.elevenlabs.defaultVoiceId || '',
+    validate: (input) => {
+      if (!input || input.trim() === '') {
+        return 'Voice ID is required';
       }
+      return true;
+    }
+  }
+]);
+
+const defaultVoiceId = voiceIdAnswers.voiceId;
+const voiceSpinner = ora('Validating ElevenLabs voice ID...').start();
+
+const voiceValidation = await validateVoiceId(elevenLabsKey, defaultVoiceId);
+if (!voiceValidation.valid) {
+  voiceSpinner.fail(`Voice ID validation failed: ${voiceValidation.error}`);
+  console.log(chalk.yellow('\n⚠️  You can continue setup, but the voice ID may not work.'));
+  const { continueAnyway } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'continueAnyway',
+      message: 'Continue anyway?',
+      default: false
     }
   ]);
 
-  const defaultVoiceId = voiceIdAnswers.voiceId;
-  const voiceSpinner = ora('Validating ElevenLabs voice ID...').start();
-
-  const voiceValidation = await validateVoiceId(elevenLabsKey, defaultVoiceId);
-  if (!voiceValidation.valid) {
-    voiceSpinner.fail(`Voice ID validation failed: ${voiceValidation.error}`);
-    console.log(chalk.yellow('\n⚠️  You can continue setup, but the voice ID may not work.'));
-    const { continueAnyway } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'continueAnyway',
-        message: 'Continue anyway?',
-        default: false
-      }
-    ]);
-
-    if (!continueAnyway) {
-      throw new Error('Setup cancelled due to invalid voice ID');
-    }
-
-    config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
-  } else {
-    voiceSpinner.succeed(`Voice ID validated: ${voiceValidation.name}`);
-    config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
+  if (!continueAnyway) {
+    throw new Error('Setup cancelled due to invalid voice ID');
   }
 
-  // OpenAI API Key
+  config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
+} else {
+  voiceSpinner.succeed(`Voice ID validated: ${voiceValidation.name}`);
+  config.api.elevenlabs.defaultVoiceId = defaultVoiceId;
+}
+
+// Auto-skip logic for OpenAI (Whisper)
+let skipOpenAI = false;
+if (config._fromEnv && config.api.openai.apiKey) {
+  const result = await validateOpenAIKey(config.api.openai.apiKey);
+  if (result.valid) {
+    console.log(chalk.green('✓ Found valid OpenAI API key in .env'));
+    config.api.openai.validated = true;
+    skipOpenAI = true;
+  } else {
+    console.log(chalk.yellow('⚠️  OpenAI key in .env is invalid. Please enter manually.'));
+  }
+}
+
+if (!skipOpenAI) {
   const openAIAnswers = await inquirer.prompt([
     {
       type: 'password',
@@ -825,8 +870,9 @@ async function setupAPIKeys(config) {
     openAISpinner.succeed('OpenAI API key validated');
     config.api.openai = { apiKey: openAIKey, validated: true };
   }
+}
 
-  return config;
+return config;
 }
 
 /**
@@ -835,6 +881,11 @@ async function setupAPIKeys(config) {
  * @returns {Promise<object>} Updated config
  */
 async function setupSIP(config) {
+  // If SIP config populated from env, skip prompts
+  if (config._fromEnv && config.sip.domain && config.sip.registrar) {
+    console.log(chalk.green('✓ Using SIP configuration from .env'));
+    return config;
+  }
   const answers = await inquirer.prompt([
     {
       type: 'input',
@@ -1138,6 +1189,66 @@ async function setupPiServer(config) {
 
   config.server.externalIp = answers.externalIp;
   config.server.httpPort = parseInt(answers.httpPort, 10);
+
+  return config;
+}
+/**
+ * Setup outbound call configuration
+ * @param {object} config - Current config
+ * @returns {Promise<object>} Updated config
+ */
+async function setupOutbound(config) {
+  if (config._fromEnv && config.outbound.callerId) {
+    console.log(chalk.green('✓ Using Outbound configuration from .env'));
+    return config;
+  }
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'callerId',
+      message: 'Default Caller ID (e.g., +15551234567):',
+      default: config.outbound?.callerId || '',
+      validate: (input) => {
+        // Optional, but if provided should look like a number
+        if (input && !/^\+?[0-9]{10,15}$/.test(input)) {
+          return 'Invalid phone number format (E.164 preferred)';
+        }
+        return true;
+      }
+    },
+    {
+      type: 'input',
+      name: 'ringTimeout',
+      message: 'Ring timeout (seconds):',
+      default: config.outbound?.ringTimeout || 30,
+      validate: (input) => {
+        const val = parseInt(input, 10);
+        if (isNaN(val) || val < 5 || val > 120) {
+          return 'Timeout must be between 5 and 120 seconds';
+        }
+        return true;
+      }
+    },
+    {
+      type: 'input',
+      name: 'maxTurns',
+      message: 'Max conversation turns:',
+      default: config.outbound?.maxTurns || 10,
+      validate: (input) => {
+        const val = parseInt(input, 10);
+        if (isNaN(val) || val < 1 || val > 50) {
+          return 'Turns must be between 1 and 50';
+        }
+        return true;
+      }
+    }
+  ]);
+
+  config.outbound = {
+    callerId: answers.callerId,
+    ringTimeout: parseInt(answers.ringTimeout, 10),
+    maxTurns: parseInt(answers.maxTurns, 10)
+  };
 
   return config;
 }
