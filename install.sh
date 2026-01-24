@@ -236,6 +236,8 @@ if ! command -v gemini &> /dev/null; then
   # Verify installation
   if command -v gemini &> /dev/null; then
     echo "✓ Gemini CLI installed: $(gemini --version)"
+    # Extra check for npm package as requested
+    echo "  Package check: $(npm list -g @google/gemini-cli --depth=0 2>/dev/null | grep @google/gemini-cli || echo 'Installed via other method')"
   else
     echo "✗ Failed to install Gemini CLI automatically"
     echo "  Please install manually: npm install -g @google/gemini-cli"
@@ -249,7 +251,8 @@ echo ""
 if [ -d "$INSTALL_DIR" ]; then
   echo "Updating existing installation..."
   cd "$INSTALL_DIR"
-  git pull origin main
+  git fetch origin main
+  git reset --hard origin/main
 else
   echo "Cloning Gemini Phone..."
   git clone "$REPO_URL" "$INSTALL_DIR"
@@ -319,6 +322,39 @@ echo ""
 echo "════════════════════════════════════════════"
 echo "✓ Installation complete!"
 echo "════════════════════════════════════════════"
+echo ""
+
+# Setup Gemini API Key
+echo "Would you like to configure your Gemini API Key now?"
+read -p "Enter API Key (leave blank to skip): " GEMINI_KEY
+if [ -n "$GEMINI_KEY" ]; then
+  echo ""
+  echo "Saving GEMINI_API_KEY..."
+  
+  # Detect shell to update
+  USER_SHELL=$(basename "$SHELL")
+  SHELL_RC=""
+  
+  case "$USER_SHELL" in
+    fish)
+      mkdir -p ~/.config/fish
+      echo "set -Ux GEMINI_API_KEY \"$GEMINI_KEY\"" >> ~/.config/fish/config.fish
+      echo "✓ Added to ~/.config/fish/config.fish"
+      ;;
+    zsh)
+      echo "export GEMINI_API_KEY=\"$GEMINI_KEY\"" >> ~/.zshrc
+      echo "✓ Added to ~/.zshrc"
+      ;;
+    *)
+      echo "export GEMINI_API_KEY=\"$GEMINI_KEY\"" >> ~/.bashrc
+      echo "✓ Added to ~/.bashrc"
+      ;;
+  esac
+  
+  # Export for current session just in case
+  export GEMINI_API_KEY="$GEMINI_KEY"
+fi
+
 echo ""
 echo "Next steps:"
 echo "  gemini-phone setup    # Configure your installation"
