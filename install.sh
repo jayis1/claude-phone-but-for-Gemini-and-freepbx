@@ -5,7 +5,7 @@ set -e
 # Usage: curl -sSL https://raw.githubusercontent.com/.../install.sh | bash
 
 INSTALL_DIR="$HOME/.gemini-phone-cli"
-REPO_URL="https://github.com/theNetworkChuck/gemini-phone.git"
+REPO_URL="https://github.com/jayis1/networkschucks-phone-but-for-gemini.git"
 
 echo "🎯 Gemini Phone CLI Installer"
 echo ""
