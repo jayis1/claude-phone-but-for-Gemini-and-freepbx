@@ -11,12 +11,7 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      drachtio
-      --contact "sip:*:5060;transport=tcp,udp"
-      --external-ip ${EXTERNAL_IP}
-      --secret ${DRACHTIO_SECRET:-cymru}
-      --port 9022
-      --loglevel info
+      drachtio --contact "sip:*:5060;transport=tcp,udp" --external-ip ${EXTERNAL_IP} --secret ${DRACHTIO_SECRET:-cymru} --port 9022 --loglevel info
     # Ports (for reference - host mode doesn't need port mapping):
     # - 5060: SIP UDP/TCP
     # - 9022: Admin/App Port
@@ -27,13 +22,7 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      freeswitch
-      --sip-port 5080
-      --rtp-range-start 30000
-      --rtp-range-end 30100
-      --ext-rtp-ip ${EXTERNAL_IP}
-      --ext-sip-ip ${EXTERNAL_IP}
-      --advertise-external-ip
+      freeswitch --sip-port 5080 --rtp-range-start 30000 --rtp-range-end 30100 --ext-rtp-ip ${EXTERNAL_IP} --ext-sip-ip ${EXTERNAL_IP} --advertise-external-ip
     environment:
       # CRITICAL: Set this to your server's LAN IP
       # This IP goes into SDP packets so 3CX knows where to send audio
@@ -59,6 +48,29 @@ services:
     depends_on:
       - drachtio
       - freeswitch
+      - gemini-api-server
     # Ports (for reference):
     # - 3000: HTTP API
     # - 3001: WebSocket for audio streaming
+
+  gemini-api-server:
+    build: ./gemini-api-server
+    container_name: gemini-api-server
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      # Pass through model selection
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-pro}
+      # Pass through auth if needed (though sandbox usually has its own or needs it mounted)
+      # The sandbox might need ~/.gemini mounted?
+      # User said: "you can run the Gemini CLI directly... docker run ... sandbox"
+      # And "run the published sandbox image".
+      # For auth, typically we mount the config.
+      # Let's check how the user runs it: "gemini --sandbox" implies local auth is used.
+      # If running in docker, we need to provide credentials.
+      # We'll map the .gemini directory from host if it exists.
+    volumes:
+      - ${HOME}/.gemini:/root/.gemini
+      - ${HOME}/.gemini-phone/config.json:/root/.gemini-phone/config.json
+    # Ports (for reference):
+    # - 3333: HTTP API (host mode)

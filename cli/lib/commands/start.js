@@ -236,11 +236,12 @@ async function startBoth(config, isPiMode) {
     }
   }
 
-  // Check Gemini CLI only in standard mode (Pi mode connects to API server instead)
-  if (!isPiMode && !(await isGeminiInstalled())) {
-    console.log(chalk.yellow('⚠️  Gemini CLI not found'));
-    console.log(chalk.gray('  Install from: https://gemini.com/download\n'));
-  }
+  // Check Gemini CLI only if NOT running in Docker (legacy mode or API server only)
+  // Since we integrated Gemini CLI into Docker, we don't strictly need it locally for 'start'
+  // if (!isPiMode && !(await isGeminiInstalled())) {
+  //   console.log(chalk.yellow('⚠️  Gemini CLI not found'));
+  //   console.log(chalk.gray('  Install from: https://gemini.com/download\n'));
+  // }
 
   // In Pi mode, verify API server is reachable
   if (isPiMode) {
@@ -312,26 +313,27 @@ async function startBoth(config, isPiMode) {
   await sleep(3000);
   spinner.succeed('Containers initialized');
 
-  // Start gemini-api-server (only in standard mode - Pi mode uses remote API server)
-  if (!isPiMode) {
-    spinner.start('Starting Gemini API server...');
-    try {
-      if (await isServerRunning()) {
-        spinner.warn('Gemini API server already running');
-      } else {
-        await startServer(config.paths.geminiApiServer, config.server.geminiApiPort);
-        spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
-      }
-    } catch (error) {
-      spinner.fail(`Failed to start server: ${error.message}`);
-      throw error;
-    }
-  }
+  // Start gemini-api-server
+  // NOW HANDLED BY DOCKER COMPOSE
+  // if (!isPiMode) {
+  //   spinner.start('Starting Gemini API server...');
+  //   try {
+  //     if (await isServerRunning()) {
+  //       spinner.warn('Gemini API server already running');
+  //     } else {
+  //       await startServer(config.paths.geminiApiServer, config.server.geminiApiPort);
+  //       spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
+  //     }
+  //   } catch (error) {
+  //     spinner.fail(`Failed to start server: ${error.message}`);
+  //     throw error;
+  //   }
+  // }
 
   // Success
   console.log(chalk.bold.green('\n✓ All services running!\n'));
   console.log(chalk.gray('Services:'));
-  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app`));
+  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app, gemini-api-server`));
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {

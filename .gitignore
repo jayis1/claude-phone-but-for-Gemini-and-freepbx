@@ -1,0 +1,6 @@
+node_modules/
+.env
+.gemini/
+coverage/
+dist/
+.DS_Store
