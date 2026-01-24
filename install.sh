@@ -4,359 +4,373 @@ set -e
 # Gemini Phone CLI Installer
 # Usage: curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/install.sh | bash
 
-INSTALL_DIR="$HOME/.gemini-phone-cli"
-REPO_URL="https://github.com/jayis1/networkschucks-phone-but-for-gemini.git"
 
-echo "🎯 Gemini Phone CLI Installer"
-echo ""
+main() {
+  INSTALL_DIR="$HOME/.gemini-phone-cli"
+  REPO_URL="https://github.com/jayis1/networkschucks-phone-but-for-gemini.git"
 
-# Detect OS
-OS="$(uname -s)"
-case "$OS" in
-  Darwin*)
-    echo "✓ Detected macOS"
-    BIN_DIR="/usr/local/bin"
-    PKG_MANAGER="brew"
-    ;;
-  Linux*)
-    echo "✓ Detected Linux"
-    
-    # Check if running as root
-    if [ "$(id -u)" -eq 0 ]; then
+  echo "🎯 Gemini Phone CLI Installer"
+  echo ""
+
+  # Detect OS
+  OS="$(uname -s)"
+  case "$OS" in
+    Darwin*)
+      echo "✓ Detected macOS"
       BIN_DIR="/usr/local/bin"
-      SUDO=""
-      echo "  Running as root - installing globally to $BIN_DIR"
-    else
-      BIN_DIR="$HOME/.local/bin"
-      SUDO="sudo"
-    fi
-    
-    mkdir -p "$BIN_DIR"
-    # Detect package manager
-    if command -v apt-get &> /dev/null; then
-      PKG_MANAGER="apt"
-    elif command -v dnf &> /dev/null; then
-      PKG_MANAGER="dnf"
-    elif command -v pacman &> /dev/null; then
-      PKG_MANAGER="pacman"
-    else
-      PKG_MANAGER="unknown"
-    fi
-    ;;
-  *)
-    echo "✗ Unsupported OS: $OS"
-    exit 1
-    ;;
-esac
-
-# Function to install Node.js
-install_nodejs() {
-  echo ""
-  echo "📦 Installing Node.js..."
-  case "$PKG_MANAGER" in
-    apt)
-      # Install Node.js 20.x LTS via NodeSource
-      if [ -n "$SUDO" ]; then
-        curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
+      PKG_MANAGER="brew"
+      ;;
+    Linux*)
+      echo "✓ Detected Linux"
+      
+      # Check if running as root
+      if [ "$(id -u)" -eq 0 ]; then
+        BIN_DIR="/usr/local/bin"
+        SUDO=""
+        echo "  Running as root - installing globally to $BIN_DIR"
       else
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        BIN_DIR="$HOME/.local/bin"
+        SUDO="sudo"
       fi
-      $SUDO apt-get install -y nodejs
-      ;;
-    dnf)
-      $SUDO dnf install -y nodejs npm
-      ;;
-    pacman)
-      $SUDO pacman -S --noconfirm nodejs npm
-      ;;
-    brew)
-      brew install node
+      
+      mkdir -p "$BIN_DIR"
+      # Detect package manager
+      if command -v apt-get &> /dev/null; then
+        PKG_MANAGER="apt"
+      elif command -v dnf &> /dev/null; then
+        PKG_MANAGER="dnf"
+      elif command -v pacman &> /dev/null; then
+        PKG_MANAGER="pacman"
+      else
+        PKG_MANAGER="unknown"
+      fi
       ;;
     *)
-      echo "✗ Cannot auto-install Node.js on this system"
-      echo "  Install manually from: https://nodejs.org/"
+      echo "✗ Unsupported OS: $OS"
       exit 1
       ;;
   esac
-  echo "✓ Node.js installed: $(node -v)"
-}
 
-# Function to install npm (for systems where it's separate)
-install_npm() {
+  # Function to install Node.js
+  install_nodejs() {
+    echo ""
+    echo "📦 Installing Node.js..."
+    case "$PKG_MANAGER" in
+      apt)
+        # Install Node.js 20.x LTS via NodeSource
+        if [ -n "$SUDO" ]; then
+          curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
+        else
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        fi
+        $SUDO apt-get install -y nodejs
+        ;;
+      dnf)
+        $SUDO dnf install -y nodejs npm
+        ;;
+      pacman)
+        $SUDO pacman -S --noconfirm nodejs npm
+        ;;
+      brew)
+        brew install node
+        ;;
+      *)
+        echo "✗ Cannot auto-install Node.js on this system"
+        echo "  Install manually from: https://nodejs.org/"
+        exit 1
+        ;;
+    esac
+    echo "✓ Node.js installed: $(node -v)"
+  }
+
+  # Function to install npm (for systems where it's separate)
+  install_npm() {
+    echo ""
+    echo "📦 Installing npm..."
+    case "$PKG_MANAGER" in
+      apt)
+        $SUDO apt-get install -y npm
+        ;;
+      dnf)
+        $SUDO dnf install -y npm
+        ;;
+      pacman)
+        $SUDO pacman -S --noconfirm npm
+        ;;
+      *)
+        echo "✗ Cannot auto-install npm on this system"
+        echo "  Install manually: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
+        exit 1
+        ;;
+    esac
+    echo "✓ npm installed: $(npm -v)"
+  }
+
+  # Function to install Docker
+  install_docker() {
+    echo ""
+    echo "📦 Installing Docker..."
+    case "$PKG_MANAGER" in
+      apt)
+        # Install Docker via official script
+        curl -fsSL https://get.docker.com | $SUDO sh
+        $SUDO usermod -aG docker $USER
+        echo "⚠️  You may need to log out and back in for Docker group to take effect"
+        ;;
+      dnf)
+        $SUDO dnf install -y docker
+        $SUDO systemctl start docker
+        $SUDO systemctl enable docker
+        $SUDO usermod -aG docker $USER
+        ;;
+      pacman)
+        $SUDO pacman -S --noconfirm docker
+        $SUDO systemctl start docker
+        $SUDO systemctl enable docker
+        $SUDO usermod -aG docker $USER
+        ;;
+      brew)
+        echo "📦 Docker Desktop required on macOS"
+        echo "  Install from: https://www.docker.com/products/docker-desktop"
+        echo ""
+        read -p "Press Enter after installing Docker Desktop..."
+        ;;
+      *)
+        echo "✗ Cannot auto-install Docker on this system"
+        echo "  Install from: https://docs.docker.com/engine/install/"
+        exit 1
+        ;;
+    esac
+  }
+
+  # Function to install git
+  install_git() {
+    echo ""
+    echo "📦 Installing git..."
+    case "$PKG_MANAGER" in
+      apt)
+        $SUDO apt-get update && $SUDO apt-get install -y git
+        ;;
+      dnf)
+        $SUDO dnf install -y git
+        ;;
+      pacman)
+        $SUDO pacman -S --noconfirm git
+        ;;
+      brew)
+        brew install git
+        ;;
+      *)
+        echo "✗ Cannot auto-install git"
+        exit 1
+        ;;
+    esac
+    echo "✓ Git installed"
+  }
+
   echo ""
-  echo "📦 Installing npm..."
-  case "$PKG_MANAGER" in
-    apt)
-      $SUDO apt-get install -y npm
-      ;;
-    dnf)
-      $SUDO dnf install -y npm
-      ;;
-    pacman)
-      $SUDO pacman -S --noconfirm npm
-      ;;
-    *)
-      echo "✗ Cannot auto-install npm on this system"
-      echo "  Install manually: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
-      exit 1
-      ;;
-  esac
-  echo "✓ npm installed: $(npm -v)"
-}
-
-# Function to install Docker
-install_docker() {
+  echo "Checking prerequisites..."
   echo ""
-  echo "📦 Installing Docker..."
-  case "$PKG_MANAGER" in
-    apt)
-      # Install Docker via official script
-      curl -fsSL https://get.docker.com | $SUDO sh
-      $SUDO usermod -aG docker $USER
-      echo "⚠️  You may need to log out and back in for Docker group to take effect"
-      ;;
-    dnf)
-      $SUDO dnf install -y docker
-      $SUDO systemctl start docker
-      $SUDO systemctl enable docker
-      $SUDO usermod -aG docker $USER
-      ;;
-    pacman)
-      $SUDO pacman -S --noconfirm docker
-      $SUDO systemctl start docker
-      $SUDO systemctl enable docker
-      $SUDO usermod -aG docker $USER
-      ;;
-    brew)
-      echo "📦 Docker Desktop required on macOS"
-      echo "  Install from: https://www.docker.com/products/docker-desktop"
-      echo ""
-      read -p "Press Enter after installing Docker Desktop..."
-      ;;
-    *)
-      echo "✗ Cannot auto-install Docker on this system"
-      echo "  Install from: https://docs.docker.com/engine/install/"
-      exit 1
-      ;;
-  esac
-}
 
-# Function to install git
-install_git() {
-  echo ""
-  echo "📦 Installing git..."
-  case "$PKG_MANAGER" in
-    apt)
-      $SUDO apt-get update && $SUDO apt-get install -y git
-      ;;
-    dnf)
-      $SUDO dnf install -y git
-      ;;
-    pacman)
-      $SUDO pacman -S --noconfirm git
-      ;;
-    brew)
-      brew install git
-      ;;
-    *)
-      echo "✗ Cannot auto-install git"
-      exit 1
-      ;;
-  esac
-  echo "✓ Git installed"
-}
+  # Check git
+  if ! command -v git &> /dev/null; then
+    echo "✗ Git not found, installing..."
+    install_git
+  else
+    echo "✓ Git installed"
+  fi
 
-echo ""
-echo "Checking prerequisites..."
-echo ""
-
-# Check git
-if ! command -v git &> /dev/null; then
-  echo "✗ Git not found, installing..."
-  install_git
-else
-  echo "✓ Git installed"
-fi
-
-# Check Node.js
-if ! command -v node &> /dev/null; then
-  echo "✗ Node.js not found, installing..."
-  install_nodejs
-else
-  NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-  if [ "$NODE_VERSION" -lt 18 ]; then
-    echo "✗ Node.js 18+ required (found v$NODE_VERSION), upgrading..."
+  # Check Node.js
+  if ! command -v node &> /dev/null; then
+    echo "✗ Node.js not found, installing..."
     install_nodejs
   else
-    echo "✓ Node.js $(node -v)"
-  fi
-fi
-
-# Check npm (sometimes separate from nodejs on Linux)
-if ! command -v npm &> /dev/null; then
-  echo "✗ npm not found (but Node.js is installed), installing..."
-  install_npm
-else
-  echo "✓ npm $(npm -v)"
-fi
-
-# Check Docker
-if ! command -v docker &> /dev/null; then
-  echo "✗ Docker not found, installing..."
-  install_docker
-else
-  echo "✓ Docker installed"
-fi
-
-# Check Docker permissions (Linux only)
-if [ "$OS" = "Linux" ]; then
-  if ! docker info &> /dev/null 2>&1; then
-    echo "⚠️  Docker permission issue"
-    echo "  Adding user to docker group..."
-    $SUDO usermod -aG docker $USER
-    echo "  ⚠️  You need to log out and back in, OR run: newgrp docker"
-    echo ""
-    read -p "Continue anyway? (Y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
-      exit 1
+    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    if [ "$NODE_VERSION" -lt 18 ]; then
+      echo "✗ Node.js 18+ required (found v$NODE_VERSION), upgrading..."
+      install_nodejs
+    else
+      echo "✓ Node.js $(node -v)"
     fi
   fi
-fi
 
-# Check Gemini CLI
-if ! command -v gemini &> /dev/null; then
-  echo "⚠️  Gemini CLI not found, installing via npm..."
-  if [ -w "$(npm root -g)" ]; then
-    npm install -g @google/gemini-cli
+  # Check npm (sometimes separate from nodejs on Linux)
+  if ! command -v npm &> /dev/null; then
+    echo "✗ npm not found (but Node.js is installed), installing..."
+    install_npm
   else
-    $SUDO npm install -g @google/gemini-cli
+    echo "✓ npm $(npm -v)"
   fi
-  
-  # Verify installation
-  if command -v gemini &> /dev/null; then
-    echo "✓ Gemini CLI installed: $(gemini --version)"
-    # Extra check for npm package as requested
-    echo "  Package check: $(npm list -g @google/gemini-cli --depth=0 2>/dev/null | grep @google/gemini-cli || echo 'Installed via other method')"
+
+  # Check Docker
+  if ! command -v docker &> /dev/null; then
+    echo "✗ Docker not found, installing..."
+    install_docker
   else
-    echo "✗ Failed to install Gemini CLI automatically"
-    echo "  Please install manually: npm install -g @google/gemini-cli"
+    echo "✓ Docker installed"
   fi
-else
-  echo "✓ Gemini CLI installed"
-fi
 
-# Clone or update repository
-echo ""
-if [ -d "$INSTALL_DIR" ]; then
-  echo "Updating existing installation..."
-  cd "$INSTALL_DIR"
-  git fetch origin main
-  git reset --hard origin/main
-else
-  echo "Cloning Gemini Phone..."
-  git clone "$REPO_URL" "$INSTALL_DIR"
-  cd "$INSTALL_DIR"
-fi
+  # Check Docker permissions (Linux only)
+  if [ "$OS" = "Linux" ]; then
+    if ! docker info &> /dev/null 2>&1; then
+      echo "⚠️  Docker permission issue"
+      echo "  Adding user to docker group..."
+      $SUDO usermod -aG docker $USER
+      echo "  ⚠️  You need to log out and back in, OR run: newgrp docker"
+      echo ""
+      read -p "Continue anyway? (Y/n) " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Nn]$ ]]; then
+        exit 1
+      fi
+    fi
+  fi
 
-# Install CLI dependencies
-echo ""
-echo "Installing dependencies..."
-cd "$INSTALL_DIR/cli"
-
-# Final check for npm before running it
-if ! command -v npm &> /dev/null; then
-  echo "⚠️  npm missing (required for dependencies)"
-  install_npm
-fi
-
-npm install --silent --production
-
-# Create symlink
-echo ""
-if [ -L "$BIN_DIR/gemini-phone" ]; then
-  rm "$BIN_DIR/gemini-phone"
-fi
-
-# Ensure executable permissions
-chmod +x "$INSTALL_DIR/cli/bin/gemini-phone.js"
-
-if [ "$OS" = "Linux" ]; then
-  ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
-  echo "✓ Installed to: $BIN_DIR/gemini-phone"
-
-  if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo ""
-    echo "⚠️  Adding $HOME/.local/bin to PATH..."
+  # Check Gemini CLI
+  if ! command -v gemini &> /dev/null; then
+    echo "⚠️  Gemini CLI not found, installing via npm..."
+    if [ -w "$(npm root -g)" ]; then
+      npm install -g @google/gemini-cli
+    else
+      $SUDO npm install -g @google/gemini-cli
+    fi
     
-    # Detect shell and update appropriate config
+    # Verify installation
+    if command -v gemini &> /dev/null; then
+      echo "✓ Gemini CLI installed: $(gemini --version)"
+      # Extra check for npm package as requested
+      echo "  Package check: $(npm list -g @google/gemini-cli --depth=0 2>/dev/null | grep @google/gemini-cli || echo 'Installed via other method')"
+    else
+      echo "✗ Failed to install Gemini CLI automatically"
+      echo "  Please install manually: npm install -g @google/gemini-cli"
+    fi
+  else
+    echo "✓ Gemini CLI installed"
+  fi
+
+  # Clone or update repository
+  echo ""
+  if [ -d "$INSTALL_DIR" ]; then
+    echo "Updating existing installation..."
+    cd "$INSTALL_DIR"
+    git fetch origin main
+    git reset --hard origin/main
+  else
+    echo "Cloning Gemini Phone..."
+    git clone "$REPO_URL" "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+  fi
+
+  # Install CLI dependencies
+  echo ""
+  echo "Installing dependencies..."
+  cd "$INSTALL_DIR/cli"
+
+  # Final check for npm before running it
+  if ! command -v npm &> /dev/null; then
+    echo "⚠️  npm missing (required for dependencies)"
+    install_npm
+  fi
+
+  npm install --silent --production
+
+  # Create symlink
+  echo ""
+  if [ -L "$BIN_DIR/gemini-phone" ]; then
+    rm "$BIN_DIR/gemini-phone"
+  fi
+
+  # Ensure executable permissions
+  chmod +x "$INSTALL_DIR/cli/bin/gemini-phone.js"
+
+  if [ "$OS" = "Linux" ]; then
+    ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
+    echo "✓ Installed to: $BIN_DIR/gemini-phone"
+
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+      echo ""
+      echo "⚠️  Adding $HOME/.local/bin to PATH..."
+      
+      # Detect shell and update appropriate config
+      USER_SHELL=$(basename "$SHELL")
+      case "$USER_SHELL" in
+        fish)
+          mkdir -p ~/.config/fish
+          echo 'set -Ua fish_user_paths "$HOME/.local/bin"' >> ~/.config/fish/config.fish
+          echo "✓ Updated ~/.config/fish/config.fish"
+          ;;
+        zsh)
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+          echo "✓ Updated ~/.zshrc"
+          ;;
+        *)
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+          echo "✓ Updated ~/.bashrc"
+          ;;
+      esac
+      
+      export PATH="$HOME/.local/bin:$PATH"
+    fi
+  else
+    if [ -w "$BIN_DIR" ]; then
+      ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
+    else
+      sudo ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
+    fi
+    echo "✓ Installed to: $BIN_DIR/gemini-phone"
+  fi
+
+  echo ""
+  echo "════════════════════════════════════════════"
+  echo "✓ Installation complete!"
+  echo "════════════════════════════════════════════"
+  echo ""
+
+  # Setup Gemini API Key
+  echo "Would you like to configure your Gemini API Key now?"
+  # Use /dev/tty for input to avoid consuming script stdin when piped
+  if [ -t 0 ]; then
+    read -p "Enter API Key (leave blank to skip): " GEMINI_KEY
+  elif [ -c /dev/tty ]; then
+    read -p "Enter API Key (leave blank to skip): " GEMINI_KEY < /dev/tty
+  else
+    echo "Skipping API Key setup (non-interactive mode)"
+    GEMINI_KEY=""
+  fi
+
+  if [ -n "$GEMINI_KEY" ]; then
+    echo ""
+    echo "Saving GEMINI_API_KEY..."
+    
+    # Detect shell to update
     USER_SHELL=$(basename "$SHELL")
+    
     case "$USER_SHELL" in
       fish)
         mkdir -p ~/.config/fish
-        echo 'set -Ua fish_user_paths "$HOME/.local/bin"' >> ~/.config/fish/config.fish
-        echo "✓ Updated ~/.config/fish/config.fish"
+        echo "set -Ux GEMINI_API_KEY \"$GEMINI_KEY\"" >> ~/.config/fish/config.fish
+        echo "✓ Added to ~/.config/fish/config.fish"
         ;;
       zsh)
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-        echo "✓ Updated ~/.zshrc"
+        echo "export GEMINI_API_KEY=\"$GEMINI_KEY\"" >> ~/.zshrc
+        echo "✓ Added to ~/.zshrc"
         ;;
       *)
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-        echo "✓ Updated ~/.bashrc"
+        echo "export GEMINI_API_KEY=\"$GEMINI_KEY\"" >> ~/.bashrc
+        echo "✓ Added to ~/.bashrc"
         ;;
     esac
     
-    export PATH="$HOME/.local/bin:$PATH"
+    # Export for current session just in case
+    export GEMINI_API_KEY="$GEMINI_KEY"
   fi
-else
-  if [ -w "$BIN_DIR" ]; then
-    ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
-  else
-    sudo ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
-  fi
-  echo "✓ Installed to: $BIN_DIR/gemini-phone"
-fi
 
-echo ""
-echo "════════════════════════════════════════════"
-echo "✓ Installation complete!"
-echo "════════════════════════════════════════════"
-echo ""
-
-# Setup Gemini API Key
-echo "Would you like to configure your Gemini API Key now?"
-read -p "Enter API Key (leave blank to skip): " GEMINI_KEY < /dev/tty
-if [ -n "$GEMINI_KEY" ]; then
   echo ""
-  echo "Saving GEMINI_API_KEY..."
-  
-  # Detect shell to update
-  USER_SHELL=$(basename "$SHELL")
-  SHELL_RC=""
-  
-  case "$USER_SHELL" in
-    fish)
-      mkdir -p ~/.config/fish
-      echo "set -Ux GEMINI_API_KEY \"$GEMINI_KEY\"" >> ~/.config/fish/config.fish
-      echo "✓ Added to ~/.config/fish/config.fish"
-      ;;
-    zsh)
-      echo "export GEMINI_API_KEY=\"$GEMINI_KEY\"" >> ~/.zshrc
-      echo "✓ Added to ~/.zshrc"
-      ;;
-    *)
-      echo "export GEMINI_API_KEY=\"$GEMINI_KEY\"" >> ~/.bashrc
-      echo "✓ Added to ~/.bashrc"
-      ;;
-  esac
-  
-  # Export for current session just in case
-  export GEMINI_API_KEY="$GEMINI_KEY"
-fi
+  echo "Next steps:"
+  echo "  gemini-phone setup    # Configure your installation"
+  echo "  gemini-phone start    # Launch services"
+  echo ""
+}
 
-echo ""
-echo "Next steps:"
-echo "  gemini-phone setup    # Configure your installation"
-echo "  gemini-phone start    # Launch services"
-echo ""
+# Run main function
+main "$@"
