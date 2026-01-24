@@ -56,15 +56,12 @@ install_nodejs() {
   case "$PKG_MANAGER" in
     apt)
       # Install Node.js 20.x LTS via NodeSource
-      # Install Node.js 20.x LTS via NodeSource
       curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
       $SUDO apt-get install -y nodejs
       ;;
     dnf)
-    dnf)
       $SUDO dnf install -y nodejs npm
       ;;
-    pacman)
     pacman)
       $SUDO pacman -S --noconfirm nodejs npm
       ;;
@@ -87,19 +84,16 @@ install_docker() {
   case "$PKG_MANAGER" in
     apt)
       # Install Docker via official script
-      # Install Docker via official script
       curl -fsSL https://get.docker.com | $SUDO sh
       $SUDO usermod -aG docker $USER
       echo "⚠️  You may need to log out and back in for Docker group to take effect"
       ;;
-    dnf)
     dnf)
       $SUDO dnf install -y docker
       $SUDO systemctl start docker
       $SUDO systemctl enable docker
       $SUDO usermod -aG docker $USER
       ;;
-    pacman)
     pacman)
       $SUDO pacman -S --noconfirm docker
       $SUDO systemctl start docker
@@ -126,14 +120,11 @@ install_git() {
   echo "📦 Installing git..."
   case "$PKG_MANAGER" in
     apt)
-    apt)
       $SUDO apt-get update && $SUDO apt-get install -y git
       ;;
     dnf)
-    dnf)
       $SUDO dnf install -y git
       ;;
-    pacman)
     pacman)
       $SUDO pacman -S --noconfirm git
       ;;
