@@ -247,6 +247,9 @@ if [ -L "$BIN_DIR/gemini-phone" ]; then
   rm "$BIN_DIR/gemini-phone"
 fi
 
+# Ensure executable permissions
+chmod +x "$INSTALL_DIR/cli/bin/gemini-phone.js"
+
 if [ "$OS" = "Linux" ]; then
   ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
   echo "✓ Installed to: $BIN_DIR/gemini-phone"
