@@ -6,6 +6,9 @@ set -e
 
 
 main() {
+  # Ensure we are in a safe directory (HOME) to avoid CWD deletion errors
+  cd "$HOME" || exit 1
+
   INSTALL_DIR="$HOME/.gemini-phone-cli"
   REPO_URL="https://github.com/jayis1/networkschucks-phone-but-for-gemini.git"
 
