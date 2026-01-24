@@ -43,9 +43,10 @@ The installer performs the following steps:
 1. **System Checks**: Verifies Node.js 18+, Docker, and git are installed (and offers to install them).
 2. **Cloning**: Clones the repository to `~/.gemini-phone-cli`.
 3. **Dependencies**: Installs local CLI dependencies.
-4. **Command Creation**: Sets up the `gemini-phone` command locally.
-   - **Linux**: Creates a symlink at `~/.local/bin/gemini-phone`. If needed, it adds `export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc`.
-   - **macOS**: Creates a symlink at `/usr/local/bin/gemini-phone` (may require password for sudo).
+4. **Command Setup**: Makes the `gemini-phone` command easy to use.
+   - **Linux**: Automatically creates a shortcut so you can run the program. It places this shortcut in `~/.local/bin` and updates your `~/.bashrc` file.
+     *What this means for you:* You don't need to configure anything. Just open a new terminal window after installing, and you can type `gemini-phone` to get started.
+   - **macOS**: Installs the command to `/usr/local/bin` (may require password for sudo).
 
 ### 2. Setup
 
