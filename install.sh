@@ -222,10 +222,6 @@ if ! command -v npm &> /dev/null; then
     echo "  npm is required for the CLI dependencies."
     exit 1
   fi
-  else
-    echo "  npm is required for the CLI dependencies."
-    exit 1
-  fi
 else
   echo "✓ npm $(npm -v)"
 fi
