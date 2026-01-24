@@ -172,40 +172,21 @@ echo ""
 
 # Check git
 if ! command -v git &> /dev/null; then
-  echo "✗ Git not found"
-  read -p "  Install git automatically? (Y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    install_git
-  else
-    exit 1
-  fi
+  echo "✗ Git not found, installing..."
+  install_git
 else
   echo "✓ Git installed"
 fi
 
 # Check Node.js
 if ! command -v node &> /dev/null; then
-  echo "✗ Node.js not found"
-  read -p "  Install Node.js automatically? (Y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    install_nodejs
-  else
-    echo "  Install manually from: https://nodejs.org/"
-    exit 1
-  fi
+  echo "✗ Node.js not found, installing..."
+  install_nodejs
 else
   NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
   if [ "$NODE_VERSION" -lt 18 ]; then
-    echo "✗ Node.js 18+ required (found v$NODE_VERSION)"
-    read -p "  Upgrade Node.js automatically? (Y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-      install_nodejs
-    else
-      exit 1
-    fi
+    echo "✗ Node.js 18+ required (found v$NODE_VERSION), upgrading..."
+    install_nodejs
   else
     echo "✓ Node.js $(node -v)"
   fi
@@ -213,30 +194,16 @@ fi
 
 # Check npm (sometimes separate from nodejs on Linux)
 if ! command -v npm &> /dev/null; then
-  echo "✗ npm not found (but Node.js is installed)"
-  read -p "  Install npm automatically? (Y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    install_npm
-  else
-    echo "  npm is required for the CLI dependencies."
-    exit 1
-  fi
+  echo "✗ npm not found (but Node.js is installed), installing..."
+  install_npm
 else
   echo "✓ npm $(npm -v)"
 fi
 
 # Check Docker
 if ! command -v docker &> /dev/null; then
-  echo "✗ Docker not found"
-  read -p "  Install Docker automatically? (Y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    install_docker
-  else
-    echo "  Install from: https://docs.docker.com/engine/install/"
-    exit 1
-  fi
+  echo "✗ Docker not found, installing..."
+  install_docker
 else
   echo "✓ Docker installed"
 fi
@@ -257,10 +224,22 @@ if [ "$OS" = "Linux" ]; then
   fi
 fi
 
-# Check Gemini CLI (optional - only needed for API server)
+# Check Gemini CLI
 if ! command -v gemini &> /dev/null; then
-  echo "⚠️  Gemini CLI not found (needed for API server only)"
-  echo "  Install from: https://geminicli.com/docs/get-started/installation/"
+  echo "⚠️  Gemini CLI not found, installing via npm..."
+  if [ -w "$(npm root -g)" ]; then
+    npm install -g @google/gemini-cli
+  else
+    $SUDO npm install -g @google/gemini-cli
+  fi
+  
+  # Verify installation
+  if command -v gemini &> /dev/null; then
+    echo "✓ Gemini CLI installed: $(gemini --version)"
+  else
+    echo "✗ Failed to install Gemini CLI automatically"
+    echo "  Please install manually: npm install -g @google/gemini-cli"
+  fi
 else
   echo "✓ Gemini CLI installed"
 fi
