@@ -184,8 +184,41 @@ else
       exit 1
     fi
   else
+  else
     echo "✓ Node.js $(node -v)"
   fi
+fi
+
+# Check npm (sometimes separate from nodejs on Linux)
+if ! command -v npm &> /dev/null; then
+  echo "✗ npm not found (but Node.js is installed)"
+  read -p "  Install npm automatically? (Y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    echo "📦 Installing npm..."
+    case "$PKG_MANAGER" in
+      apt)
+        $SUDO apt-get install -y npm
+        ;;
+      dnf)
+        $SUDO dnf install -y npm
+        ;;
+      pacman)
+        $SUDO pacman -S --noconfirm npm
+        ;;
+      *)
+        echo "✗ Cannot auto-install npm on this system"
+        echo "  Install manually: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
+        exit 1
+        ;;
+    esac
+    echo "✓ npm installed: $(npm -v)"
+  else
+    echo "  npm is required for the CLI dependencies."
+    exit 1
+  fi
+else
+  echo "✓ npm $(npm -v)"
 fi
 
 # Check Docker
