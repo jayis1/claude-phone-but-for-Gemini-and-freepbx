@@ -244,7 +244,25 @@ if [ "$OS" = "Linux" ]; then
   if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     echo ""
     echo "⚠️  Adding $HOME/.local/bin to PATH..."
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    
+    # Detect shell and update appropriate config
+    USER_SHELL=$(basename "$SHELL")
+    case "$USER_SHELL" in
+      fish)
+        mkdir -p ~/.config/fish
+        echo 'set -Ua fish_user_paths "$HOME/.local/bin"' >> ~/.config/fish/config.fish
+        echo "✓ Updated ~/.config/fish/config.fish"
+        ;;
+      zsh)
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+        echo "✓ Updated ~/.zshrc"
+        ;;
+      *)
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+        echo "✓ Updated ~/.bashrc"
+        ;;
+    esac
+    
     export PATH="$HOME/.local/bin:$PATH"
   fi
 else
