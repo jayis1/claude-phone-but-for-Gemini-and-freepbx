@@ -81,6 +81,29 @@ install_nodejs() {
   echo "✓ Node.js installed: $(node -v)"
 }
 
+# Function to install npm (for systems where it's separate)
+install_npm() {
+  echo ""
+  echo "📦 Installing npm..."
+  case "$PKG_MANAGER" in
+    apt)
+      $SUDO apt-get install -y npm
+      ;;
+    dnf)
+      $SUDO dnf install -y npm
+      ;;
+    pacman)
+      $SUDO pacman -S --noconfirm npm
+      ;;
+    *)
+      echo "✗ Cannot auto-install npm on this system"
+      echo "  Install manually: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
+      exit 1
+      ;;
+  esac
+  echo "✓ npm installed: $(npm -v)"
+}
+
 # Function to install Docker
 install_docker() {
   echo ""
@@ -195,24 +218,12 @@ if ! command -v npm &> /dev/null; then
   read -p "  Install npm automatically? (Y/n) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    echo "📦 Installing npm..."
-    case "$PKG_MANAGER" in
-      apt)
-        $SUDO apt-get install -y npm
-        ;;
-      dnf)
-        $SUDO dnf install -y npm
-        ;;
-      pacman)
-        $SUDO pacman -S --noconfirm npm
-        ;;
-      *)
-        echo "✗ Cannot auto-install npm on this system"
-        echo "  Install manually: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm"
-        exit 1
-        ;;
-    esac
-    echo "✓ npm installed: $(npm -v)"
+  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    install_npm
+  else
+    echo "  npm is required for the CLI dependencies."
+    exit 1
+  fi
   else
     echo "  npm is required for the CLI dependencies."
     exit 1
@@ -276,6 +287,13 @@ fi
 echo ""
 echo "Installing dependencies..."
 cd "$INSTALL_DIR/cli"
+
+# Final check for npm before running it
+if ! command -v npm &> /dev/null; then
+  echo "⚠️  npm missing (required for dependencies)"
+  install_npm
+fi
+
 npm install --silent --production
 
 # Create symlink
