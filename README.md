@@ -242,6 +242,20 @@ The installer assumes Gemini CLI is managed separately. If `gemini-phone doctor`
    gemini --version
    ```
 
+### Alternative: Run via Docker
+
+For security and isolation, you can run the Gemini CLI directly from a docker container:
+
+```bash
+docker run --rm -it us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.1
+```
+
+If you have the CLI installed locally, you can also force sandbox mode:
+
+```bash
+gemini --sandbox -y -p "your prompt here"
+```
+
 See [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for more.
 
 ## Configuration
