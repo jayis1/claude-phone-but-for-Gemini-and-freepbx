@@ -35,7 +35,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/theNetworkChuck/claude-phone/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/install.sh | bash
 ```
 
 The installer will:
