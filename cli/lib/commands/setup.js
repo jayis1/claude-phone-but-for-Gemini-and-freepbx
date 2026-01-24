@@ -1239,3 +1239,81 @@ async function setupOutbound(config) {
 
   return config;
 }
+
+/**
+ * Load .env file from current working directory
+ * @returns {object|null} Key-value pairs or null if no file
+ */
+function loadLocalEnv() {
+  const envPath = path.join(process.cwd(), '.env');
+  if (!fs.existsSync(envPath)) return null;
+
+  try {
+    const content = fs.readFileSync(envPath, 'utf8');
+    const env = {};
+    content.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+        const [key, ...parts] = trimmed.split('=');
+        const value = parts.join('=');
+        // Remove quotes if present
+        env[key.trim()] = value.trim().replace(/^['"](.*)['"]$/, '$1');
+      }
+    });
+    return env;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Merge loaded env vars into config object
+ * @param {object} config - Base config
+ * @param {object} env - Env vars
+ * @returns {object} Updated config
+ */
+function mergeEnvWithConfig(config, env) {
+  // Deep clone to avoid mutations
+  const newConfig = JSON.parse(JSON.stringify(config));
+
+  // Network
+  if (env.EXTERNAL_IP) newConfig.server.externalIp = env.EXTERNAL_IP;
+  if (env.HTTP_PORT) newConfig.server.httpPort = parseInt(env.HTTP_PORT, 10);
+  if (env.GEMINI_API_URL) {
+    try {
+      const url = new URL(env.GEMINI_API_URL);
+      // If port is specified in URL, use it
+      if (url.port) newConfig.server.geminiApiPort = parseInt(url.port, 10);
+    } catch (e) { }
+  }
+
+  // SIP
+  if (env.SIP_DOMAIN) newConfig.sip.domain = env.SIP_DOMAIN;
+  if (env.SIP_REGISTRAR) newConfig.sip.registrar = env.SIP_REGISTRAR;
+
+  // Devices (Primary)
+  if (!newConfig.devices.length) {
+    newConfig.devices.push({});
+  }
+  if (env.SIP_EXTENSION) newConfig.devices[0].extension = env.SIP_EXTENSION;
+  if (env.SIP_AUTH_ID) newConfig.devices[0].authId = env.SIP_AUTH_ID;
+  if (env.SIP_PASSWORD) newConfig.devices[0].password = env.SIP_PASSWORD;
+  if (env.ELEVENLABS_VOICE_ID) newConfig.devices[0].voiceId = env.ELEVENLABS_VOICE_ID;
+
+  // API Keys
+  if (env.ELEVENLABS_API_KEY) {
+    newConfig.api.elevenlabs.apiKey = env.ELEVENLABS_API_KEY;
+  }
+  if (env.OPENAI_API_KEY) {
+    newConfig.api.openai.apiKey = env.OPENAI_API_KEY;
+  }
+
+  // Outbound Settings
+  if (env.DEFAULT_CALLER_ID) newConfig.outbound.callerId = env.DEFAULT_CALLER_ID;
+  if (env.MAX_CONVERSATION_TURNS) newConfig.outbound.maxTurns = parseInt(env.MAX_CONVERSATION_TURNS, 10);
+  if (env.OUTBOUND_RING_TIMEOUT) newConfig.outbound.ringTimeout = parseInt(env.OUTBOUND_RING_TIMEOUT, 10);
+
+  // Mark as pre-filled for logic checks
+  newConfig._fromEnv = true;
+  return newConfig;
+}
