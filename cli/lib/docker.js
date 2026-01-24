@@ -270,7 +270,7 @@ export async function startContainers() {
   }
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-f', dockerComposePath, 'up', '-d'];
+  const composeArgs = [...compose.args, '-f', dockerComposePath, 'up', '-d', '--build'];
 
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
