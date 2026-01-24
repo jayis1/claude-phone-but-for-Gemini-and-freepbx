@@ -6,10 +6,14 @@ set -e
 
 
 main() {
+  # Capture where we started, so we can find .env files
+  START_DIR="$(pwd)"
+
   # Ensure we are in a safe directory (HOME) to avoid CWD deletion errors
   cd "$HOME" || exit 1
 
   INSTALL_DIR="$HOME/.gemini-phone-cli"
+
   REPO_URL="https://github.com/jayis1/networkschucks-phone-but-for-gemini.git"
 
   echo "🎯 Gemini Phone CLI Installer"
@@ -337,9 +341,16 @@ main() {
 
   # Setup Gemini API Key
   
-  # Check if GEMINI_API_KEY is defined in .env
-  if [ -f ".env" ]; then
-    ENV_KEY=$(grep "^GEMINI_API_KEY=" .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+  # Check if GEMINI_API_KEY is defined in .env (in start dir or home)
+  ENV_FILE=""
+  if [ -f "$START_DIR/.env" ]; then
+    ENV_FILE="$START_DIR/.env"
+  elif [ -f "$HOME/.env" ]; then
+    ENV_FILE="$HOME/.env"
+  fi
+
+  if [ -n "$ENV_FILE" ]; then
+    ENV_KEY=$(grep "^GEMINI_API_KEY=" "$ENV_FILE" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
     if [ -n "$ENV_KEY" ]; then
       echo "✓ Found GEMINI_API_KEY in .env"
       GEMINI_KEY="$ENV_KEY"
