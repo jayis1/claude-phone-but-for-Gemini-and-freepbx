@@ -204,6 +204,16 @@ gemini-phone logs      # View logs
 | "Sorry, something went wrong" | API server unreachable | Check `gemini-phone status` |
 | Port conflict on startup | 3CX SBC using port 5060 | Setup auto-detects this; re-run setup |
 
+### Manual Node.js Installation
+If the installer fails to install Node.js automatically (common on some restricted Debian/Ubuntu systems), run:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
+```
+
+Then run the installer again.
+
 See [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for more.
 
 ## Configuration
