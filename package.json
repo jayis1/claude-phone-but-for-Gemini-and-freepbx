@@ -1,0 +1,26 @@
+{
+  "name": "gemini-phone",
+  "version": "1.0.0",
+  "description": "Voice interface for Gemini Code via SIP/3CX",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:cli && npm run test:voice-app",
+    "test:cli": "cd cli && npm test",
+    "test:voice-app": "cd voice-app && node --test test/**/*.test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:voice-app": "eslint voice-app/",
+    "lint:api-server": "eslint gemini-api-server/",
+    "precommit": "npm run lint",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "husky": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "MadLab",
+  "license": "MIT"
+}
