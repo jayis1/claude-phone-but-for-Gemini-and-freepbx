@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.16
+            MISSION CONTROL v2.1.17
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -1666,3 +1666,5 @@ app.post('/api/config/provider', (req, res) => {
       addLog('WARN', 'MISSION-CONTROL', 'Falling back to HTTP due to certificate error');
     });
   }
+
+}
