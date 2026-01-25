@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.29
+            MISSION CONTROL v2.1.30
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -382,6 +382,15 @@ app.get('/', (req, res) => {
                   <span style="font-size: 0.8rem">0.5x</span>
                   <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
                   <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="stat-label">Music Volume</div>
+                <div class="slider-container">
+                  <span style="font-size: 0.8rem">0%</span>
+                  <input type="range" id="music-volume" min="0" max="100" step="5" value="50" onchange="updateMusicVolume(this.value)">
+                  <span id="music-volume-val" style="font-family: monospace; width: 40px">50%</span>
                 </div>
               </div>
 
@@ -610,6 +619,19 @@ app.get('/', (req, res) => {
                 body: JSON.stringify({ speed: parseFloat(val) })
               });
             } catch(e) { console.error('Music speed update failed:', e); }
+          }
+
+          async function updateMusicVolume(val) {
+            document.getElementById('music-volume-val').innerText = val + '%';
+            try {
+              // Send to Inference Server (or Voice App if it handles mixing)
+              // Currently Inference Brain handles YT DJ via yt-dlp, so we send there
+              await fetch('/api/proxy/inference/music-volume', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ volume: parseInt(val) })
+              });
+            } catch(e) { console.error('Music volume update failed:', e); }
           }
 
           // Inference Brain
