@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.1.3/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.0.0/install.sh | bash
 
 
 main() {

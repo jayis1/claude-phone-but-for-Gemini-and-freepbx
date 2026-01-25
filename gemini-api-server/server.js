@@ -612,10 +612,77 @@ app.delete('/session/:callId', (req, res) => {
  * Health check endpoint
  */
 app.get('/health', (req, res) => {
+  res.json({ success: true, status: 'healthy' });
+});
+
+/**
+ * GET /ping
+ * Simple ping endpoint
+ */
+app.get('/ping', (req, res) => {
+  res.json({ success: true, message: 'pong', timestamp: new Date().toISOString() });
+});
+
+/**
+ * GET /joke
+ * Returns a random programming joke
+ */
+app.get('/joke', (req, res) => {
+  const jokes = [
+    "Why do programmers prefer dark mode? Because light attracts bugs!",
+    "How many programmers does it take to change a light bulb? None, that's a hardware problem.",
+    "Why do Java developers wear glasses? Because they don't C#.",
+    "What's a programmer's favorite hangout place? Foo Bar.",
+    "Why did the programmer quit his job? Because he didn't get arrays.",
+    "How do you comfort a JavaScript bug? You console it.",
+    "Why do programmers always mix up Halloween and Christmas? Because Oct 31 == Dec 25.",
+    "What do you call a programmer from Finland? Nerdic.",
+    "Why did the developer go broke? Because he used up all his cache.",
+    "What's the object-oriented way to become wealthy? Inheritance."
+  ];
+  const joke = jokes[Math.floor(Math.random() * jokes.length)];
+  res.json({ success: true, joke });
+});
+
+/**
+ * GET /fortune
+ * Returns a random fortune cookie message
+ */
+app.get('/fortune', (req, res) => {
+  const fortunes = [
+    "Your code will compile on the first try today.",
+    "A bug you've been hunting will reveal itself soon.",
+    "Your next pull request will be approved without comments.",
+    "The production deployment will go smoothly.",
+    "You will find the perfect Stack Overflow answer.",
+    "Your tests will all pass on the first run.",
+    "A senior developer will praise your code.",
+    "Your feature will ship ahead of schedule.",
+    "The legacy code you're refactoring will make sense.",
+    "Your documentation will be read and appreciated."
+  ];
+  const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+  res.json({ success: true, fortune });
+});
+
+/**
+ * GET /system-info
+ * Returns system information
+ */
+app.get('/system-info', (req, res) => {
+  const os = require('os');
   res.json({
-    status: 'ok',
-    service: 'gemini-api-server',
-    timestamp: new Date().toISOString()
+    success: true,
+    system: {
+      platform: os.platform(),
+      arch: os.arch(),
+      cpus: os.cpus().length,
+      totalMemory: (os.totalmem() / 1024 / 1024 / 1024).toFixed(2) + ' GB',
+      freeMemory: (os.freemem() / 1024 / 1024 / 1024).toFixed(2) + ' GB',
+      uptime: (os.uptime() / 3600).toFixed(2) + ' hours',
+      hostname: os.hostname(),
+      nodeVersion: process.version
+    }
   });
 });
 
@@ -741,34 +808,51 @@ app.get('/', (req, res) => {
               font-family: monospace;
               width: 100%;
             }
+            .interactive-section {
+              margin-bottom: 2rem;
+              padding: 1.5rem;
+              background: rgba(139, 92, 246, 0.05);
+              border-radius: 12px;
+              border: 1px solid rgba(139, 92, 246, 0.2);
+            }
+            .button-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 0.75rem;
+              margin-bottom: 1rem;
+            }
+            .api-button {
+              background: linear-gradient(135deg, #8b5cf6, #6366f1);
+              color: white;
+              border: none;
+              padding: 0.75rem 1rem;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              font-size: 0.875rem;
+            }
+            .api-button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            }
+            .api-button:active {
+              transform: translateY(0);
+            }
+            .result-box {
+              min-height: 60px;
+              background: rgba(0, 0, 0, 0.3);
+              border-radius: 8px;
+              padding: 1rem;
+              color: #f8fafc;
+              font-size: 0.9rem;
+              line-height: 1.6;
+            }
         </style>
-        <script>
-          document.addEventListener('DOMContentLoaded', () => {
-            const select = document.getElementById('model-select');
-            select.addEventListener('change', async (e) => {
-              const model = e.target.value;
-              try {
-                const res = await fetch('/config', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ model })
-                });
-                const data = await res.json();
-                if (data.success) {
-                  alert('Model updated to ' + model);
-                } else {
-                  alert('Failed to update: ' + data.error);
-                }
-              } catch (err) {
-                alert('Error updating model: ' + err.message);
-              }
-            });
-          });
-        </script>
       </head>
       <body>
         <div class="card">
-          <h1>Gemini API</h1>
+          <h1>⚡ Gemini API</h1>
           <div class="status-badge">System Operational</div>
           
           <div class="info-grid">
@@ -786,25 +870,89 @@ app.get('/', (req, res) => {
             </div>
           </div>
 
+          <div class="interactive-section">
+            <div class="info-label" style="margin-bottom:1rem; text-align:center">🎮 Try the API</div>
+            <div class="button-grid">
+              <button class="api-button" onclick="testEndpoint('/ping')">Ping</button>
+              <button class="api-button" onclick="testEndpoint('/joke')">Get Joke</button>
+              <button class="api-button" onclick="testEndpoint('/fortune')">Fortune</button>
+              <button class="api-button" onclick="testEndpoint('/system-info')">System Info</button>
+            </div>
+            <div id="result" class="result-box"></div>
+          </div>
+
           <div class="endpoints">
+            <div class="info-label" style="margin-bottom:0.5rem">Endpoints</div>
             <div>POST /ask</div>
             <div>POST /ask-structured</div>
-            <div>POST /call</div>
             <div>POST /end-session</div>
+            <div>POST /call</div>
             <div>POST /config</div>
             <div>GET /sessions</div>
             <div>DELETE /session/:callId</div>
             <div>GET /health</div>
-            <div>POST /config</div>
-            <div>GET /sessions</div>
-            <div>DELETE /session/:callId</div>
-            <div>GET /health</div>
+            <div>GET /ping</div>
+            <div>GET /joke</div>
+            <div>GET /fortune</div>
+            <div>GET /system-info</div>
           </div>
 
           <div class="footer">
             Server Time: ${new Date().toLocaleTimeString()}
           </div>
         </div>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            var select = document.getElementById('model-select');
+            select.addEventListener('change', async function(e) {
+              var model = e.target.value;
+              try {
+                var res = await fetch('/config', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ model: model })
+                });
+                var data = await res.json();
+                if (data.success) {
+                  alert('Model updated to ' + model);
+                } else {
+                  alert('Failed to update: ' + data.error);
+                }
+              } catch (err) {
+                alert('Error updating model: ' + err.message);
+              }
+            });
+          });
+
+          async function testEndpoint(endpoint) {
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div style=\"color: #94a3b8;\">Loading...</div>';
+            
+            try {
+              var res = await fetch(endpoint);
+              var data = await res.json();
+              
+              var content = '';
+              if (data.joke) {
+                content = '<div style=\"color: #10b981; font-weight: 600;\">😄 ' + data.joke + '</div>';
+              } else if (data.fortune) {
+                content = '<div style=\"color: #8b5cf6; font-weight: 600;\">🔮 ' + data.fortune + '</div>';
+              } else if (data.system) {
+                content = '<div style=\"text-align: left; font-size: 0.85rem;\">';
+                for (var key in data.system) {
+                  content += '<div><span style=\"color: #94a3b8;\">' + key + ':</span> <span style=\"color: #f8fafc;\">' + data.system[key] + '</span></div>';
+                }
+                content += '</div>';
+              } else {
+                content = '<pre style=\"text-align: left; margin: 0;\">' + JSON.stringify(data, null, 2) + '</pre>';
+              }
+              
+              resultDiv.innerHTML = content;
+            } catch (err) {
+              resultDiv.innerHTML = '<div style=\"color: #ef4444;\">Error: ' + err.message + '</div>';
+            }
+          }
+        </script>
       </body>
     </html>
   `);
