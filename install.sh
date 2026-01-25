@@ -340,6 +340,12 @@ main() {
   cd "$INSTALL_DIR/inference-server"
   npm install --silent --production
 
+  # Install Mission Control dependencies
+  echo ""
+  echo "Installing Mission Control dependencies..."
+  cd "$INSTALL_DIR/mission-control"
+  npm install --silent --production
+
   # Create symlink
   echo ""
   if [ -L "$BIN_DIR/gemini-phone" ]; then
