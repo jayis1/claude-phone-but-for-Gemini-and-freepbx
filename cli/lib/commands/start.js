@@ -398,6 +398,7 @@ async function startBoth(config, isPiMode) {
     const inferencePort = config.server.inferencePort || 4000;
     console.log(chalk.gray(`  • Voice App:         http://127.0.0.1:${voiceAppPort} (Voice Controls)`));
     console.log(chalk.gray(`  • Inference Brain:   http://127.0.0.1:${inferencePort} (AI Reasoning)`));
+    console.log(chalk.gray(`  • Mission Control:   http://127.0.0.1:3030 (Dashboard)`));
     console.log(chalk.gray(`  • API Server:        http://127.0.0.1:${config.server.geminiApiPort} (Tool Execution)`));
     console.log();
   }
