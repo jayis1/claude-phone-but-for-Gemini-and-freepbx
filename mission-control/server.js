@@ -340,8 +340,8 @@ app.get('/', (req, res) => {
             <span class="status-dot"></span>
             MISSION CONTROL v2.1.44
             <div style="display:flex; gap:10px; margin-left: 20px;">
-              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; align-items: center; gap: 5px;">
-                <span>🔄</span> Check Updates
+              <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+                <span>🔄</span> System Update
               </button>
               <a href="/htop" style="text-decoration: none;">
                 <button style="padding: 4px 8px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -351,7 +351,11 @@ app.get('/', (req, res) => {
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
-            <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px;">FreePBX / SIP</span>
+            <a href="/setup-freepbx" style="text-decoration:none;">
+              <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#8b5cf6'; this.style.color='#fff'" onmouseout="this.style.borderColor='#3f3f46'; this.style.color='var(--text-dim)'">
+                FreePBX / SIP
+              </span>
+            </a>
           </div>
           <div class="service-status">
             <span>Services:</span>
@@ -1527,6 +1531,130 @@ app.get('/setup', (req, res) => {
           </body>
         </html>
         `);
+});
+
+
+// ============================================
+// FreePBX AI Setup Page
+// ============================================
+app.get('/setup-freepbx', (req, res) => {
+  const env = parseEnv();
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Initialize Telephony Subsystem</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+          :root {--bg: #000000; --panel: #111111; --text: #00ff00; --dim: #008800; --accent: #00cc00; --input-bg: #0a0a0a; }
+          body {font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; min-height: 100vh; }
+          .container {background: var(--panel); padding: 2rem; border: 1px solid var(--dim); border-radius: 4px; width: 100%; max-width: 600px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); }
+          
+          h1 {margin-bottom: 2rem; font-size: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;}
+          .typing-effect { overflow: hidden; white-space: nowrap; animation: typing 3s steps(40, end); border-right: 2px solid var(--accent); }
+          @keyframes typing { from { width: 0 } to { width: 100% } }
+          
+          .terminal-text { color: var(--dim); font-size: 0.85rem; margin-bottom: 2rem; line-height: 1.6; }
+          .highlight { color: #fff; font-weight: bold; }
+          
+          .form-group {margin-bottom: 1.5rem; position: relative; }
+          label {display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+          input {width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--dim); color: #fff; font-family: inherit; font-size: 1rem; transition: all 0.2s; }
+          input:focus {outline: none; border-color: var(--text); box-shadow: 0 0 10px rgba(0, 255, 0, 0.2); }
+          
+          .actions {margin-top: 3rem; display: flex; gap: 15px; }
+          .btn {flex: 1; padding: 15px; border: 1px solid var(--accent); background: transparent; color: var(--text); font-family: inherit; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
+          .btn:hover {background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
+          .btn-cancel { border-color: #555; color: #777; }
+          .btn-cancel:hover { border-color: #777; color: #fff; background: #222; box-shadow: none; }
+          
+          .blink { animation: blinker 1s linear infinite; }
+          @keyframes blinker { 50% { opacity: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>
+            <span>> INITIALIZING TELEPHONY PROTOCOL...</span>
+            <span class="typing-effect" style="font-size: 0.9em; color: var(--dim); border:none;">> LOADING AI_MASKING_SEQUENCE.EXE</span>
+          </h1>
+          
+          <div class="terminal-text">
+            <p>> <span class="highlight">OBJECTIVE:</span> Establish SIP trunk connection to global voice network.</p>
+            <p>> <span class="highlight">STATUS:</span> AI Core online. Pretending to be a standard telephone endpoint.</p>
+            <p>> <span class="highlight">INSTRUCTION:</span> Enter FreePBX credentials below. Audio subsystems will mimic human voice patterns upon successful handshake.</p>
+          </div>
+
+          <form id="configForm" onsubmit="saveConfig(event)">
+            <input type="hidden" name="SIP_PROVIDER" value="freepbx">
+            
+            <div class="form-group">
+              <label>>> TARGET_DOMAIN [IP/FQDN]</label>
+              <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="192.168.x.x" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label>>> IDENTITY_EXTENSION</label>
+              <input type="text" name="SIP_EXTENSION" value="${env.SIP_EXTENSION || ''}" required placeholder="EXT-001">
+            </div>
+
+            <div class="form-group">
+              <label>>> ACCESS_SECRET_KEY</label>
+              <input type="password" name="SIP_PASSWORD" value="${env.SIP_PASSWORD || ''}" required placeholder="********">
+            </div>
+            
+            <div class="form-group">
+              <label>>> REGISTRAR_OVERRIDE [OPTIONAL]</label>
+              <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="LEAVE EMPTY FOR DEFAULT">
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn btn-cancel" onclick="window.location='/'">ABORT_SEQUENCE</button>
+              <button type="submit" class="btn">>> INITIATE_CONNECTION <span class="blink">_</span></button>
+            </div>
+          </form>
+        </div>
+
+        <script>
+          async function saveConfig(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Auto-fill auth ID same as extension for FreePBX usually
+            data.SIP_AUTH_ID = data.SIP_EXTENSION;
+            if(!data.SIP_REGISTRAR) data.SIP_REGISTRAR = data.SIP_DOMAIN;
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '>> NEGOTIATING_HANDSHAKE...';
+            btn.disabled = true;
+
+            try {
+              await fetch('/api/config/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              });
+              
+              btn.innerHTML = '>> CONNECTION_ESTABLISHED';
+              btn.style.background = '#00ff00';
+              btn.style.color = 'black';
+              
+              setTimeout(() => {
+                window.location = '/';
+              }, 1500);
+            } catch(err) {
+              alert('CRITICAL FAILURE: ' + err.message);
+              btn.innerHTML = '>> RETRY_CONNECTION';
+              btn.disabled = false;
+            }
+          }
+        </script>
+      </body>
+    </html>
+  `);
 });
 
 
