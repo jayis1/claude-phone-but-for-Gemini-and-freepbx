@@ -181,6 +181,10 @@ function initializeServers() {
   httpServer = createHttpServer(config.audio_dir, config.http_port);
   console.log("[" + new Date().toISOString() + "] HTTP Server started on port " + config.http_port);
 
+  // Add configuration routes for voice/speed settings
+  httpServer.addConfigRoutes(deviceRegistry);
+  console.log("[" + new Date().toISOString() + "] Voice configuration API enabled");
+
   // WebSocket server for audio fork
   audioForkServer = new AudioForkServer({ port: config.ws_port });
   audioForkServer.start();

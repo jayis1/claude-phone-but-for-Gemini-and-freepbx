@@ -368,10 +368,12 @@ async function startBoth(config, isPiMode) {
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
-    console.log(chalk.gray(`  • Gemini API server: http://localhost:${config.server.geminiApiPort}`));
-    console.log(chalk.gray(`  • Inference Server:  http://localhost:4000 (Brain)`));
+    console.log(chalk.gray(`  • Voice App:         http://localhost:${config.server.httpPort} (Voice Controls)`));
+    console.log(chalk.gray(`  • Inference Brain:   http://localhost:4000 (AI Reasoning)`));
+    console.log(chalk.gray(`  • API Server:        http://localhost:${config.server.geminiApiPort} (Tool Execution)`));
+    console.log(chalk.gray(`  • Mission Control:   http://localhost:8080 (Unified Dashboard)`));
   }
-  console.log(chalk.gray(`  • Voice app API: http://localhost:${config.server.httpPort}\n`));
+  console.log();
   console.log(chalk.gray('Ready to receive calls on:'));
   for (const device of config.devices) {
     console.log(chalk.gray(`  • ${device.name}: extension ${device.extension}`));

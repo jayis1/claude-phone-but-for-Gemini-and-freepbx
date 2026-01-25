@@ -815,11 +815,16 @@ app.get('/', (req, res) => {
               border-radius: 12px;
               border: 1px solid rgba(139, 92, 246, 0.2);
             }
-            .button-grid {
+            .main-layout {
               display: grid;
-              grid-template-columns: repeat(2, 1fr);
+              grid-template-columns: 200px 1fr;
+              gap: 1.5rem;
+              margin-bottom: 2rem;
+            }
+            .sidebar {
+              display: flex;
+              flex-direction: column;
               gap: 0.75rem;
-              margin-bottom: 1rem;
             }
             .api-button {
               background: linear-gradient(135deg, #8b5cf6, #6366f1);
@@ -831,6 +836,7 @@ app.get('/', (req, res) => {
               cursor: pointer;
               transition: all 0.2s ease;
               font-size: 0.875rem;
+              width: 100%;
             }
             .api-button:hover {
               transform: translateY(-2px);
@@ -847,6 +853,19 @@ app.get('/', (req, res) => {
               color: #f8fafc;
               font-size: 0.9rem;
               line-height: 1.6;
+              margin-top: 1rem;
+            }
+            .endpoints-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 0.5rem;
+            }
+            .endpoint-item {
+              background: rgba(0, 0, 0, 0.2);
+              padding: 0.75rem;
+              border-radius: 6px;
+              font-size: 0.85rem;
+              font-family: monospace;
             }
         </style>
       </head>
@@ -870,32 +889,34 @@ app.get('/', (req, res) => {
             </div>
           </div>
 
-          <div class="interactive-section">
-            <div class="info-label" style="margin-bottom:1rem; text-align:center">🎮 Try the API</div>
-            <div class="button-grid">
+          <div class="main-layout">
+            <div class="sidebar">
               <button class="api-button" onclick="testEndpoint('/ping')">Ping</button>
               <button class="api-button" onclick="testEndpoint('/joke')">Get Joke</button>
               <button class="api-button" onclick="testEndpoint('/fortune')">Fortune</button>
               <button class="api-button" onclick="testEndpoint('/system-info')">System Info</button>
             </div>
-            <div id="result" class="result-box"></div>
+
+            <div>
+              <div class="info-label" style="margin-bottom:0.75rem">Endpoints</div>
+              <div class="endpoints-grid">
+                <div class="endpoint-item">POST /ask</div>
+                <div class="endpoint-item">POST /ask-structured</div>
+                <div class="endpoint-item">POST /end-session</div>
+                <div class="endpoint-item">POST /call</div>
+                <div class="endpoint-item">POST /config</div>
+                <div class="endpoint-item">GET /sessions</div>
+                <div class="endpoint-item">DELETE /session/:id</div>
+                <div class="endpoint-item">GET /health</div>
+                <div class="endpoint-item">GET /ping</div>
+                <div class="endpoint-item">GET /joke</div>
+                <div class="endpoint-item">GET /fortune</div>
+                <div class="endpoint-item">GET /system-info</div>
+              </div>
+            </div>
           </div>
 
-          <div class="endpoints">
-            <div class="info-label" style="margin-bottom:0.5rem">Endpoints</div>
-            <div>POST /ask</div>
-            <div>POST /ask-structured</div>
-            <div>POST /end-session</div>
-            <div>POST /call</div>
-            <div>POST /config</div>
-            <div>GET /sessions</div>
-            <div>DELETE /session/:callId</div>
-            <div>GET /health</div>
-            <div>GET /ping</div>
-            <div>GET /joke</div>
-            <div>GET /fortune</div>
-            <div>GET /system-info</div>
-          </div>
+          <div id="result" class="result-box"></div>
 
           <div class="footer">
             Server Time: ${new Date().toLocaleTimeString()}

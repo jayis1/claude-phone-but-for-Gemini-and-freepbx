@@ -58,21 +58,38 @@ function createHttpServer(audioDir, port = 3000) {
     }
   }));
 
-  // Root route - Status page
+  // Root route - Interactive Dashboard
   app.get('/', (req, res) => {
+    const voices = [
+      { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel' },
+      { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni' },
+      { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli' },
+      { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh' },
+      { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold' },
+      { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam' },
+      { id: 'yoZ06aMxZJJ28mfd3POQ', name: 'Sam' },
+      { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella' },
+      { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' },
+      { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel' }
+    ];
+
+    const voiceOptions = voices.map(v =>
+      `<option value="${v.id}">${v.name}</option>`
+    ).join('');
+
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Gemini Phone</title>
+          <title>Gemini Voice</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <style>
             :root {
               --bg: #0f172a;
               --card: #1e293b;
               --text: #f8fafc;
-              --accent: #8b5cf6;
-              --accent-hover: #7c3aed;
+              --accent: #c084fc;
+              --accent-hover: #a855f7;
               --success: #10b981;
               --border: #334155;
             }
@@ -93,7 +110,7 @@ function createHttpServer(audioDir, port = 3000) {
               border-radius: 16px;
               box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
               border: 1px solid var(--border);
-              max-width: 450px;
+              max-width: 500px;
               width: 90%;
               text-align: center;
             }
@@ -128,6 +145,89 @@ function createHttpServer(audioDir, port = 3000) {
               margin-right: 0.5rem;
               box-shadow: 0 0 8px var(--success);
             }
+            .control-section {
+              margin-bottom: 2rem;
+              padding: 1.5rem;
+              background: rgba(192, 132, 252, 0.05);
+              border-radius: 12px;
+              border: 1px solid rgba(192, 132, 252, 0.2);
+              text-align: left;
+            }
+            .control-label {
+              font-size: 0.75rem;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: #94a3b8;
+              margin-bottom: 0.5rem;
+              display: block;
+            }
+            .voice-select, .device-select {
+              width: 100%;
+              background: #334155;
+              color: white;
+              border: 1px solid #475569;
+              padding: 0.5rem;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              margin-bottom: 1rem;
+            }
+            .slider-container {
+              margin-bottom: 1.5rem;
+            }
+            .slider {
+              width: 100%;
+              height: 8px;
+              border-radius: 4px;
+              background: #334155;
+              outline: none;
+              -webkit-appearance: none;
+            }
+            .slider::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              appearance: none;
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #c084fc, #6366f1);
+              cursor: pointer;
+              box-shadow: 0 2px 8px rgba(192, 132, 252, 0.4);
+            }
+            .slider::-moz-range-thumb {
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #c084fc, #6366f1);
+              cursor: pointer;
+              border: none;
+              box-shadow: 0 2px 8px rgba(192, 132, 252, 0.4);
+            }
+            .slider-value {
+              display: flex;
+              justify-content: space-between;
+              font-size: 0.85rem;
+              color: #cbd5e1;
+              margin-top: 0.5rem;
+            }
+            .btn {
+              background: linear-gradient(135deg, #c084fc, #6366f1);
+              color: white;
+              border: none;
+              padding: 0.75rem 1.5rem;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              font-size: 0.9rem;
+              width: 100%;
+              margin-top: 0.5rem;
+            }
+            .btn:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(192, 132, 252, 0.4);
+            }
+            .btn:active {
+              transform: translateY(0);
+            }
             .info-grid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);
@@ -158,11 +258,66 @@ function createHttpServer(audioDir, port = 3000) {
               border-top: 1px solid var(--border);
               padding-top: 1rem;
             }
+            .result-message {
+              padding: 0.75rem;
+              border-radius: 8px;
+              margin-top: 1rem;
+              font-size: 0.85rem;
+              display: none;
+            }
+            .result-message.success {
+              background: rgba(16, 185, 129, 0.1);
+              color: #10b981;
+              border: 1px solid rgba(16, 185, 129, 0.2);
+            }
+            .result-message.error {
+              background: rgba(239, 68, 68, 0.1);
+              color: #ef4444;
+              border: 1px solid rgba(239, 68, 68, 0.2);
+            }
+            .endpoints-section {
+              background: rgba(192, 132, 252, 0.05);
+              border: 1px solid rgba(192, 132, 252, 0.2);
+              border-radius: 12px;
+              padding: 1.5rem;
+              margin-bottom: 2rem;
+            }
+            .endpoints-header {
+              font-size: 0.75rem;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: #94a3b8;
+              margin-bottom: 1rem;
+            }
+            .endpoint-item {
+              background: rgba(0, 0, 0, 0.2);
+              padding: 0.75rem;
+              border-radius: 6px;
+              margin-bottom: 0.5rem;
+              font-size: 0.85rem;
+              font-family: monospace;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .endpoint-method {
+              color: #10b981;
+              font-weight: 600;
+              margin-right: 0.5rem;
+            }
+            .endpoint-path {
+              color: #c084fc;
+            }
+            .endpoint-desc {
+              color: #94a3b8;
+              font-size: 0.75rem;
+              font-family: sans-serif;
+            }
           </style>
         </head>
         <body>
           <div class="card">
-            <h1>Gemini Voice</h1>
+            <h1>🎙️ Gemini Voice</h1>
             <div class="status-badge">System Operational</div>
             
             <div class="info-grid">
@@ -171,8 +326,72 @@ function createHttpServer(audioDir, port = 3000) {
                 <div class="info-value">${port}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Audio Dir</div>
-                <div class="info-value">/app/audio</div>
+                <div class="info-label">Status</div>
+                <div class="info-value">Ready</div>
+              </div>
+            </div>
+
+            <div class="control-section">
+              <label class="control-label">Device</label>
+              <select id="device-select" class="device-select">
+                <option value="">Select Device...</option>
+              </select>
+
+              <label class="control-label">Voice</label>
+              <select id="voice-select" class="voice-select">
+                ${voiceOptions}
+              </select>
+
+              <div class="slider-container">
+                <label class="control-label">Speech Speed</label>
+                <input type="range" id="speed-slider" class="slider" min="0.5" max="2.0" step="0.1" value="1.0">
+                <div class="slider-value">
+                  <span>0.5x</span>
+                  <span id="speed-value">1.0x</span>
+                  <span>2.0x</span>
+                </div>
+              </div>
+
+              <button class="btn" onclick="saveSettings()">Save Settings</button>
+              <div id="result-message" class="result-message"></div>
+            </div>
+
+            <div class="endpoints-section">
+              <div class="endpoints-header">API Endpoints</div>
+              <div class="endpoint-item">
+                <div>
+                  <span class="endpoint-method">POST</span>
+                  <span class="endpoint-path">/api/config/voice</span>
+                </div>
+                <div class="endpoint-desc">Update voice</div>
+              </div>
+              <div class="endpoint-item">
+                <div>
+                  <span class="endpoint-method">POST</span>
+                  <span class="endpoint-path">/api/config/speed</span>
+                </div>
+                <div class="endpoint-desc">Update speed</div>
+              </div>
+              <div class="endpoint-item">
+                <div>
+                  <span class="endpoint-method">GET</span>
+                  <span class="endpoint-path">/api/devices</span>
+                </div>
+                <div class="endpoint-desc">List devices</div>
+              </div>
+              <div class="endpoint-item">
+                <div>
+                  <span class="endpoint-method">GET</span>
+                  <span class="endpoint-path">/api/config</span>
+                </div>
+                <div class="endpoint-desc">Get config</div>
+              </div>
+              <div class="endpoint-item">
+                <div>
+                  <span class="endpoint-method">GET</span>
+                  <span class="endpoint-path">/health</span>
+                </div>
+                <div class="endpoint-desc">Health check</div>
               </div>
             </div>
 
@@ -180,6 +399,105 @@ function createHttpServer(audioDir, port = 3000) {
               Server Time: ${new Date().toLocaleTimeString()}
             </div>
           </div>
+          <script>
+            var currentDevice = '';
+            var deviceConfigs = {};
+
+            // Load devices on page load
+            async function loadDevices() {
+              try {
+                var res = await fetch('/api/devices');
+                var data = await res.json();
+                var select = document.getElementById('device-select');
+                
+                if (data.devices && data.devices.length > 0) {
+                  data.devices.forEach(function(device) {
+                    var option = document.createElement('option');
+                    option.value = device.extension;
+                    option.textContent = device.name + ' (ext ' + device.extension + ')';
+                    select.appendChild(option);
+                    deviceConfigs[device.extension] = device;
+                  });
+                  
+                  // Select first device by default
+                  select.value = data.devices[0].extension;
+                  loadDeviceSettings(data.devices[0].extension);
+                }
+              } catch (err) {
+                console.error('Failed to load devices:', err);
+              }
+            }
+
+            // Load settings for selected device
+            function loadDeviceSettings(extension) {
+              currentDevice = extension;
+              var config = deviceConfigs[extension];
+              if (config) {
+                document.getElementById('voice-select').value = config.voiceId || '21m00Tcm4TlvDq8ikWAM';
+                document.getElementById('speed-slider').value = config.speed || 1.0;
+                updateSpeedValue();
+              }
+            }
+
+            // Update speed value display
+            function updateSpeedValue() {
+              var slider = document.getElementById('speed-slider');
+              document.getElementById('speed-value').textContent = slider.value + 'x';
+            }
+
+            // Save settings
+            async function saveSettings() {
+              var device = document.getElementById('device-select').value;
+              var voice = document.getElementById('voice-select').value;
+              var speed = parseFloat(document.getElementById('speed-slider').value);
+              var resultDiv = document.getElementById('result-message');
+
+              if (!device) {
+                showMessage('Please select a device', 'error');
+                return;
+              }
+
+              try {
+                // Save voice
+                await fetch('/api/config/voice', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ device: device, voiceId: voice })
+                });
+
+                // Save speed
+                await fetch('/api/config/speed', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ device: device, speed: speed })
+                });
+
+                showMessage('Settings saved successfully!', 'success');
+              } catch (err) {
+                showMessage('Failed to save settings: ' + err.message, 'error');
+              }
+            }
+
+            function showMessage(text, type) {
+              var div = document.getElementById('result-message');
+              div.textContent = text;
+              div.className = 'result-message ' + type;
+              div.style.display = 'block';
+              setTimeout(function() {
+                div.style.display = 'none';
+              }, 3000);
+            }
+
+            // Event listeners
+            document.getElementById('device-select').addEventListener('change', function(e) {
+              loadDeviceSettings(e.target.value);
+            });
+
+            document.getElementById('speed-slider').addEventListener('input', updateSpeedValue);
+
+            // Load devices on page load
+            loadDevices();
+          </script>
         </body>
       </html>
     `);
@@ -194,6 +512,119 @@ function createHttpServer(audioDir, port = 3000) {
       port
     });
   });
+
+  // Configuration API endpoints (will be populated by addConfigRoutes)
+  let deviceRegistry = null;
+
+  /**
+   * Add configuration routes
+   * Call this after device registry is available
+   */
+  function addConfigRoutes(registry) {
+    deviceRegistry = registry;
+
+    // Get all devices
+    app.get('/api/devices', (req, res) => {
+      try {
+        const devices = deviceRegistry ? deviceRegistry.getAll() : [];
+        res.json({ success: true, devices });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    // Get current configuration
+    app.get('/api/config', (req, res) => {
+      try {
+        const device = req.query.device;
+        if (!device || !deviceRegistry) {
+          return res.status(400).json({ success: false, error: 'Device parameter required' });
+        }
+
+        const config = deviceRegistry.get(device);
+        if (!config) {
+          return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        res.json({
+          success: true,
+          config: {
+            voiceId: config.voiceId,
+            speed: config.speed || 1.0
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    // Update voice configuration
+    app.post('/api/config/voice', (req, res) => {
+      try {
+        const { device, voiceId } = req.body;
+
+        if (!device || !voiceId) {
+          return res.status(400).json({ success: false, error: 'Device and voiceId required' });
+        }
+
+        if (!deviceRegistry) {
+          return res.status(500).json({ success: false, error: 'Device registry not available' });
+        }
+
+        const config = deviceRegistry.get(device);
+        if (!config) {
+          return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        // Update voice ID
+        config.voiceId = voiceId;
+        deviceRegistry.update(device, config);
+
+        debug(`Updated voice for device ${device} to ${voiceId}`);
+        res.json({ success: true, voiceId });
+      } catch (error) {
+        console.error('Error updating voice:', error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    // Update speed configuration
+    app.post('/api/config/speed', (req, res) => {
+      try {
+        const { device, speed } = req.body;
+
+        if (!device || speed === undefined) {
+          return res.status(400).json({ success: false, error: 'Device and speed required' });
+        }
+
+        if (speed < 0.5 || speed > 2.0) {
+          return res.status(400).json({ success: false, error: 'Speed must be between 0.5 and 2.0' });
+        }
+
+        if (!deviceRegistry) {
+          return res.status(500).json({ success: false, error: 'Device registry not available' });
+        }
+
+        const config = deviceRegistry.get(device);
+        if (!config) {
+          return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        // Update speed
+        config.speed = speed;
+        deviceRegistry.update(device, config);
+
+        debug(`Updated speed for device ${device} to ${speed}x`);
+        res.json({ success: true, speed });
+      } catch (error) {
+        console.error('Error updating speed:', error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    debug('Configuration routes added');
+  }
+
 
   // Audio upload endpoint
   app.post("/audio", async (req, res) => {
@@ -321,7 +752,8 @@ function createHttpServer(audioDir, port = 3000) {
     saveAudio,
     getAudioUrl,
     close: () => server.close(),
-    finalize
+    finalize,
+    addConfigRoutes
   };
 }
 

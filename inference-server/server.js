@@ -315,30 +315,6 @@ app.get('/', (req, res) => {
               font-weight: 600;
               font-family: monospace;
             }
-            .meter-container {
-              margin-top: 1.5rem;
-              text-align: left;
-            }
-            .meter-label {
-              font-size: 0.75rem;
-              color: #94a3b8;
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 4px;
-            }
-            .meter-bg {
-              height: 8px;
-              background: #334155;
-              border-radius: 4px;
-              overflow: hidden;
-              margin-bottom: 1rem;
-            }
-            .meter-fill {
-              height: 100%;
-              background: linear-gradient(to right, #ec4899, #8b5cf6);
-              width: 0%;
-              transition: width 0.5s ease;
-            }
             .endpoints {
               text-align: left;
               background: rgba(0,0,0,0.2);
@@ -348,7 +324,9 @@ app.get('/', (req, res) => {
               font-size: 0.85rem;
               color: #cbd5e1;
             }
-            .endpoints div { margin-bottom: 0.25rem; }
+            .endpoints > div {
+              padding: 0.25rem 0;
+            }
             .model-select {
               background: #334155;
               color: white;
@@ -358,27 +336,15 @@ app.get('/', (req, res) => {
               font-family: monospace;
               width: 100%;
             }
+            .footer {
+              font-size: 0.875rem;
+              color: #64748b;
+              border-top: 1px solid var(--border);
+              padding-top: 1rem;
+            }
         </style>
         <script>
-          async function updateStats() {
-            try {
-              const res = await fetch('/stats');
-              const data = await res.json();
-              
-              document.getElementById('cpu-val').innerText = data.cpu + '%';
-              document.getElementById('cpu-fill').style.width = data.cpu + '%';
-              
-              document.getElementById('gpu-val').innerText = data.gpu + '%';
-              document.getElementById('gpu-fill').style.width = data.gpu + '%';
-              
-              document.getElementById('session-count').innerText = data.sessions + ' active';
-            } catch (e) {}
-          }
-
           document.addEventListener('DOMContentLoaded', () => {
-            setInterval(updateStats, 2000);
-            updateStats();
-
             const select = document.getElementById('model-select');
             select.addEventListener('change', async (e) => {
               const model = e.target.value;
@@ -419,30 +385,17 @@ app.get('/', (req, res) => {
             </div>
           </div>
 
-          <div class="meter-container">
-            <div class="meter-label">
-              <span>CPU USAGE</span>
-              <span id="cpu-val">0%</span>
-            </div>
-            <div class="meter-bg">
-              <div id="cpu-fill" class="meter-fill" style="width: 0%"></div>
-            </div>
-
-            <div class="meter-label">
-              <span>GPU USAGE</span>
-              <span id="gpu-val">0%</span>
-            </div>
-            <div class="meter-bg">
-              <div id="gpu-fill" class="meter-fill" style="width: 0%"></div>
-            </div>
-          </div>
-
           <div class="endpoints">
             <div class="info-label" style="margin-bottom:0.5rem">Endpoints</div>
             <div>POST /ask</div>
-            <div>GET /stats</div>
+            <div>POST /end-session</div>
             <div>POST /config</div>
+            <div>GET /stats</div>
             <div>GET /sessions <span id="session-count" style="float:right; opacity:0.5">${sessions.size} active</span></div>
+          </div>
+
+          <div class="footer">
+            Server Time: ${new Date().toLocaleTimeString()}
           </div>
         </div>
       </body>

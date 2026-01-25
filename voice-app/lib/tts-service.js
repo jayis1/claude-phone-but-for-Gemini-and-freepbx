@@ -49,9 +49,10 @@ function generateFilename(text) {
  * Convert text to speech using ElevenLabs API
  * @param {string} text - Text to convert to speech
  * @param {string} voiceId - ElevenLabs voice ID (optional)
+ * @param {number} speed - Speech speed multiplier 0.5-2.0 (optional, default 1.0)
  * @returns {Promise<string>} HTTP URL to audio file
  */
-async function generateSpeech(text, voiceId = DEFAULT_VOICE_ID) {
+async function generateSpeech(text, voiceId = DEFAULT_VOICE_ID, speed = 1.0) {
   const startTime = Date.now();
 
   try {
@@ -59,10 +60,14 @@ async function generateSpeech(text, voiceId = DEFAULT_VOICE_ID) {
       throw new Error('ELEVENLABS_API_KEY environment variable not set');
     }
 
+    // Clamp speed to valid range
+    const clampedSpeed = Math.max(0.5, Math.min(2.0, speed));
+
     logger.info('Generating speech with ElevenLabs', {
       textLength: text.length,
       voiceId,
-      model: MODEL_ID
+      model: MODEL_ID,
+      speed: clampedSpeed
     });
 
     // Call ElevenLabs API
@@ -81,7 +86,8 @@ async function generateSpeech(text, voiceId = DEFAULT_VOICE_ID) {
           stability: 0.5,
           similarity_boost: 0.75,
           style: 0.0,
-          use_speaker_boost: true
+          use_speaker_boost: true,
+          speed: clampedSpeed  // Apply speed setting
         }
       },
       responseType: 'arraybuffer'
