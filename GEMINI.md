@@ -155,7 +155,7 @@ gemini-phone/
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.2/install.sh | bash
 
 # Setup and run
 gemini-phone setup    # Interactive configuration
