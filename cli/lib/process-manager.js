@@ -107,7 +107,9 @@ export async function startServer(serverPath, port, pidPath = null) {
  * @param {string} executionServerUrl - URL of execution server
  * @returns {Promise<number>} Process PID
  */
-export async function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333', pidFilename = 'inference.pid', scriptName = 'server.js') {
+// function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333', pidFilename = 'inference.pid', scriptName = 'server.js') {
+// We update the signature to:
+export async function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333', pidFilename = 'inference.pid', scriptName = 'server.js', extraEnv = {}) {
   const pidPath = path.join(getConfigDir(), pidFilename);
 
   // Check if already running
@@ -125,7 +127,8 @@ export async function startInferenceServer(serverPath, port = 4000, executionSer
       env: {
         ...process.env,
         PORT: port,
-        EXECUTION_SERVER_URL: executionServerUrl
+        EXECUTION_SERVER_URL: executionServerUrl,
+        ...extraEnv
       }
     });
 

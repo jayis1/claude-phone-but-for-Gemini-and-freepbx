@@ -364,7 +364,14 @@ async function startBoth(config, isPiMode) {
       spinner.start('Starting Mission Control Dashboard...');
       try {
         const missionControlPort = config.server.missionControlPort || 3030;
-        await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid');
+        const voiceAppPort = config.server.voiceAppPort || 3434;
+        const inferencePort = config.server.inferencePort || 4000;
+
+        await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid', 'server.js', {
+          VOICE_APP_URL: `http://localhost:${voiceAppPort}`,
+          INFERENCE_URL: `http://localhost:${inferencePort}`,
+          API_SERVER_URL: `http://localhost:${config.server.geminiApiPort}`
+        });
         spinner.succeed(`Mission Control Dashboard started on port ${missionControlPort}`);
       } catch (error) {
         if (error.message.includes('already running')) {
