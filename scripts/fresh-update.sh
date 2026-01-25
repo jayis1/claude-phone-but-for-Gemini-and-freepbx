@@ -39,10 +39,5 @@ else
   echo "[UPDATE] Gemini CLI found."
 fi
 
-# 4. Re-link CLI (optional but good practice)
-echo "[UPDATE] Re-linking CLI..."
-cd cli
-npm link --force
-cd ..
-
+# 4. Success message
 echo "[UPDATE] Update Complete! Please restart services."
