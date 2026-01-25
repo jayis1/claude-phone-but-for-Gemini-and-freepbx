@@ -126,7 +126,6 @@ export async function startInferenceServer(serverPath, port = 4000, executionSer
         ...process.env,
         PORT: port,
         EXECUTION_SERVER_URL: executionServerUrl
-        // GEMINI_API_KEY should be in process.env already from CLI start
       }
     });
 

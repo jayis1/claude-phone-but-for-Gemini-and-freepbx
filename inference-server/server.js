@@ -3,7 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 app.use(express.json());
@@ -14,15 +18,11 @@ const EXECUTION_SERVER_URL = process.env.EXECUTION_SERVER_URL || 'http://localho
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
-    console.error("❌ GEMINI_API_KEY is missing via .env");
+    console.error("❌ GEMINI_API_KEY is missing via .env or process.env");
     process.exit(1);
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    systemInstruction: "You are a helpful AI assistant connected to a phone system. You can answer questions and perform actions using the available tools. Keep your responses concise (under 40 words) as they will be spoken out loud."
-});
 
 // Session Storage: callId -> ChatSession
 const sessions = new Map();
@@ -48,18 +48,30 @@ const tools = [
     }
 ];
 
-const modelWithTools = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    tools: tools,
-    systemInstruction: "You are a helpful AI assistant connected to a phone system. You can answer questions and perform actions using the available tools. Keep your responses concise (under 40 words) as they will be spoken out loud."
-});
+// Mutable Model State
+let currentModelName = "gemini-1.5-flash";
+let modelWithTools;
+
+// Initialize Model
+function initModel(modelName) {
+    console.log(`[Inference] Initializing model: ${modelName}`);
+    currentModelName = modelName;
+    modelWithTools = genAI.getGenerativeModel({
+        model: modelName,
+        tools: tools,
+        systemInstruction: "You are a helpful AI assistant connected to a phone system. You can answer questions and perform actions using the available tools. Keep your responses concise (under 40 words) as they will be spoken out loud."
+    });
+}
+
+// Initial boot
+initModel(currentModelName);
 
 app.post('/ask', async (req, res) => {
     const { prompt, callId, devicePrompt } = req.body;
 
     if (!prompt) return res.status(400).json({ error: "Missing prompt" });
 
-    console.log(`[Inference] Query: "${prompt}" (CallID: ${callId || 'none'})`);
+    // console.log(`[Inference] Query: "${prompt}" (CallID: ${callId || 'none'})`);
 
     try {
         let chatSession;
@@ -79,10 +91,6 @@ app.post('/ask', async (req, res) => {
         let response = result.response;
 
         // 3. Handle Tool Calls Loop
-        // We loop because a tool call might trigger *another* tool call, or text.
-        // However, for simplicity here, we'll handle one turn of function calling.
-        // The Google SDK usually handles the "function_call" part, but we need to execute it.
-
         const functionCalls = response.functionCalls();
 
         if (functionCalls && functionCalls.length > 0) {
@@ -150,9 +158,9 @@ app.post('/config', (req, res) => {
     const { model } = req.body;
     if (model) {
         console.log(`[Inference] Switching model to ${model}`);
-        // TODO: Implement dynamic model switching if required
+        initModel(model);
     }
-    res.json({ success: true, model: model || "gemini-1.5-flash" });
+    res.json({ success: true, model: currentModelName });
 });
 
 /**
@@ -345,6 +353,6 @@ app.get('/', (req, res) => {
     res.send(html);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🧠 Inference Server running on port ${PORT}`);
 });
