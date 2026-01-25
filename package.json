@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone",
-  "version": "2.1.43",
+  "version": "2.2.0",
   "description": "Voice interface for Gemini Code via SIP/3CX",
   "private": true,
   "scripts": {
