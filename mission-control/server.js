@@ -341,11 +341,11 @@ app.get('/', (req, res) => {
             MISSION CONTROL v2.1.44
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-                <span>🔄</span> System Update
+                <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
               </button>
               <a href="/htop" style="text-decoration: none;">
                 <button style="padding: 4px 8px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-                  <span>📊</span> Page 2
+                  <span>📊</span> htop
                 </button>
               </a>
             </div>
@@ -1043,23 +1043,30 @@ app.get('/', (req, res) => {
           setInterval(updateLogs, 2000);
 
           // Update Checker (Silent Background)
+          // Auto-Check Updates on Load to Populate Button
           async function silentUpdateCheck() {
-            const btn = document.getElementById('update-btn');
-            try {
-              const res = await fetch('/api/update/check');
-              const data = await res.json();
-
-              if (data.updateAvailable) {
-                btn.style.display = 'flex';
-                btn.innerText = '🚀 Update v' + data.remoteVersion;
-                btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
-              } else {
-                btn.style.display = 'none';
-              }
-            } catch (e) {
-              console.error('Update check failed:', e);
-            }
+             const btnVer = document.getElementById('update-ver');
+             if(!btnVer) return; // Should not happen now as button is always visible
+             try {
+               const res = await fetch('/api/update/check');
+               const data = await res.json();
+               if(data.success && data.remoteVersion) {
+                 if(data.updateAvailable) {
+                   btnVer.innerText = 'v' + data.remoteVersion;
+                   document.getElementById('update-btn').style.background = '#10b981'; // Green for update available
+                 } else {
+                   btnVer.innerText = 'v' + data.localVersion;
+                 }
+                 btnVer.style.opacity = '1';
+               } else {
+                 btnVer.innerText = '?';
+               }
+             } catch(e) {
+               btnVer.innerText = 'Error';
+             }
           }
+          
+          silentUpdateCheck(); // Run immediately on load
 
           // Modal Helper Function
           function showModal(title, message, showConfirm, onConfirm) {
