@@ -23,7 +23,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 
 ## Architecture
 
-Gemini Phone v2.1.9 uses a 3-tier architecture:
+Gemini Phone v2.1.11 uses a 3-tier architecture:
 
 ```text
 ┌─────────────────────────────────────────────┐
@@ -71,7 +71,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.9/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.11/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -93,8 +93,9 @@ The interactive setup wizard helps you:
 2. **Configure PBX**: Connect to **3CX** or **FreePBX**.
 3. **API Keys**: Enter your ElevenLabs and OpenAI keys.
 
-## New in v2.1.9
+## New in v2.1.11
 
+- **UI Polish**: Custom Yes/No update dialogs (No more browser alerts).
 - **Fixed**: Mission Control now correctly connects to Voice App (Red Dot Fix).
 - **Fixed**: Auto-Update button logic.
 - **Auto-Update**: One-click update from Mission Control dashboard.

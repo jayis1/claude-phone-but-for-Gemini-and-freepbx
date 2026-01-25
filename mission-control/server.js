@@ -294,32 +294,35 @@ app.get('/', (req, res) => {
             transition: width 0.5s ease;
           }
 
-          /* Logs */
-          .log-container {
-            flex: 1;
-            background: #000;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            padding: 0.75rem;
-            overflow-y: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
+          /* Modal Styles */
+          .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
           }
-          .log-entry {
-            margin-bottom: 4px;
-            line-height: 1.4;
-            display: flex;
-            gap: 8px;
+          .modal {
+            background: var(--panel); border: 1px solid var(--border);
+            padding: 2rem; border-radius: 12px; max-width: 450px; width: 90%;
+            text-align: center; color: var(--text);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            transform: translateY(0);
+            transition: transform 0.2s;
           }
-          .log-time { color: var(--text-dim); }
-          .log-service { color: var(--accent); }
+          .modal h3 { margin-bottom: 0.5rem; color: #fff; font-size: 1.25rem; }
+          .modal p { margin-bottom: 1.5rem; color: var(--text-dim); line-height: 1.5; }
+          .modal-buttons { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+          .btn-primary { background: var(--accent); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: filter 0.2s; }
+          .btn-primary:hover { filter: brightness(1.1); }
+          .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
+          .btn-secondary:hover { background: rgba(255,255,255,0.05); }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.9
+            MISSION CONTROL v2.1.11
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
