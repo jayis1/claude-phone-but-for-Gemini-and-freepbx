@@ -1132,9 +1132,16 @@ app.get('/api/htop', async (req, res) => {
   const execPromise = util.promisify(exec);
 
   try {
-    // top -b is universally supported on Linux for batch output
-    // We get the first section for cpu/mem and the top processes
-    const cmd = 'top -b -n 1 | head -n 50';
+    // Try htop -n 1 (snapshot mode) for better visuals
+    // Fallback to top -b if htop fails or is missing
+    let cmd = 'export TERM=xterm-256color && htop -n 1 | head -n 50';
+    try {
+      const { execSync } = require('child_process');
+      execSync('command -v htop');
+    } catch (e) {
+      cmd = 'top -b -n 1 | head -n 50';
+    }
+
     const { stdout } = await execPromise(cmd);
     res.json({ success: true, output: stdout });
   } catch (error) {
