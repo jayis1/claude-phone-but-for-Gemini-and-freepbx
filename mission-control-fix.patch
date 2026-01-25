@@ -1,0 +1,36 @@
+--- a/mission-control/server.js
++++ b/mission-control/server.js
+@@ -685,6 +685,20 @@
+              } catch(e) {}
+           }
+ 
++          // 3CX PBX connectivity check
++          async function update3CXStatus() {
++            try {
++              const res = await fetch('/api/proxy/voice/health');
++              if(res.ok) {
++                document.getElementById('dot-3cx').className = 'service-dot online';
++              } else {
++                throw new Error('Voice App unhealthy');
++              }
++            } catch(e) {
++              document.getElementById('dot-3cx').className = 'service-dot offline';
++            }
++          }
++
+           // Docker container health check
+           async function updateDockerStatus() {
+             try {
+@@ -692,10 +706,12 @@
+               const data = await res.json();
+               
+               if(data.success) {
+                 document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
+                 document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
++                console.log('Docker health OK:', data);
+               }
+             } catch(e) {
++              console.error('Docker health failed:', e);
+               document.getElementById('dot-drachtio').className = 'service-dot offline';
+               document.getElementById('dot-freeswitch').className = 'service-dot offline';
+             }

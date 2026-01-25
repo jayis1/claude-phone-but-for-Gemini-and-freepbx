@@ -1,0 +1,48 @@
+--- a/mission-control/server.js
++++ b/mission-control/server.js
+@@ -356,10 +356,48 @@
+                 </div>
+               </div>
+ 
++              <!-- TTS Voice Selector -->
++              <div class="control-group" style="margin-bottom: 1rem;">
++                <div class="stat-label">TTS Voice</div>
++                <select id="tts-voice" onchange="changeTTSVoice(this.value)" style="width: 100%; padding: 0.5rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px;">
++                  <option value="21m00Tcm4TlvDq8ikWAM">Rachel</option>
++                  <option value="ErXwobaYiN019PkySvjV">Antoni</option>
++                  <option value="MF3mGyEYCl7XYWbV9V6O">Elli</option>
++                  <option value="TxGEqnHWrfWFTfGW9XjX">Josh</option>
++                  <option value="VR6AewLTigWG4xSOukaG">Arnold</option>
++                  <option value="pNInz6obpgDQGcFmaJgB">Adam</option>
++                  <option value="yoZ06aMxZJJ28mfd3POQ">Sam</option>
++                  <option value="EXAVITQu4vr4xnSDxMaL">Bella</option>
++                  <option value="IKne3meq5aSn9XLyUdCD">Charlie</option>
++                  <option value="onwK4e9ZLuTAKqWW03F9">Daniel</option>
++                </select>
++              </div>
++
++              <!-- Active Calls List -->
++              <div style="margin-bottom: 1rem;">
++                <div class="stat-label">Active Calls</div>
++                <div id="active-calls-list" style="max-height: 150px; overflow-y: auto; background: #000; border-radius: 6px; padding: 0.5rem; font-size: 0.75rem; font-family: monospace;">
++                  <div style="color: var(--text-dim)">No active calls</div>
++                </div>
++              </div>
++
++              <!-- Quick Outbound Call -->
++              <div>
++                <div class="stat-label">Quick Call</div>
++                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
++                  <input type="text" id="quick-call-number" placeholder="+1234567890" style="flex: 1; padding: 0.5rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px;">
++                  <button onclick="quickCall()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer;">Call</button>
++                </div>
++                <div id="call-result" style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim);"></div>
++              </div>
++
+               <div style="margin-top: 1rem;">
+                 <div class="stat-label">CLI Access</div>
+-                <div style="font-size: 0.8rem; color: var(--success);">✓ Enabled (Gemini Bridge)</div>
++                <div style="font-size: 0.8rem; color: var(--success);">✓ Gemini Bridge + Outbound + Query API</div>
+               </div>
+             </div>
+           </div>

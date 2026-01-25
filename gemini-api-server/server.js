@@ -28,6 +28,23 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3333;
 
+// Log storage
+const logs = [];
+const MAX_LOGS = 100;
+
+function addLog(level, message, meta = {}) {
+  const timestamp = new Date().toISOString();
+  logs.unshift({ timestamp, level, message, service: 'GEMINI-API', meta });
+  if (logs.length > MAX_LOGS) logs.pop();
+  process.stdout.write(`[${timestamp}] [${level}] ${message}\n`);
+}
+
+// Override console methods
+const originalLog = console.log;
+const originalError = console.error;
+console.log = (msg, ...args) => { addLog('INFO', msg, args); };
+console.error = (msg, ...args) => { addLog('ERROR', msg, args); };
+
 /**
  * Build the full environment that Gemini CLI expects
  * This mimics what happens when you run `gemini` in a terminal
@@ -605,6 +622,14 @@ app.delete('/session/:callId', (req, res) => {
   const { callId } = req.params;
   const deleted = sessions.delete(callId);
   res.json({ success: true, deleted });
+});
+
+/**
+ * GET /logs
+ * Expose system logs
+ */
+app.get('/logs', (req, res) => {
+  res.json({ success: true, logs });
 });
 
 /**

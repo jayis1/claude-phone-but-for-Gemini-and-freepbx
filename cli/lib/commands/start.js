@@ -351,9 +351,8 @@ async function startBoth(config, isPiMode) {
       spinner.start('Starting Mission Control Dashboard...');
       try {
         const missionControlPort = config.server.missionControlPort || 3030;
-        // Dockerized Voice App usually runs on port 3000 (standard httpPort in config)
-        // NOT 3434, which was the old local port
-        const voiceAppPort = config.server.httpPort || 3000;
+        // Voice App container listens on 3434 (HTTP_PORT env var)
+        const voiceAppPort = 3434;
         const inferencePort = config.server.inferencePort || 4000;
 
         await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid', 'server.js', {

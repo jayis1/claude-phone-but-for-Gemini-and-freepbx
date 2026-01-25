@@ -1,0 +1,22 @@
+nohup: ignoring input
+
+> inference-server@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (0) from ../.env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[2026-01-25T09:12:02.399Z] [INFO] 🧠 Inference Server (Proxy Mode) running on port 4000 
+file:///home/jais/codings/networkschucks-phone-but-for-gemini/inference-server/server.js:35
+  const https = require('https');
+                ^
+
+ReferenceError: require is not defined
+    at addLog (file:///home/jais/codings/networkschucks-phone-but-for-gemini/inference-server/server.js:35:17)
+    at console.log (file:///home/jais/codings/networkschucks-phone-but-for-gemini/inference-server/server.js:56:35)
+    at Server.<anonymous> (file:///home/jais/codings/networkschucks-phone-but-for-gemini/inference-server/server.js:248:11)
+    at Server.f (/home/jais/codings/networkschucks-phone-but-for-gemini/inference-server/node_modules/once/once.js:25:25)
+    at Object.onceWrapper (node:events:622:28)
+    at Server.emit (node:events:520:35)
+    at emitListeningNT (node:net:1983:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:88:21)
+
+Node.js v25.3.0

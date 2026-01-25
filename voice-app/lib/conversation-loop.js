@@ -345,11 +345,13 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
       const thinkingUrl = await ttsService.generateSpeech(thinkingPhrase, voiceId);
       if (callActive) await endpoint.play(thinkingUrl);
 
-      // 2. Start hold music in background
+      // 2. Start hold music in background (Non-blocking)
       let musicPlaying = false;
       if (callActive) {
+        logger.info('Starting hold music', { callUuid, url: HOLD_MUSIC_URL });
+        // Play without await so it runs in background
         endpoint.play(HOLD_MUSIC_URL).catch(e => {
-          logger.warn('Hold music failed', { callUuid, error: e.message });
+          logger.warn('Hold music failed to start', { callUuid, error: e.message });
         });
         musicPlaying = true;
       }
@@ -361,12 +363,15 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
         { callId: callUuid, devicePrompt: devicePrompt }
       );
 
-      // 4. Stop hold music
+      // 4. Stop hold music immediately
       if (musicPlaying && callActive) {
         try {
+          logger.info('Stopping hold music', { callUuid });
           await endpoint.api('uuid_break', endpoint.uuid);
+          // Small delay to ensure break command processes
+          await new Promise(r => setTimeout(r, 100));
         } catch (e) {
-          // Ignore - music may have already stopped
+          logger.warn('Failed to stop hold music', { callUuid, error: e.message });
         }
       }
 

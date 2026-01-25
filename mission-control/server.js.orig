@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3030;
 // Voice App: 3000 (Docker mapping)
 // Brain: 4000
 // API: 3333
-const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://127.0.0.1:3434';
+const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://127.0.0.1:3000';
 const INFERENCE_URL = process.env.INFERENCE_URL || process.env.INFERENCE_BRAIN_URL || 'http://127.0.0.1:4000';
 const API_SERVER_URL = process.env.API_SERVER_URL || 'http://127.0.0.1:3333';
 
@@ -310,7 +310,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.1
+            MISSION CONTROL v2.1
           </div>
           <div class="service-status">
             <span>Services:</span>
@@ -355,39 +355,9 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
-              <!-- Gemini CLI Terminal -->
-              <div style="margin-bottom: 1rem;">
-                <div class="stat-label">Gemini CLI</div>
-                
-                <!-- Terminal Output -->
-                <div id="gemini-terminal" style="background: #000; border-radius: 6px 6px 0 0; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; height: 200px; overflow-y: auto; border: 1px solid var(--border);">
-                  <div style="color: var(--success);">$ gemini --help</div>
-                  <div style="color: var(--text-dim); font-size: 0.7rem; margin-bottom: 0.5rem;">Type a command and press Enter</div>
-                </div>
-                
-                <!-- Terminal Input -->
-                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
-                  <span style="padding: 0.5rem; color: var(--success); font-family: monospace;">$</span>
-                  <input 
-                    type="text" 
-                    id="gemini-cli-input" 
-                    placeholder="--help" 
-                    onkeypress="if(event.key==='Enter') executeGeminiCommand()"
-                    style="flex: 1; background: transparent; border: none; color: var(--text); font-family: monospace; font-size: 0.85rem; outline: none; padding: 0.5rem 0.5rem 0.5rem 0;">
-                  <button onclick="executeGeminiCommand()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Run</button>
-                </div>
-              </div>
-
               <div style="margin-top: 1rem;">
-                <div class="stat-label">CLI Access & APIs</div>
-                <div style="font-size: 0.75rem; line-height: 1.6;">
-                  <div style="color: var(--success);">✓ Gemini Bridge (Conversation)</div>
-                  <div style="color: var(--success);">✓ Outbound Calling API</div>
-                  <div style="color: var(--success);">✓ Query API (Programmatic)</div>
-                  <div style="color: var(--success);">✓ TTS/STT Services</div>
-                  <div style="color: var(--success);">✓ Device Management</div>
-                  <div style="color: var(--success);">✓ Multi-Extension Support</div>
-                </div>
+                <div class="stat-label">CLI Access</div>
+                <div style="font-size: 0.8rem; color: var(--success);">✓ Enabled (Gemini Bridge)</div>
               </div>
             </div>
           </div>
@@ -443,14 +413,18 @@ app.get('/', (req, res) => {
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">Connection</div>
-                  <div class="stat-value">HTTPS/REST</div>
+                  <div class="stat-value">HTTP/REST</div>
                 </div>
               </div>
 
               <div class="btn-grid">
                 <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
+                <button class="btn" onclick="apiAction('docker-check')">🐳 Docker</button>
+                <button class="btn" onclick="apiAction('git-status')">🐙 Git</button>
                 <button class="btn" onclick="apiAction('list-files')">📂 Files</button>
                 <button class="btn" onclick="apiAction('weather')">☀️ Weather</button>
+                <button class="btn" onclick="apiAction('network')">🖧 Network</button>
+                <button class="btn" onclick="apiAction('disk')">💾 Disk</button>
                 <button class="btn" onclick="apiAction('ports')">🔌 Ports</button>
                 <button class="btn" onclick="apiAction('uptime')">⏱️ Uptime</button>
                 <button class="btn" onclick="apiAction('joke')">😄 Joke</button>
@@ -683,161 +657,63 @@ app.get('/', (req, res) => {
             try {
                const res = await fetch('/api/logs');
                const data = await res.json();
-                              // 1. Shared System Logs (All)
-                const html = data.logs.slice(0, 50).map(l => 
-                  \`<div class="log-entry">
-    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-    <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${(l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN')}]</span>
-    <span>\${l.message}</span>
-  </div>\`
-                ).join('');
-                document.getElementById('sys-logs').innerHTML = html;
+               
+               // 1. Shared System Logs (All)
+               const html = data.logs.slice(0, 50).map(l => 
+                 \`<div class="log-entry">
+                    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
+                    <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${(l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN')}]</span>
+                    <span>\${l.message}</span>
+                  </div>\`
+               ).join('');
+               document.getElementById('sys-logs').innerHTML = html;
 
-                // 2. Inference Brain Logs (Filtered)
-                const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
-                const brainHtml = brainLogs.slice(0, 20).map(l => 
-                  \`<div class="log-entry">
-    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-    <span style="color: #ec4899;">\${l.message}</span>
-  </div>\`
-                ).join('');
-                
-                const brainLogEl = document.getElementById('brain-log');
-                if (brainLogEl) {
-                  brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
-                }
+               // 2. Inference Brain Logs (Filtered)
+               const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
+               const brainHtml = brainLogs.slice(0, 20).map(l => 
+                 \`<div class="log-entry">
+                    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
+                    <span style="color: #ec4899;">\${l.message}</span>
+                  </div>\`
+               ).join('');
+               
+               const brainLogEl = document.getElementById('brain-log');
+               if(brainLogEl) {
+                 brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
+               }
 
-             } catch (e) { }
+            } catch(e) {}
           }
 
-          // Gemini CLI Terminal
-let commandHistory = [];
-let historyIndex = -1;
+          // Docker container health check
+          async function updateDockerStatus() {
+            try {
+              const res = await fetch('/api/docker-health');
+              const data = await res.json();
+              
+              if(data.success) {
+                document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
+                document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
+              }
+            } catch(e) {
+              document.getElementById('dot-drachtio').className = 'service-dot offline';
+              document.getElementById('dot-freeswitch').className = 'service-dot offline';
+            }
+          }
 
-async function executeGeminiCommand() {
-  const input = document.getElementById('gemini-cli-input');
-  const terminal = document.getElementById('gemini-terminal');
-  const command = input.value.trim();
+          setInterval(update3CXStatus, 5000);
+          setInterval(updateDockerStatus, 5000);
 
-  if (!command) return;
-
-  // Add to history
-  commandHistory.push(command);
-  historyIndex = commandHistory.length;
-
-  // Show command in terminal
-  const cmdDiv = document.createElement('div');
-  cmdDiv.style.color = 'var(--success)';
-  cmdDiv.style.marginTop = '0.5rem';
-            cmdDiv.textContent = \`$ gemini \${command}\`;
-  terminal.appendChild(cmdDiv);
-
-  // Show loading
-  const loadingDiv = document.createElement('div');
-  loadingDiv.style.color = 'var(--warning)';
-  loadingDiv.textContent = 'Executing...';
-  terminal.appendChild(loadingDiv);
-  terminal.scrollTop = terminal.scrollHeight;
-
-  try {
-    const res = await fetch('/api/gemini-cli', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command })
-    });
-
-    const data = await res.json();
-    terminal.removeChild(loadingDiv);
-
-    // Show output
-    const outputDiv = document.createElement('div');
-    outputDiv.style.color = data.success ? 'var(--text)' : 'var(--error)';
-    outputDiv.style.whiteSpace = 'pre-wrap';
-    outputDiv.textContent = data.output;
-    terminal.appendChild(outputDiv);
-
-  } catch (error) {
-    terminal.removeChild(loadingDiv);
-    const errorDiv = document.createElement('div');
-    errorDiv.style.color = 'var(--error)';
-    errorDiv.textContent = \`Error: \${error.message}\`;
-    terminal.appendChild(errorDiv);
-  }
-
-  terminal.scrollTop = terminal.scrollHeight;
-  input.value = '';
-}
-
-// Command history navigation
-setTimeout(() => {
-  const input = document.getElementById('gemini-cli-input');
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (historyIndex > 0) {
-          historyIndex--;
-          e.target.value = commandHistory[historyIndex];
-        }
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (historyIndex < commandHistory.length - 1) {
-          historyIndex++;
-          e.target.value = commandHistory[historyIndex];
-        } else {
-          historyIndex = commandHistory.length;
-          e.target.value = '';
-        }
-      }
-    });
-  }
-}, 100);
-
-// 3CX PBX connectivity check
-async function update3CXStatus() {
-  try {
-    const res = await fetch('/api/proxy/voice/health');
-    if (res.ok) {
-      document.getElementById('dot-3cx').className = 'service-dot online';
-    } else {
-      throw new Error('Voice App unhealthy');
-    }
-  } catch (e) {
-    document.getElementById('dot-3cx').className = 'service-dot offline';
-  }
-}
-
-// Docker container health check
-async function updateDockerStatus() {
-  try {
-    const res = await fetch('/api/docker-health');
-    const data = await res.json();
-
-    if (data.success) {
-      document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
-      document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
-      console.log('Docker health OK:', data);
-    }
-  } catch (e) {
-    console.error('Docker health failed:', e);
-    document.getElementById('dot-drachtio').className = 'service-dot offline';
-    document.getElementById('dot-freeswitch').className = 'service-dot offline';
-  }
-}
-
-setInterval(update3CXStatus, 5000);
-setInterval(updateDockerStatus, 5000);
-
-setInterval(updateVoice, 5000);
-setInterval(updateInference, 5000);
-setInterval(updateApiStatus, 5000);
-setInterval(updateSystem, 2000);
-setInterval(updateLogs, 2000);
-
-update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updateApiStatus(); updateSystem(); updateLogs();
-        </script >
-      </body >
-    </html >
+          setInterval(updateVoice, 5000);
+          setInterval(updateInference, 5000);
+          setInterval(updateApiStatus, 5000);
+          setInterval(updateSystem, 2000);
+          setInterval(updateLogs, 2000);
+          
+          update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updateApiStatus(); updateSystem(); updateLogs();
+        </script>
+      </body>
+    </html>
   `);
 });
 
@@ -848,10 +724,10 @@ update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updat
 const proxyRequest = async (url, options = {}) => {
   try {
     const response = await fetch(url, options);
-    // if (!response.ok) throw new Error(`HTTP ${ response.status } `); // Don't throw, let client handle
+    // if (!response.ok) throw new Error(`HTTP ${response.status}`); // Don't throw, let client handle
     return await response.json();
   } catch (err) {
-    console.error(`Proxy Error to ${url}: `, err.message);
+    console.error(`Proxy Error to ${url}:`, err.message);
     throw err;
   }
 };
@@ -877,7 +753,7 @@ app.use('/api/proxy/voice', async (req, res) => {
 // Inference Proxies
 app.use('/api/proxy/inference', async (req, res) => {
   const targetPath = req.path === '/' ? '' : req.path;
-  const url = `${INFERENCE_URL}${targetPath} `;
+  const url = `${INFERENCE_URL}${targetPath}`;
   try {
     const opts = {
       method: req.method, // Forward POST/GET
@@ -895,7 +771,7 @@ app.use('/api/proxy/inference', async (req, res) => {
 // API Server Proxies
 app.use('/api/proxy/api', async (req, res) => {
   const targetPath = req.path === '/' ? '' : req.path;
-  const url = `${API_SERVER_URL}${targetPath} `;
+  const url = `${API_SERVER_URL}${targetPath}`;
   try {
     const opts = {
       method: req.method,
@@ -912,33 +788,6 @@ app.use('/api/proxy/api', async (req, res) => {
 
 // ============================================
 // LOCAL API ROUTES
-
-// Gemini CLI execution endpoint
-app.post('/api/gemini-cli', async (req, res) => {
-  const { command } = req.body;
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
-
-  try {
-    const { stdout, stderr } = await execPromise(`gemini ${command} `, {
-      timeout: 30000,
-      maxBuffer: 1024 * 1024 // 1MB
-    });
-
-    res.json({
-      success: true,
-      output: stdout || stderr,
-      command: `gemini ${command} `
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      output: error.message,
-      command: `gemini ${command} `
-    });
-  }
-});
 // ============================================
 
 app.get('/api/system-stats', async (req, res) => {
@@ -1008,23 +857,13 @@ app.get('/api/docker-health', async (req, res) => {
 });
 
 // Logs API - Aggregated
-app.post('/api/logs', (req, res) => {
-  const { level, message, service, timestamp, data } = req.body;
-  if (message) {
-    addLog(level || 'INFO', service || 'EXTERNAL', message, data);
-    res.json({ success: true });
-  } else {
-    res.status(400).json({ error: 'Message required' });
-  }
-});
-
 app.get('/api/logs', async (req, res) => {
   try {
     let combinedLogs = [...systemLogs];
 
     // Fetch Voice App Logs
     try {
-      const vRes = await fetch(`${VOICE_APP_URL} /api/logs`);
+      const vRes = await fetch(`${VOICE_APP_URL}/api/logs`);
       const vData = await vRes.json();
       if (vData.logs) combinedLogs = combinedLogs.concat(vData.logs);
     } catch (e) { }
@@ -1055,24 +894,7 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
-const https = require('https');
-// fs and path are already required at top
-
-try {
-  const options = {
-    key: fs.readFileSync(path.join(__dirname, 'certs/key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'certs/cert.pem'))
-  };
-
-  https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
-    console.log(`Mission Control started on port ${PORT} (HTTPS)`);
-    addLog('INFO', 'MISSION-CONTROL', `Server started on https://localhost:${PORT}`);
-  });
-} catch (error) {
-  console.error('Failed to start HTTPS server:', error.message);
-  // Fallback to HTTP for safety, though user requested HTTPS
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Mission Control started on port ${PORT} (HTTP - Certificate Error)`);
-    addLog('WARN', 'MISSION-CONTROL', 'Falling back to HTTP due to certificate error');
-  });
-}
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Mission Control started on port ${PORT}`);
+  addLog('INFO', 'MISSION-CONTROL', 'Server started on port ' + PORT);
+});

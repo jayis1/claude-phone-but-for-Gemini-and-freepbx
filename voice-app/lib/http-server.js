@@ -17,7 +17,25 @@ const crypto = require('crypto');
 // Cleanup interval: every 2 minutes
 const CLEANUP_INTERVAL = 120000;
 // File max age: 10 minutes
+// File max age: 10 minutes
 const FILE_MAX_AGE = 600000;
+
+// Log storage
+const logs = [];
+const MAX_LOGS = 100;
+
+function addLog(level, message, meta = {}) {
+  const timestamp = new Date().toISOString();
+  logs.unshift({ timestamp, level, message, service: 'VOICE-APP', meta });
+  if (logs.length > MAX_LOGS) logs.pop();
+  process.stdout.write(`[${timestamp}] [${level}] ${message}\n`);
+}
+
+// Override console
+const originalLog = console.log;
+const originalError = console.error;
+console.log = (msg, ...args) => { addLog('INFO', msg, args); originalLog(msg, ...args); };
+console.error = (msg, ...args) => { addLog('ERROR', msg, args); originalError(msg, ...args); };
 
 /**
  * Create HTTP Server
@@ -624,6 +642,11 @@ function createHttpServer(audioDir, port = 3000) {
 
     debug('Configuration routes added');
   }
+
+  // Logs Endpoint
+  app.get('/api/logs', (req, res) => {
+    res.json({ success: true, logs });
+  });
 
 
   // Audio upload endpoint

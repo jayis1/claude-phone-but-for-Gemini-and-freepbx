@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import os from 'os';
+import https from 'https';
 import { exec } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -28,6 +29,24 @@ function addLog(level, message, meta = {}) {
 
   const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : '';
   process.stdout.write(`[${timestamp}] [${level}] ${message} ${metaStr}\n`);
+
+  // Forward to Mission Control (HTTPS)
+  // Use a custom agent to allow self-signed certs since we're localhost
+  const https = require('https');
+  const agent = new https.Agent({ rejectUnauthorized: false });
+
+  fetch('https://127.0.0.1:3030/api/logs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      level,
+      message,
+      service: 'INFERENCE-BRAIN',
+      timestamp,
+      data: meta
+    }),
+    agent
+  }).catch(e => { /* Ignore connection errors */ });
 }
 
 // Override console methods
@@ -58,15 +77,20 @@ function getGpuUsage() {
 // ==========================================
 
 async function proxyToApi(endpoint, body) {
+  const start = Date.now();
   try {
+    console.log(`Forwarding ${endpoint} to API Server...`);
     const res = await fetch(`${API_SERVER_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-    return await res.json();
+    const data = await res.json();
+    const duration = Date.now() - start;
+    console.log(`Received response from ${endpoint} (${duration}ms)`);
+    return data;
   } catch (err) {
-    console.error(`Proxy error to ${endpoint}:`, err.message);
+    console.error(`Proxy error to ${endpoint}: ${err.message}`);
     throw err;
   }
 }
@@ -123,6 +147,55 @@ app.get('/stats', async (req, res) => {
     gpu: await getGpuUsage(),
     sessions: apiStats.sessions,
     model: apiStats.model || 'gemini-2.5-pro'
+  });
+});
+
+// Python Execution Endpoint
+import { spawn } from 'child_process';
+
+app.post('/run-python', (req, res) => {
+  const { script, args, prompt } = req.body;
+  const scriptName = script || 'mock_llm.py';
+  const scriptPath = path.join(__dirname, 'python', scriptName);
+
+  // Security check: ensure script is inside python dir
+  if (scriptName.includes('..') || scriptName.includes('/')) {
+    return res.status(403).json({ error: "Access denied: Invalid script path" });
+  }
+
+  console.log(`Executing Python script: ${scriptName}`);
+
+  const pyProcess = spawn('python3', [scriptPath]);
+  let output = '';
+  let errorOutput = '';
+
+  // Send input to Python script via stdin
+  const inputPayload = JSON.stringify({ prompt: prompt || args, ...req.body });
+  pyProcess.stdin.write(inputPayload);
+  pyProcess.stdin.end();
+
+  pyProcess.stdout.on('data', (data) => {
+    output += data.toString();
+  });
+
+  pyProcess.stderr.on('data', (data) => {
+    errorOutput += data.toString();
+  });
+
+  pyProcess.on('close', (code) => {
+    if (code !== 0) {
+      console.error(`Python script exited with code ${code}: ${errorOutput}`);
+      return res.status(500).json({ success: false, error: errorOutput || 'Script execution failed' });
+    }
+
+    try {
+      // Try to parse JSON output from Python
+      const jsonResponse = JSON.parse(output);
+      res.json(jsonResponse);
+    } catch (e) {
+      // Return raw output if not JSON
+      res.json({ success: true, raw_output: output.trim() });
+    }
   });
 });
 

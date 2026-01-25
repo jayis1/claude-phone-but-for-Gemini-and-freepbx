@@ -106,6 +106,16 @@ async function stopBoth() {
     brainSpinner.succeed('Inference Server stopped');
   } catch (error) {
     // Ignore if not running or failed
+    // Ignore if not running or failed
     brainSpinner.info('Inference Server not running or already stopped');
+  }
+
+  // Stop Mission Control
+  const mcSpinner = ora('Stopping Mission Control...').start();
+  try {
+    await stopInferenceServer('mission-control.pid');
+    mcSpinner.succeed('Mission Control stopped');
+  } catch (error) {
+    mcSpinner.info('Mission Control not running or already stopped');
   }
 }
