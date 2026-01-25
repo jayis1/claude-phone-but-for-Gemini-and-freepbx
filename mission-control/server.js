@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.12
+            MISSION CONTROL v2.1.19
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -378,6 +378,15 @@ app.get('/', (req, res) => {
                   <span style="font-size: 0.8rem">0.5x</span>
                   <input type="range" id="voice-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateSpeed(this.value)">
                   <span id="speed-val" style="font-family: monospace; width: 40px">1.0x</span>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="stat-label">Music Speed (YouTube DJ)</div>
+                <div class="slider-container">
+                  <span style="font-size: 0.8rem">0.5x</span>
+                  <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
+                  <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
                 </div>
               </div>
 
@@ -593,6 +602,18 @@ app.get('/', (req, res) => {
                 });
               }
             } catch(e) { console.error(e); }
+          }
+
+          async function updateMusicSpeed(val) {
+            document.getElementById('music-speed-val').innerText = val + 'x';
+            try {
+              // Send to Inference Server to control YouTube DJ playback speed
+              await fetch('/api/proxy/inference/music-speed', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ speed: parseFloat(val) })
+              });
+            } catch(e) { console.error('Music speed update failed:', e); }
           }
 
           // Inference Brain
