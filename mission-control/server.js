@@ -27,6 +27,15 @@ const API_SERVER_URL = process.env.API_SERVER_URL || 'http://127.0.0.1:3333';
 app.use(express.json());
 app.use(cors());
 
+// JSON Parse Error Handler - Prevents crash on bad logging data
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    console.error('[Mission Control] Bad JSON received:', err.message);
+    return res.status(400).send({ status: 400, message: err.message });
+  }
+  next();
+});
+
 // Store for active calls and logs
 let activeCalls = [];
 let systemLogs = [];
@@ -310,7 +319,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.1
+            MISSION CONTROL v2.1.2
           </div>
           <div class="service-status">
             <span>Services:</span>
@@ -318,8 +327,10 @@ app.get('/', (req, res) => {
               <span class="service-dot offline" id="dot-3cx" title="3CX PBX"></span>
               <span class="service-dot offline" id="dot-drachtio" title="Drachtio (SIP)"></span>
               <span class="service-dot offline" id="dot-freeswitch" title="FreeSWITCH (Media)"></span>
+              <span class="service-dot offline" id="dot-freepbx" title="FreePBX/Asterisk"></span>
               <span class="service-dot offline" id="dot-voice" title="Voice App (Node.js)"></span>
               <span class="service-dot offline" id="dot-brain" title="Inference Brain"></span>
+              <span class="service-dot offline" id="dot-python" title="Python Brain (Snake)"></span>
               <span class="service-dot offline" id="dot-api" title="API Server"></span>
               <span class="service-dot offline" id="dot-system" title="System Monitor"></span>
             </div>
@@ -815,12 +826,36 @@ async function updateDockerStatus() {
     if (data.success) {
       document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
       document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
+      // Assume FreePBX is online if Drachtio is connected (since it handles SIP)
+      document.getElementById('dot-freepbx').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
       console.log('Docker health OK:', data);
     }
   } catch (e) {
     console.error('Docker health failed:', e);
     document.getElementById('dot-drachtio').className = 'service-dot offline';
     document.getElementById('dot-freeswitch').className = 'service-dot offline';
+    document.getElementById('dot-freepbx').className = 'service-dot offline';
+  }
+}
+
+// Python Brain Check
+async function updatePython() {
+  try {
+    // Send a minimal execution request
+    const res = await fetch('/api/proxy/inference/run-python', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ script: 'mock_llm.py', prompt: 'ping' })
+    });
+    // We expect a valid JSON response
+    const data = await res.json();
+    if(res.ok && data.status === 'success') {
+      document.getElementById('dot-python').className = 'service-dot online';
+    } else {
+       throw new Error('Python script failed');
+    }
+  } catch(e) {
+    document.getElementById('dot-python').className = 'service-dot offline';
   }
 }
 
@@ -829,11 +864,12 @@ setInterval(updateDockerStatus, 5000);
 
 setInterval(updateVoice, 5000);
 setInterval(updateInference, 5000);
+setInterval(updatePython, 10000); // Check every 10s (heavier)
 setInterval(updateApiStatus, 5000);
 setInterval(updateSystem, 2000);
 setInterval(updateLogs, 2000);
 
-update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updateApiStatus(); updateSystem(); updateLogs();
+update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
         </script >
       </body >
     </html >
@@ -985,8 +1021,12 @@ app.get('/api/docker-health', async (req, res) => {
 
     stdout.trim().split('\n').forEach(line => {
       if (line) {
+        // Simple check for 'Up' -> running
         const [name, status] = line.split(',');
-        containers[name] = status.toLowerCase().includes('up');
+        const isUp = status && status.startsWith('Up');
+        if (name.includes('drachtio')) containers.drachtio = isUp;
+        if (name.includes('freeswitch')) containers.freeswitch = isUp;
+        if (name.includes('voice-app')) containers.voiceApp = isUp;
       }
     });
 
@@ -994,27 +1034,20 @@ app.get('/api/docker-health', async (req, res) => {
       success: true,
       drachtio: containers.drachtio || false,
       freeswitch: containers.freeswitch || false,
-      voiceApp: containers['voice-app'] || false
+      voiceApp: containers.voiceApp || false
     });
   } catch (error) {
-    res.json({
-      success: false,
-      drachtio: false,
-      freeswitch: false,
-      voiceApp: false
-    });
+    res.json({ success: false, error: error.message });
   }
 });
 
 // Logs API - Aggregated
 app.post('/api/logs', (req, res) => {
-  const { level, message, service, timestamp, data } = req.body;
-  if (message) {
-    addLog(level || 'INFO', service || 'EXTERNAL', message, data);
-    res.json({ success: true });
-  } else {
-    res.status(400).json({ error: 'Message required' });
-  }
+  const { level, service, message, data } = req.body;
+  if (!message) return res.status(400).send({ error: 'Message required' });
+
+  addLog(level || 'INFO', service || 'UNKNOWN', message, data);
+  res.send({ success: true });
 });
 
 app.get('/api/logs', async (req, res) => {

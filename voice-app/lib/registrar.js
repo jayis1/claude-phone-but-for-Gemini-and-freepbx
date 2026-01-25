@@ -16,7 +16,8 @@ class Registrar {
     this.extension = config.extension;
 
     // Auth credentials (separate from extension)
-    this.authId = config.auth_id;
+    // For FreePBX/Asterisk, auth_id is often the same as extension
+    this.authId = config.auth_id || config.extension;
     this.password = config.password;
 
     // Server addresses

@@ -1,0 +1,83 @@
+nohup: ignoring input
+[2026-01-25T09:22:40.836Z] [INFO] [2026-01-25T09:22:40.836Z] INFO Device registry loaded {"deviceCount":1,"devices":["9000"]}
+[2026-01-25T09:22:40.836Z] INFO Device registry loaded {"deviceCount":1,"devices":["9000"]}
+[2026-01-25T09:22:40.855Z] [INFO] 
+================================================================
+
+================================================================
+[2026-01-25T09:22:40.856Z] [INFO]           Voice Interface Application Starting                 
+          Voice Interface Application Starting                 
+[2026-01-25T09:22:40.856Z] [INFO]        (with Multi-Extension + Query API Support)              
+       (with Multi-Extension + Query API Support)              
+[2026-01-25T09:22:40.856Z] [INFO] ================================================================
+================================================================
+[2026-01-25T09:22:40.856Z] [INFO] 
+Configuration:
+
+Configuration:
+[2026-01-25T09:22:40.856Z] [INFO]   - drachtio:    drachtio:9022
+  - drachtio:    drachtio:9022
+[2026-01-25T09:22:40.856Z] [INFO]   - FreeSWITCH:  freeswitch:8021
+  - FreeSWITCH:  freeswitch:8021
+[2026-01-25T09:22:40.858Z] [INFO]   - SIP Domain:  hello.networkchuck.com
+  - SIP Domain:  hello.networkchuck.com
+[2026-01-25T09:22:40.858Z] [INFO]   - Registrar:   hello.networkchuck.com:5060
+  - Registrar:   hello.networkchuck.com:5060
+[2026-01-25T09:22:40.859Z] [INFO]   - External IP: 10.70.7.81
+  - External IP: 10.70.7.81
+[2026-01-25T09:22:40.859Z] [INFO]   - HTTP Port:   3434
+  - HTTP Port:   3434
+[2026-01-25T09:22:40.859Z] [INFO]   - WS Port:     3001
+  - WS Port:     3001
+[2026-01-25T09:22:40.859Z] [INFO]   - Audio Dir:   /tmp/voice-audio
+  - Audio Dir:   /tmp/voice-audio
+[2026-01-25T09:22:40.859Z] [INFO]   - Mix Type:    L (capture direction)
+  - Mix Type:    L (capture direction)
+[2026-01-25T09:22:40.859Z] [INFO] 
+[DEVICES] Loaded 1 device extensions
+
+[DEVICES] Loaded 1 device extensions
+[2026-01-25T09:22:40.859Z] [INFO] 
+Waiting for connections...
+
+
+Waiting for connections...
+
+[2026-01-25T09:22:40.865Z] [INFO] [2026-01-25T09:22:40.865Z] HTTP Server started on port 3434
+[2026-01-25T09:22:40.865Z] HTTP Server started on port 3434
+[2026-01-25T09:22:40.865Z] [INFO] [2026-01-25T09:22:40.865Z] Voice configuration API enabled
+[2026-01-25T09:22:40.865Z] Voice configuration API enabled
+[2026-01-25T09:22:40.867Z] [INFO] [2026-01-25T09:22:40.867Z] TTS Service configured
+[2026-01-25T09:22:40.867Z] TTS Service configured
+[2026-01-25T09:22:40.868Z] [INFO] [2026-01-25T09:22:40.868Z] INFO Query routes initialized {"geminiBridge":true}
+[2026-01-25T09:22:40.868Z] INFO Query routes initialized {"geminiBridge":true}
+[2026-01-25T09:22:40.870Z] [INFO] [2026-01-25T09:22:40.870Z] QUERY API enabled (/api/query, /api/devices)
+[2026-01-25T09:22:40.870Z] QUERY API enabled (/api/query, /api/devices)
+[2026-01-25T09:22:40.885Z] [INFO] [2026-01-25T09:22:40.885Z] FREESWITCH attempt 1/10
+[2026-01-25T09:22:40.885Z] FREESWITCH attempt 1/10
+node:events:486
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3434
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at app.listen (/home/jais/codings/networkschucks-phone-but-for-gemini/voice-app/node_modules/express/lib/application.js:635:24)
+    at createHttpServer (/home/jais/codings/networkschucks-phone-but-for-gemini/voice-app/lib/http-server.js:696:22)
+    at initializeHttpServer (/home/jais/codings/networkschucks-phone-but-for-gemini/voice-app/index.js:134:16)
+    at Object.<anonymous> (/home/jais/codings/networkschucks-phone-but-for-gemini/voice-app/index.js:179:1)
+    at Module._compile (node:internal/modules/cjs/loader:1760:14)
+    at Object..js (node:internal/modules/cjs/loader:1892:10)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 3434
+}
+
+Node.js v25.3.0

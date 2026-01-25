@@ -10,6 +10,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
+// Allow self-signed certs for local Mission Control logging
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -32,7 +35,7 @@ function addLog(level, message, meta = {}) {
 
   // Forward to Mission Control (HTTPS)
   // Use a custom agent to allow self-signed certs since we're localhost
-  const https = require('https');
+  // Note: https is imported at the top level
   const agent = new https.Agent({ rejectUnauthorized: false });
 
   fetch('https://127.0.0.1:3030/api/logs', {

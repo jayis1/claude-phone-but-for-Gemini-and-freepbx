@@ -1,0 +1,17 @@
+nohup: ignoring input
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[2026-01-25T09:38:35.591Z] [INFO] 🧠 Inference Server (Proxy Mode) running on port 4000 
+[2026-01-25T09:38:35.620Z] [INFO]    Points to API Server: http://localhost:3333 
+[2026-01-25T09:38:35.629Z] [ERROR] (node:1528695) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created) 
+[2026-01-25T09:38:38.218Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:38:48.134Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:38:58.158Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:39:08.143Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:39:18.142Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:39:28.142Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:39:38.142Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:39:48.152Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:39:58.146Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:40:08.178Z] [INFO] Executing Python script: mock_llm.py 
+[2026-01-25T09:40:18.198Z] [INFO] Executing Python script: mock_llm.py 
