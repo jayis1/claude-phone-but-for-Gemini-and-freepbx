@@ -190,7 +190,7 @@ test('docker compose generation', async (t) => {
     const envFile = generateEnvFile(config);
 
     // Should use localhost for standard mode
-    assert.ok(envFile.includes('GEMINI_API_URL=http://localhost:3333'),
+    assert.ok(envFile.includes('GEMINI_API_URL=http://localhost:4000'),
       'Should use localhost for standard mode');
   });
 
@@ -229,7 +229,7 @@ test('docker compose generation', async (t) => {
     const envFile = generateEnvFile(config);
 
     // Should use localhost for both mode (all services on same machine)
-    assert.ok(envFile.includes('GEMINI_API_URL=http://localhost:3333'),
+    assert.ok(envFile.includes('GEMINI_API_URL=http://localhost:4000'),
       'Should use localhost for both mode (all-in-one installation)');
 
     // Should NOT use any remote IP

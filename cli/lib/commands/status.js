@@ -46,7 +46,11 @@ export async function statusCommand() {
  * @returns {Promise<void>}
  */
 async function showApiServerStatus(config, isPiSplit) {
-  console.log(chalk.bold('Gemini API Server:'));
+  const { getConfigDir } = await import('../config.js');
+  const path = await import('path');
+  const configDir = getConfigDir();
+
+  console.log(chalk.bold('Local Services:'));
 
   if (isPiSplit) {
     // Pi-split mode: Check remote API server
@@ -54,22 +58,50 @@ async function showApiServerStatus(config, isPiSplit) {
     const apiHealth = await checkGeminiApiServer(apiUrl);
 
     if (apiHealth.healthy) {
-      console.log(chalk.green(`  ✓ Connected to API server (${config.deployment.pi.macIp}:${config.server.geminiApiPort})`));
+      console.log(chalk.green(`  ✓ API Server: Connected (${config.deployment.pi.macIp}:${config.server.geminiApiPort})`));
       console.log(chalk.gray('    Remote API server is healthy'));
     } else {
-      console.log(chalk.red(`  ✗ Cannot reach API server`));
+      console.log(chalk.red(`  ✗ API Server: Cannot reach server`));
       console.log(chalk.gray(`    Tried: ${apiUrl}`));
-      console.log(chalk.gray('    Run "gemini-phone api-server" on your API server'));
     }
   } else {
-    // Standard mode: Check local server
-    const serverRunning = await isServerRunning();
+    // Standard mode: Check local services
+
+    // 1. Mission Control (Dashboard)
+    const mcPidPath = path.join(configDir, 'mission-control.pid');
+    const mcRunning = await isServerRunning(mcPidPath);
+    if (mcRunning) {
+      console.log(chalk.green(`  ✓ Mission Control: Running (Port 3030)`));
+      console.log(chalk.gray(`    Dashboard: http://localhost:3030`));
+    } else {
+      console.log(chalk.red('  ✗ Mission Control: Not running'));
+    }
+
+    // 2. Inference Brain
+    const brainPidPath = path.join(configDir, 'inference.pid');
+    const brainRunning = await isServerRunning(brainPidPath);
+    if (brainRunning) {
+      console.log(chalk.green(`  ✓ Inference Brain: Running (Port 4000)`));
+    } else {
+      console.log(chalk.red('  ✗ Inference Brain: Not running'));
+    }
+
+    // 3. Voice App (Local)
+    const voiceAppPidPath = path.join(configDir, 'voice-app.pid');
+    const voiceAppRunning = await isServerRunning(voiceAppPidPath);
+    if (voiceAppRunning) {
+      console.log(chalk.green(`  ✓ Voice App: Running (Port 3434)`));
+    } else {
+      console.log(chalk.red('  ✗ Voice App: Not running'));
+    }
+
+    // 4. API Server
+    const serverRunning = await isServerRunning(); // default gemini-api-server.pid
     if (serverRunning) {
       const pid = getServerPid();
-      console.log(chalk.green(`  ✓ Running (PID: ${pid})`));
-      console.log(chalk.gray(`    Port: ${config.server.geminiApiPort}`));
+      console.log(chalk.green(`  ✓ API Server: Running (Port ${config.server.geminiApiPort})`));
     } else {
-      console.log(chalk.red('  ✗ Not running'));
+      console.log(chalk.red('  ✗ API Server: Not running'));
     }
   }
   console.log();

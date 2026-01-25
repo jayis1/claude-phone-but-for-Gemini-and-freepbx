@@ -136,7 +136,7 @@ services:
       --rtp-range-end 30100
     # RTP ports 30000-30100 avoid conflict with 3CX SBC (uses 20000-20099)
     environment:
-      - EXTERNAL_IP=\${EXTERNAL_IP:-127.0.0.1}
+      - EXTERNAL_IP=${externalIp}
 
   voice-app:
     build: ${config.paths.voiceApp}

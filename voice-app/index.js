@@ -62,7 +62,7 @@ var config = {
     expiry: parseInt(process.env.SIP_EXPIRY) || 3600
   },
   external_ip: process.env.EXTERNAL_IP || "10.70.7.81",
-  http_port: parseInt(process.env.HTTP_PORT) || 3000,
+  http_port: parseInt(process.env.HTTP_PORT) || 3434,
   ws_port: parseInt(process.env.WS_PORT) || 3001,
   audio_dir: process.env.AUDIO_DIR || "/tmp/voice-audio"
 };

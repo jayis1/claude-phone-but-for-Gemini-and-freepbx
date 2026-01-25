@@ -6,7 +6,7 @@ Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call 
 
 ## What's New in v2.0.5
 
-🎯 **Mission Control Dashboard** - Unified view of all services on port 8080  
+🎯 **Mission Control Dashboard** - Unified view of all services on port 3030  
 🎙️ **Voice Customization** - Choose from 10 ElevenLabs voices with speed control (0.5x-2.0x)  
 ⚡ **Redesigned Dashboards** - Beautiful, optimized interfaces for all services  
 📊 **Real-time Monitoring** - Live system stats, logs, and active call tracking
@@ -26,7 +26,7 @@ Gemini Phone v2.0 uses a 3-tier architecture:
 
 ```text
 ┌─────────────────────────────────────────────┐
-│  Voice App (Port 3000)                      │
+│  Voice App (Port 3434)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
 │  + Voice customization controls             │
 └─────────────────┬───────────────────────────┘
@@ -43,7 +43,7 @@ Gemini Phone v2.0 uses a 3-tier architecture:
 │  + Interactive endpoints                    │
 └─────────────────────────────────────────────┘
 
-All monitored by Mission Control (Port 8080)
+All monitored by Mission Control (Port 3030)
 ```
 
 ## Prerequisites
@@ -232,7 +232,7 @@ Access the unified dashboard at `http://your-server-ip:3030`
 
 ## Voice Customization
 
-Configure voice and speed settings per device via the Voice App dashboard (`http://your-server-ip:3000`):
+Configure voice and speed settings per device via the Voice App dashboard (`http://your-server-ip:3434`):
 
 **Available Voices** (10 ElevenLabs options):
 
@@ -261,13 +261,13 @@ All services provide interactive web dashboards:
 | Service | Port | URL | Features |
 | :--- | :--- | :--- | :--- |
 | **Mission Control** | 3030 | `http://localhost:3030` | Unified view, system stats, logs |
-| **Voice App** | 3000 | `http://localhost:3000` | Voice/speed config, API endpoints |
+| **Voice App** | 3434 | `http://localhost:3434` | Voice/speed config, API endpoints |
 | **Inference Brain** | 4000 | `http://localhost:4000` | Model selection, endpoints |
 | **API Server** | 3333 | `http://localhost:3333` | Interactive endpoints, testing |
 
 ## API Endpoints
 
-### Voice App (Port 3000)
+### Voice App (Port 3434)
 
 | Method | Endpoint | Purpose |
 | :--- | :--- | :--- |

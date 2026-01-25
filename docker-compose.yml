@@ -31,44 +31,4 @@ services:
     # - 5080: Internal SIP
     # - 30000-30100: RTP Audio (changed from 20000-20100 to avoid conflict with 3CX SBC)
 
-  voice-app:
-    build: ./voice-app
-    container_name: voice-app
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
-    volumes:
-      # Audio files directory for TTS playback
-      - ./voice-app/audio:/app/audio
-      # Device configurations
-      - ./voice-app/config:/app/config
-    depends_on:
-      - drachtio
-      - freeswitch
-      - gemini-api-server
-    # Ports (for reference):
-    # - 3000: HTTP API
-    # - 3001: WebSocket for audio streaming
 
-  gemini-api-server:
-    build: ./gemini-api-server
-    container_name: gemini-api-server
-    restart: unless-stopped
-    network_mode: host
-    environment:
-      # Pass through model selection
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-pro}
-      # Pass through auth if needed (though sandbox usually has its own or needs it mounted)
-      # The sandbox might need ~/.gemini mounted?
-      # User said: "you can run the Gemini CLI directly... docker run ... sandbox"
-      # And "run the published sandbox image".
-      # For auth, typically we mount the config.
-      # Let's check how the user runs it: "gemini --sandbox" implies local auth is used.
-      # If running in docker, we need to provide credentials.
-      # We'll map the .gemini directory from host if it exists.
-    volumes:
-      - ${HOME}/.gemini:/root/.gemini
-      - ${HOME}/.gemini-phone/config.json:/root/.gemini-phone/config.json
-    # Ports (for reference):
-    # - 3333: HTTP API (host mode)

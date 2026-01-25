@@ -107,18 +107,18 @@ export async function startServer(serverPath, port, pidPath = null) {
  * @param {string} executionServerUrl - URL of execution server
  * @returns {Promise<number>} Process PID
  */
-export async function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333') {
-  const pidPath = path.join(getConfigDir(), 'inference.pid');
+export async function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333', pidFilename = 'inference.pid', scriptName = 'server.js') {
+  const pidPath = path.join(getConfigDir(), pidFilename);
 
   // Check if already running
   if (await isServerRunning(pidPath)) {
     const pid = getServerPid(pidPath);
-    throw new Error(`Inference Server already running (PID: ${pid})`);
+    throw new Error(`Service already running (PID: ${pid})`);
   }
 
   return new Promise((resolve, reject) => {
     // Spawn detached process
-    const child = spawn('node', ['server.js'], {
+    const child = spawn('node', [scriptName], {
       cwd: serverPath,
       detached: true,
       stdio: 'ignore', // 'ignore' in production, 'inherit' for debug
@@ -139,7 +139,7 @@ export async function startInferenceServer(serverPath, port = 4000, executionSer
     } catch (error) {
       // Try to kill if write failed
       try { process.kill(child.pid, 'SIGTERM'); } catch (e) { }
-      reject(new Error(`Failed to write Inference PID: ${error.message}`));
+      reject(new Error(`Failed to write PID file (${pidFilename}): ${error.message}`));
     }
   });
 }
