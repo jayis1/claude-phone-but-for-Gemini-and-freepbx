@@ -322,9 +322,10 @@ async function startBoth(config, isPiMode) {
       try {
         // Start Voice App on port 3434 (HTTP) and 3001 (WS)
         // We override HTTP_PORT env var when starting
-        process.env.HTTP_PORT = 3434;
-        await startInferenceServer(voiceAppPath, 3434, null, 'voice-app.pid', 'index.js'); // Re-using startInferenceServer as generic node starter
-        spinner.succeed('Voice App started on port 3434');
+        const voiceAppPort = config.server.voiceAppPort || 3434;
+        process.env.HTTP_PORT = voiceAppPort;
+        await startInferenceServer(voiceAppPath, voiceAppPort, null, 'voice-app.pid', 'index.js'); // Re-using startInferenceServer as generic node starter
+        spinner.succeed(`Voice App started on port ${voiceAppPort}`);
       } catch (error) {
         if (error.message.includes('already running')) {
           spinner.warn('Voice App already running');
@@ -342,8 +343,9 @@ async function startBoth(config, isPiMode) {
       spinner.start('Starting Inference Server (Brain)...');
       try {
         // Point Brain to Hands (API Server on port 3333)
-        await startInferenceServer(inferencePath, 4000, `http://localhost:${config.server.geminiApiPort}`, 'inference.pid');
-        spinner.succeed('Inference Server (Brain) started on port 4000');
+        const inferencePort = config.server.inferencePort || 4000;
+        await startInferenceServer(inferencePath, inferencePort, `http://localhost:${config.server.geminiApiPort}`, 'inference.pid');
+        spinner.succeed(`Inference Server (Brain) started on port ${inferencePort}`);
       } catch (error) {
         if (error.message.includes('already running')) {
           spinner.warn('Inference Server already running');
@@ -361,8 +363,9 @@ async function startBoth(config, isPiMode) {
     if (fs.existsSync(missionControlPath)) {
       spinner.start('Starting Mission Control Dashboard...');
       try {
-        await startInferenceServer(missionControlPath, 3030, null, 'mission-control.pid');
-        spinner.succeed('Mission Control Dashboard started on port 3030');
+        const missionControlPort = config.server.missionControlPort || 3030;
+        await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid');
+        spinner.succeed(`Mission Control Dashboard started on port ${missionControlPort}`);
       } catch (error) {
         if (error.message.includes('already running')) {
           spinner.warn('Mission Control already running');
@@ -396,8 +399,10 @@ async function startBoth(config, isPiMode) {
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
-    console.log(chalk.gray(`  • Voice App:         http://localhost:3434 (Voice Controls)`));
-    console.log(chalk.gray(`  • Inference Brain:   http://localhost:4000 (AI Reasoning)`));
+    const voiceAppPort = config.server.voiceAppPort || 3434;
+    const inferencePort = config.server.inferencePort || 4000;
+    console.log(chalk.gray(`  • Voice App:         http://localhost:${voiceAppPort} (Voice Controls)`));
+    console.log(chalk.gray(`  • Inference Brain:   http://localhost:${inferencePort} (AI Reasoning)`));
     console.log(chalk.gray(`  • API Server:        http://localhost:${config.server.geminiApiPort} (Tool Execution)`));
     console.log();
   }

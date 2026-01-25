@@ -725,6 +725,8 @@ function createDefaultConfig() {
     },
     server: {
       geminiApiPort: 3333,
+      inferencePort: 4000,
+      missionControlPort: 3030,
       httpPort: 3000,
       externalIp: 'auto'
     },
@@ -1150,12 +1152,40 @@ async function setupServer(config) {
         }
         return true;
       }
+    },
+    {
+      type: 'input',
+      name: 'inferencePort',
+      message: 'Inference Brain port:',
+      default: config.server.inferencePort || 4000,
+      validate: (input) => {
+        const port = parseInt(input, 10);
+        if (isNaN(port) || port < 1024 || port > 65535) {
+          return 'Port must be between 1024 and 65535';
+        }
+        return true;
+      }
+    },
+    {
+      type: 'input',
+      name: 'missionControlPort',
+      message: 'Mission Control Dashboard port:',
+      default: config.server.missionControlPort || 3030,
+      validate: (input) => {
+        const port = parseInt(input, 10);
+        if (isNaN(port) || port < 1024 || port > 65535) {
+          return 'Port must be between 1024 and 65535';
+        }
+        return true;
+      }
     }
   ]);
 
   config.server.externalIp = answers.externalIp;
   config.server.geminiApiPort = parseInt(answers.geminiApiPort, 10);
   config.server.httpPort = parseInt(answers.httpPort, 10);
+  config.server.inferencePort = parseInt(answers.inferencePort, 10);
+  config.server.missionControlPort = parseInt(answers.missionControlPort, 10);
 
   return config;
 }
