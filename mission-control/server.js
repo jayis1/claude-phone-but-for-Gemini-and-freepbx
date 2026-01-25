@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.11
+            MISSION CONTROL v2.1.12
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -936,36 +936,45 @@ async function updateProvider() {
   } catch(e) {}
 }
 
-// Update Checker
-async function checkForUpdates() {
+// Update Checker (Silent Background)
+async function silentUpdateCheck() {
   const btn = document.getElementById('update-btn');
-  btn.innerText = 'Checking...';
-  
   try {
     const res = await fetch('/api/update/check');
     const data = await res.json();
     
     if (data.updateAvailable) {
-       if (confirm(\`New version (\${data.remoteVersion}) available! Update from \${data.localVersion}?\n\nThis will restart Mission Control.\`)) {
-         btn.innerText = 'Updating...';
-         await fetch('/api/update/apply', { method: 'POST' });
-         alert('Update started! Please reload the page in 10-20 seconds.');
-         setTimeout(() => location.reload(), 15000);
-       } else {
-         btn.innerHTML = '<span>🔄</span> Check Updates';
-       }
+       // Update available: Show button
+       btn.style.display = 'flex';
+       btn.innerText = '🚀 Update v' + data.remoteVersion;
+       btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
     } else {
-       alert('You are on the latest version (' + data.localVersion + ')');
-       btn.innerHTML = '<span>🔄</span> Check Updates';
+       // Up to date: Hide button to prevent accidental clicks
+       btn.style.display = 'none';
     }
   } catch (e) {
-    alert('Update check failed: ' + e.message);
-    btn.innerHTML = '<span>🔄</span> Check Updates';
+    console.error('Update check failed:', e);
   }
 }
 
-// Show update button on load
-document.getElementById('update-btn').style.display = 'flex';
+function showUpdateModal(current, remote) {
+  showModal(
+     'Update Available 🚀', 
+     \`A new version (\${remote}) is available! You are on \${current}.\n\nDo you want to update and restart now?\`, 
+     true, 
+     async () => {
+       const btn = document.getElementById('update-btn');
+       btn.innerText = 'Updating...';
+       await fetch('/api/update/apply', { method: 'POST' });
+       showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
+       setTimeout(() => location.reload(), 15000);
+     }
+  );
+}
+
+// Initial check and periodic poll
+silentUpdateCheck();
+setInterval(silentUpdateCheck, 60000); // Check every minute
 
 update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs(); updateProvider();
         </script>
