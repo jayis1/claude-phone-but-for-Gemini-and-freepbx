@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.19
+            MISSION CONTROL v2.1.20
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -1212,49 +1212,25 @@ app.get('/api/config/provider', (req, res) => {
   res.json({ provider });
 });
 
-// Switch Provider
-// Switch Provider
-app.post('/api/config/provider', (req, res) => {
-  const { provider } = req.body; // '3cx' or 'freepbx'
-  if (!['3cx', 'freepbx'].includes(provider)) return res.status(400).json({ error: 'Invalid provider' });
 
-  // 1. Load profiles storage
-  let profiles = {};
-  if (fs.existsSync(PROFILES_FILE)) {
-    profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
-  }
+// 3. Load TARGET profile configuration
+const targetConfig = profiles[provider] || {};
 
-  // 2. Save CURRENT config to its profile (before switching)
-  const currentEnv = parseEnv();
-  const currentProvider = currentEnv.SIP_PROVIDER || '3cx';
+// 4. Update .env with target values (switching context)
+const updates = { ...targetConfig, SIP_PROVIDER: provider };
 
-  profiles[currentProvider] = {
-    SIP_DOMAIN: currentEnv.SIP_DOMAIN,
-    SIP_REGISTRAR: currentEnv.SIP_REGISTRAR,
-    SIP_EXTENSION: currentEnv.SIP_EXTENSION,
-    SIP_AUTH_ID: currentEnv.SIP_AUTH_ID,
-    SIP_PASSWORD: currentEnv.SIP_PASSWORD,
-    DRACHTIO_SIP_PORT: currentEnv.DRACHTIO_SIP_PORT
-  };
+// Default logic for FreePBX
+if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
+  updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
+}
 
-  // 3. Load TARGET profile configuration
-  const targetConfig = profiles[provider] || {};
+writeEnv(updates);
+fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
 
-  // 4. Update .env with target values (switching context)
-  const updates = { ...targetConfig, SIP_PROVIDER: provider };
+// Note: We do NOT restart here anymore, the frontend will redirect to /setup
+// Only update the env file so /setup page shows correct values
 
-  // Default logic for FreePBX
-  if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
-    updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
-  }
-
-  writeEnv(updates);
-  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
-
-  // Note: We do NOT restart here anymore, the frontend will redirect to /setup
-  // Only update the env file so /setup page shows correct values
-
-  res.json({ success: true, provider });
+res.json({ success: true, provider });
 });
 
 // Save Full Configuration (From Setup Page)
