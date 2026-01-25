@@ -11,7 +11,7 @@ import { loadConfig, saveConfig, configExists } from '../config.js';
  * @param {string} projectRoot - Root directory of gemini-phone
  * @returns {boolean} True if git repo
  */
-function isGitRepo(projectRoot) {
+export function isGitRepo(projectRoot) {
   try {
     execSync('git rev-parse --is-inside-work-tree', {
       cwd: projectRoot,
@@ -82,10 +82,11 @@ async function fetchLatestRelease() {
 /**
  * Update via git pull
  * @param {string} projectRoot - Root directory
+ * @param {object} options - Options { silent: boolean }
  * @returns {Promise<void>}
  */
-async function updateViaGit(projectRoot) {
-  console.log(chalk.bold('\nUpdating from git...\n'));
+export async function updateViaGit(projectRoot, options = {}) {
+  if (!options.silent) console.log(chalk.bold('\nUpdating from git...\n'));
 
   try {
     // Check current branch
@@ -128,14 +129,14 @@ async function updateViaGit(projectRoot) {
     }
 
     // Pull latest
-    console.log(chalk.gray('\nPulling latest changes...'));
+    if (!options.silent) console.log(chalk.gray('\nPulling latest changes...'));
     execSync('git pull origin main', {
       cwd: projectRoot,
-      stdio: 'inherit'
+      stdio: options.silent ? 'ignore' : 'inherit'
     });
 
-    console.log(chalk.green('\n✓ Update complete\n'));
-    console.log(chalk.gray('Run "gemini-phone status" to verify services\n'));
+    if (!options.silent) console.log(chalk.green('\n✓ Update complete\n'));
+    if (!options.silent) console.log(chalk.gray('Run "gemini-phone status" to verify services\n'));
   } catch (error) {
     throw new Error(`Git update failed: ${error.message}`);
   }

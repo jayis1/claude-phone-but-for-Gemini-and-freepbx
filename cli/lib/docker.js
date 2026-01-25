@@ -177,8 +177,9 @@ export function generateEnvFile(config) {
     // Voice server mode (non-Pi): point to remote API server
     geminiApiUrl = `http://${config.deployment.apiServerIp}:${config.server.geminiApiPort}`;
   } else {
-    // Both or api-server mode: local API server
-    geminiApiUrl = `http://localhost:${config.server.geminiApiPort}`;
+    // Both or api-server mode: local INFERENCE server (Brain)
+    // The voice-app talks to the Brain (4000), which talks to the Hands (3333)
+    geminiApiUrl = `http://localhost:4000`;
   }
 
   const lines = [

@@ -2,6 +2,7 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
+import { URL } from 'url';
 import crypto from 'crypto';
 import fs from 'fs';
 import { execSync } from 'child_process';
@@ -231,6 +232,30 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
           installSpinner.fail(`Failed to install dependencies: ${error.message}`);
           console.log(chalk.yellow('\nYou can install manually with:'));
           console.log(chalk.cyan(`  cd ${apiServerPath} && npm install\n`));
+        }
+      }
+    }
+  }
+
+  // Install dependencies for Inference Server (if it exists)
+  if (installationType === 'both' || installationType === 'api-server') {
+    const apiServerPath = config.paths?.geminiApiServer || path.join(getProjectRoot(), 'gemini-api-server');
+    const inferenceServerPath = path.resolve(apiServerPath, '../inference-server');
+
+    if (fs.existsSync(inferenceServerPath)) {
+      const nodeModulesPath = path.join(inferenceServerPath, 'node_modules');
+      if (!fs.existsSync(nodeModulesPath)) {
+        const installSpinner = ora('Installing Inference Server dependencies...').start();
+        try {
+          execSync('npm install', {
+            cwd: inferenceServerPath,
+            stdio: 'pipe'
+          });
+          installSpinner.succeed('Inference Server dependencies installed');
+        } catch (error) {
+          installSpinner.fail(`Failed to install Inference Server dependencies: ${error.message}`);
+          console.log(chalk.yellow('\nYou can install manually with:'));
+          console.log(chalk.cyan(`  cd ${inferenceServerPath} && npm install\n`));
         }
       }
     }

@@ -4,10 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { checkDocker, writeDockerConfig, startContainers } from '../docker.js';
-import { startServer, isServerRunning } from '../process-manager.js';
+import { startServer, isServerRunning, startInferenceServer } from '../process-manager.js';
 import { isGeminiInstalled, sleep } from '../utils.js';
 import { checkGeminiApiServer } from '../network.js';
+
 import { runPrereqChecks } from '../prereqs.js';
+import { isGitRepo, updateViaGit } from './update.js';
 
 /**
  * Start command - Launch all services
@@ -15,6 +17,17 @@ import { runPrereqChecks } from '../prereqs.js';
  */
 export async function startCommand() {
   console.log(chalk.bold.cyan('\n🚀 Starting Gemini Phone\n'));
+
+  // Auto-update if possible
+  if (isGitRepo(process.cwd())) {
+    try {
+      await updateViaGit(process.cwd(), { silent: true });
+      console.log(chalk.gray('✓ Auto-updated to latest version'));
+    } catch (err) {
+      // Ignore update errors so we don't block startup
+      console.log(chalk.yellow(`⚠️  Auto-update failed: ${err.message}`));
+    }
+  }
 
   // Check if configured
   if (!configExists()) {
@@ -312,6 +325,26 @@ async function startBoth(config, isPiMode) {
   await sleep(3000);
   spinner.succeed('Containers initialized');
 
+  // Start Inference Server (Brain)
+  if (!isPiMode) {
+    const inferencePath = path.resolve(config.paths.geminiApiServer, '../inference-server');
+    if (fs.existsSync(inferencePath)) {
+      spinner.start('Starting Inference Server (Brain)...');
+      try {
+        // Point Brain to Hands (API Server on port 3333)
+        await startInferenceServer(inferencePath, 4000, `http://localhost:${config.server.geminiApiPort}`);
+        spinner.succeed('Inference Server (Brain) started on port 4000');
+      } catch (error) {
+        if (error.message.includes('already running')) {
+          spinner.warn('Inference Server already running');
+        } else {
+          spinner.fail(`Failed to start Inference Server: ${error.message}`);
+          // Don't exit, just warn? or exit? Better to warn for now.
+        }
+      }
+    }
+  }
+
   // Start gemini-api-server
   if (!isPiMode) {
     spinner.start('Starting Gemini API server...');
@@ -336,6 +369,7 @@ async function startBoth(config, isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
     console.log(chalk.gray(`  • Gemini API server: http://localhost:${config.server.geminiApiPort}`));
+    console.log(chalk.gray(`  • Inference Server:  http://localhost:4000 (Brain)`));
   }
   console.log(chalk.gray(`  • Voice app API: http://localhost:${config.server.httpPort}\n`));
   console.log(chalk.gray('Ready to receive calls on:'));

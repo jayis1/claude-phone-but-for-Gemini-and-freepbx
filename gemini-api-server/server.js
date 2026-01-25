@@ -119,6 +119,12 @@ console.log(`[STARTUP] Voice App URL: ${VOICE_APP_URL}`);
 const sessions = new Map();
 
 // Model selection - Sonnet for balanced speed/quality
+const GEMINI_MODELS = [
+  'gemini-2.5-pro',
+  'gemini-2.0-flash',
+  'gemini-1.5-pro',
+  'gemini-1.5-flash'
+];
 let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
 
 function parseGeminiStdout(stdout) {
@@ -194,34 +200,41 @@ function runGeminiOnce({ fullPrompt, callId, timestamp }) {
   });
 }
 
-/**
- * Voice Context - Prepended to all voice queries
- *
- * This tells Gemini how to handle voice-specific patterns:
- * - Output VOICE_RESPONSE for TTS (conversational, 40 words max)
- * - Output COMPLETED for status logging (12 words max)
- * - For Slack delivery requests: do the work, send to Slack, then acknowledge
- */
+// Tool Definitions
+const TOOLS = [
+  {
+    name: "make_outbound_call",
+    description: "Initiate a phone call to a number or extension. Use this when the user asks you to call someone.",
+    parameters: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "The phone number or extension to call" },
+        message: { type: "string", description: "The message to speak when they answer" },
+        mode: { type: "string", enum: ["conversation", "announce"], description: "Default to 'conversation'" }
+      },
+      required: ["to", "message"]
+    }
+  }
+];
+
 const VOICE_CONTEXT = `[VOICE CALL CONTEXT]
-This query comes via voice call. You MUST include BOTH of these lines in your response:
+This query comes via voice call.
 
-🗣️ VOICE_RESPONSE: [Your conversational answer in 40 words or less. This is what gets spoken aloud via TTS. Be natural and helpful, like talking to a friend.]
+You have access to the following tools:
+${JSON.stringify(TOOLS, null, 2)}
 
-🎯 COMPLETED: [Status summary in 12 words or less. This is for logging only.]
+To use a tool, output ONLY the JSON object for the tool call (no other text) in this format:
+{"tool": "make_outbound_call", "parameters": {"to": "...", "message": "...", "mode": "conversation"}}
 
-IMPORTANT: The VOICE_RESPONSE line is what the caller HEARS. Make it conversational and complete - don't just say "Done" or "Task completed". Actually answer their question or confirm what you did in a natural way.
+If NOT using a tool, you must include BOTH of these lines:
+🗣️ VOICE_RESPONSE: [Your conversational answer in 40 words or less]
+🎯 COMPLETED: [Status summary in 12 words or less]
 
-DISCORD DELIVERY: When the caller requests delivery to a Discord Channel (phrases like "send to Discord", "post to #channel", "message me when done"):
-1. Do the requested work (research, generate content, analyze, etc.)
-2. Send results to the specified Discord channel using the Discord skill
-3. Include a VOICE_RESPONSE like: "Done! I sent the info to the discord channel."
-
-The caller may hang up while you're working (they'll hear hold music). That's fine - complete the work and send to Discord. They'll see it there.
-
-Example query: "What's the weather in Royce City?"
-Example response:
-🗣️ VOICE_RESPONSE: It's 65 degrees and partly cloudy in Royce City right now. Great weather for being outside!
-🎯 COMPLETED: Weather lookup for Royce City done.
+IMPORTANT:
+- The VOICE_RESPONSE line is what the caller HEARS.
+- If you call a tool, do NOT output VOICE_RESPONSE yet. The system will handle it.
+- Example query: "Call extension 100"
+- Example tool output: {"tool": "make_outbound_call", "parameters": {"to": "100", "message": "Hello, connecting you now.", "mode": "conversation"}}
 [END VOICE CONTEXT]
 
 `;
@@ -312,6 +325,33 @@ app.post('/ask', async (req, res) => {
     }
 
     console.log(`[${new Date().toISOString()}] RESPONSE (${duration_ms}ms): "${response.substring(0, 100)}..."`);
+
+    // Check for Tool Call
+    try {
+      const toolJson = JSON.parse(response);
+      if (toolJson.tool === 'make_outbound_call' && toolJson.parameters) {
+        console.log(`[${timestamp}] TOOL DETECTED: make_outbound_call to ${toolJson.parameters.to}`);
+
+        // Execute the tool
+        const callResult = await executeOutboundCall({
+          to: toolJson.parameters.to,
+          message: toolJson.parameters.message,
+          mode: toolJson.parameters.mode,
+          device: null
+        });
+
+        return res.json({
+          success: true,
+          response: `🗣️ VOICE_RESPONSE: Calling ${toolJson.parameters.to} now.\n🎯 COMPLETED: Outbound call initiated (Call ID: ${callResult.callId})`,
+          sessionId,
+          duration_ms,
+          tool_executed: true,
+          callId: callResult.callId
+        });
+      }
+    } catch (e) {
+      // Not a valid JSON tool call, proceed as normal text response
+    }
 
     res.json({ success: true, response, sessionId, duration_ms });
 
@@ -510,6 +550,28 @@ app.get('/sessions', (req, res) => {
   });
 });
 
+
+/**
+ * Helper: Execute Outbound Call
+ */
+async function executeOutboundCall({ to, message, mode, device }) {
+  if (!to || !message) {
+    throw new Error('Missing "to" or "message"');
+  }
+
+  const res = await fetch(`${VOICE_APP_URL}/api/outbound-call`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, message, mode, device })
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Voice App Error ${res.status}: ${text}`);
+  }
+  return await res.json();
+}
+
 /**
  * POST /call
  * Initiate an outbound call via 3CX/voice-app
@@ -523,31 +585,15 @@ app.post('/call', async (req, res) => {
   const { to, message, mode, device } = req.body;
   const timestamp = new Date().toISOString();
 
-  if (!to || !message) {
-    return res.status(400).json({ success: false, error: 'Missing "to" or "message"' });
-  }
-
   console.log(`[${timestamp}] OUTBOUND CALL REQUEST: to=${to} mode=${mode || 'announce'}`);
 
   try {
-    const callRes = await fetch(`${VOICE_APP_URL}/api/outbound-call`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body)
-    });
-
-    if (!callRes.ok) {
-      const errText = await callRes.text();
-      console.error(`[${timestamp}] CALL FAILED: ${callRes.status} ${errText}`);
-      return res.status(callRes.status).json({ success: false, error: `Voice App Error: ${errText}` });
-    }
-
-    const data = await callRes.json();
+    const data = await executeOutboundCall({ to, message, mode, device });
     console.log(`[${timestamp}] CALL QUEUED: ${data.callId}`);
     res.json(data);
   } catch (error) {
     console.error(`[${timestamp}] CALL ERROR: ${error.message}`);
-    res.status(500).json({ success: false, error: `Failed to contact voice-app: ${error.message}` });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -686,7 +732,39 @@ app.get('/', (req, res) => {
               color: #cbd5e1;
             }
             .endpoints div { margin-bottom: 0.25rem; }
+            .model-select {
+              background: #334155;
+              color: white;
+              border: 1px solid #475569;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-family: monospace;
+              width: 100%;
+            }
         </style>
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('model-select');
+            select.addEventListener('change', async (e) => {
+              const model = e.target.value;
+              try {
+                const res = await fetch('/config', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ model })
+                });
+                const data = await res.json();
+                if (data.success) {
+                  alert('Model updated to ' + model);
+                } else {
+                  alert('Failed to update: ' + data.error);
+                }
+              } catch (err) {
+                alert('Error updating model: ' + err.message);
+              }
+            });
+          });
+        </script>
       </head>
       <body>
         <div class="card">
@@ -700,7 +778,11 @@ app.get('/', (req, res) => {
             </div>
             <div class="info-item">
               <div class="info-label">Model</div>
-              <div class="info-value">${GEMINI_MODEL}</div>
+              <div class="info-value">
+                <select id="model-select" class="model-select">
+                  ${GEMINI_MODELS.map(m => `<option value="${m}" ${m === GEMINI_MODEL ? 'selected' : ''}>${m}</option>`).join('')}
+                </select>
+              </div>
             </div>
           </div>
 

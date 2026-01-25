@@ -101,6 +101,51 @@ export async function startServer(serverPath, port, pidPath = null) {
 }
 
 /**
+ * Start the inference-server (Brain)
+ * @param {string} serverPath - Path to inference-server directory
+ * @param {number} port - Port to listen on (4000)
+ * @param {string} executionServerUrl - URL of execution server
+ * @returns {Promise<number>} Process PID
+ */
+export async function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333') {
+  const pidPath = path.join(getConfigDir(), 'inference.pid');
+
+  // Check if already running
+  if (await isServerRunning(pidPath)) {
+    const pid = getServerPid(pidPath);
+    throw new Error(`Inference Server already running (PID: ${pid})`);
+  }
+
+  return new Promise((resolve, reject) => {
+    // Spawn detached process
+    const child = spawn('node', ['server.js'], {
+      cwd: serverPath,
+      detached: true,
+      stdio: 'ignore', // 'ignore' in production, 'inherit' for debug
+      env: {
+        ...process.env,
+        PORT: port,
+        EXECUTION_SERVER_URL: executionServerUrl
+        // GEMINI_API_KEY should be in process.env already from CLI start
+      }
+    });
+
+    // Don't wait for child process
+    child.unref();
+
+    // Write PID file
+    try {
+      fs.writeFileSync(pidPath, child.pid.toString(), { mode: 0o600 });
+      resolve(child.pid);
+    } catch (error) {
+      // Try to kill if write failed
+      try { process.kill(child.pid, 'SIGTERM'); } catch (e) { }
+      reject(new Error(`Failed to write Inference PID: ${error.message}`));
+    }
+  });
+}
+
+/**
  * Stop the gemini-api-server
  * @param {string} [pidPath] - Optional PID file path (for testing)
  * @returns {Promise<void>}
@@ -148,6 +193,14 @@ export async function stopServer(pidPath = null) {
   if (fs.existsSync(pidPath)) {
     fs.unlinkSync(pidPath);
   }
+}
+
+/**
+ * Stop the inference-server
+ */
+export async function stopInferenceServer() {
+  const pidPath = path.join(getConfigDir(), 'inference.pid');
+  await stopServer(pidPath);
 }
 
 /**
