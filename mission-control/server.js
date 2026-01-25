@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.17
+            MISSION CONTROL v2.1.18
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -402,7 +402,7 @@ app.get('/', (req, res) => {
                 
                 <!-- Terminal Input -->
                 <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
-                  <span style="padding: 0.5rem; color: var(--success); font-family: monospace;">$</span>
+                  <div style="margin-bottom:0.5rem;padding:0.25rem;border-left:2px solid var(--accent);">$</div>
                   <input 
                     type="text" 
                     id="gemini-cli-input" 
@@ -1667,4 +1667,3 @@ app.post('/api/config/provider', (req, res) => {
     });
   }
 
-}
