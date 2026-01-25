@@ -16,7 +16,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ## Prerequisites
 
 | Requirement | Where to Get It | Notes |
-|-------------|-----------------|-------|
+| :--- | :--- | :--- |
 | **3CX Cloud Account** | [3cx.com](https://www.3cx.com/) | Free tier works |
 | **ElevenLabs API Key** | [elevenlabs.io](https://elevenlabs.io/) | For text-to-speech |
 | **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/) | For Whisper speech-to-text |
@@ -25,7 +25,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ## Platform Support
 
 | Platform | Status |
-|----------|--------|
+| :--- | :--- |
 | **macOS** | Fully supported |
 | **Linux** | Fully supported (including Raspberry Pi) |
 | **Windows** | Not supported (may work with WSL) |
@@ -35,7 +35,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.3/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.4/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -59,7 +59,7 @@ gemini-phone setup
 The setup wizard asks what you're installing:
 
 | Type | Use Case | What It Configures |
-|------|----------|-------------------|
+| :--- | :--- | :--- |
 | **Voice Server** | Pi or dedicated voice box | Docker containers, connects to remote API server |
 | **API Server** | Mac/Linux with Claude Code | Just the Claude API wrapper |
 | **Both** | All-in-one single machine | Everything on one box |
@@ -76,7 +76,7 @@ gemini-phone start
 
 Best for: Mac or Linux server that's always on and has Gemini Code installed.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Your Phone                                                  │
 │      │                                                       │
@@ -107,7 +107,7 @@ gemini-phone start    # Launches Docker + API server
 
 Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Your Phone                                                  │
 │      │                                                       │
@@ -143,7 +143,7 @@ Note: On the API server machine, you don't need to run `gemini-phone setup` firs
 ## CLI Commands
 
 | Command | Description |
-|---------|-------------|
+| :--- | :--- |
 | `gemini-phone setup` | Interactive configuration wizard |
 | `gemini-phone start` | Start services based on installation type |
 | `gemini-phone stop` | Stop all services |
@@ -180,7 +180,7 @@ Example devices:
 The voice-app exposes these endpoints on port 3000:
 
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| :--- | :--- | :--- |
 | POST | `/api/outbound-call` | Initiate an outbound call |
 | GET | `/api/call/:callId` | Get call status |
 | GET | `/api/calls` | List active calls |
@@ -202,7 +202,7 @@ gemini-phone logs      # View logs
 ### Common Issues
 
 | Problem | Likely Cause | Solution |
-|---------|--------------|----------|
+| :--- | :--- | :--- |
 | Calls connect but no audio | Wrong external IP | Re-run `gemini-phone setup`, verify LAN IP |
 | Extension not registering | 3CX SBC not running | Check 3CX admin panel |
 | "Sorry, something went wrong" | API server unreachable | Check `gemini-phone status` |
