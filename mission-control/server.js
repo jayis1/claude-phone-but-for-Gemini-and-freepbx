@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.28
+            MISSION CONTROL v2.1.29
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -334,7 +334,7 @@ app.get('/', (req, res) => {
           <div class="service-status">
             <span>Services:</span>
             <div class="service-dots">
-              <span class="service-dot offline" id="dot-pbx" title="PBX Connection"></span>
+
               <span class="service-dot offline" id="dot-drachtio" title="Drachtio (SIP)"></span>
               <span class="service-dot offline" id="dot-freeswitch" title="FreeSWITCH (Media)"></span>
               <span class="service-dot offline" id="dot-freepbx" title="FreePBX/Asterisk"></span>
@@ -871,12 +871,12 @@ async function updatePBXStatus() {
   try {
     const res = await fetch('/api/proxy/voice/health');
     if (res.ok) {
-      document.getElementById('dot-pbx').className = 'service-dot online';
+      document.getElementById('dot-freepbx').className = 'service-dot online';
     } else {
       throw new Error('Voice App unhealthy');
     }
   } catch (e) {
-    document.getElementById('dot-pbx').className = 'service-dot offline';
+    document.getElementById('dot-freepbx').className = 'service-dot offline';
   }
 }
 
@@ -889,15 +889,12 @@ async function updateDockerStatus() {
     if (data.success) {
       document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
       document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
-      // Assume FreePBX is online if Drachtio is connected (since it handles SIP)
-      document.getElementById('dot-freepbx').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
       console.log('Docker health OK:', data);
     }
   } catch (e) {
     console.error('Docker health failed:', e);
     document.getElementById('dot-drachtio').className = 'service-dot offline';
     document.getElementById('dot-freeswitch').className = 'service-dot offline';
-    document.getElementById('dot-freepbx').className = 'service-dot offline';
   }
 }
 
