@@ -23,9 +23,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 
 ## Architecture
 
-## Architecture
-
-Gemini Phone v2.1.6 uses a 3-tier architecture:
+Gemini Phone v2.1.8 uses a 3-tier architecture:
 
 ```text
 ┌─────────────────────────────────────────────┐
@@ -57,7 +55,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 | :--- | :--- | :--- |
 | **SIP PBX Account** | 3CX / FreePBX / Asterisk | Any SIP-compliant server |
 | **ElevenLabs API Key** | [elevenlabs.io](https://elevenlabs.io/) | For text-to-speech |
-| **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/) | For Whisper speech-to-text |
+| **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/) | For Whisper STT |
 | **Gemini Code CLI** | [geminicli.com](https://geminicli.com/) | Requires Gemini subscription |
 
 ## Platform Support
@@ -73,7 +71,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.6/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.8/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -95,14 +93,9 @@ The interactive setup wizard helps you:
 2. **Configure PBX**: Connect to **3CX** or **FreePBX**.
 3. **API Keys**: Enter your ElevenLabs and OpenAI keys.
 
-### 3. Start
+## New in v2.1.8
 
-```bash
-gemini-phone start
-```
-
-## New in v2.1.6
-
+- **Fixed**: Auto-Update button logic.
 - **Auto-Update**: One-click update from Mission Control dashboard.
 - **Provider Switching**: Hot-swap between 3CX and FreePBX.
 - **Setup UI**: Dedicated configuration page for easy PBX setup.
@@ -129,14 +122,12 @@ Best for: Mac or Linux server that's always on and has Gemini Code installed.
 │  │   3CX / FreePBX       │  ← Cloud/Local PBX               │
 │  └──────┬────────────────┘                                  │
 │         │                                                    │
+│         │ SIP                                                │
 │         ↓                                                    │
-│  ┌─────────────────────────────────────────────┐           │
-│  │     Single Server (Mac/Linux)                │           │
-│  │  ┌───────────┐    ┌───────────────────┐    │           │
-│  │  │ voice-app │ ←→ │ gemini-api-server │    │           │
-│  │  │ (Docker)  │    │ (Gemini Code CLI) │    │           │
-│  │  └───────────┘    └───────────────────┘    │           │
-│  └─────────────────────────────────────────────┘           │
+│  ┌───────────────────────┐                                  │
+│  │   Gemini Phone        │  ← Running "Both" mode           │
+│  │  (Voice + API Server) │                                  │
+│  └───────────────────────┘                                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
