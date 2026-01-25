@@ -1132,14 +1132,9 @@ app.get('/api/htop', async (req, res) => {
   const execPromise = util.promisify(exec);
 
   try {
-    // We try htop -b (batch mode) first, fallback to top -b
-    let cmd = 'htop -b -n 1 | head -n 45';
-    try {
-      await execPromise('command -v htop');
-    } catch (e) {
-      cmd = 'top -b -n 1 | head -n 45';
-    }
-
+    // top -b is universally supported on Linux for batch output
+    // We get the first section for cpu/mem and the top processes
+    const cmd = 'top -b -n 1 | head -n 50';
     const { stdout } = await execPromise(cmd);
     res.json({ success: true, output: stdout });
   } catch (error) {
