@@ -709,7 +709,7 @@ app.get('/', (req, res) => {
               const checkData = await checkRes.json();
 
               if (checkData.updateAvailable) {
-                if(confirm('Update available: v' + checkData.remoteVersion + '\n(Current: v' + checkData.localVersion + ')\n\nInstall now?')) {
+                if(confirm('Update available: v' + checkData.remoteVersion + ' (Current: v' + checkData.localVersion + ') - Install now?')) {
                   btn.innerHTML = '<span>🔄</span> Installing...';
                   await fetch('/api/update/apply', {method: 'POST' });
                   alert('Update started! System will restart. Please reload shortly.');
@@ -1095,7 +1095,7 @@ app.get('/', (req, res) => {
           function showUpdateModal(current, remote) {
             showModal(
               'Update Available 🚀',
-              'A new version (' + remote + ') is available! You are on ' + current + '.\n\nDo you want to update and restart now?',
+              'A new version (' + remote + ') is available! You are on ' + current + '. Do you want to update and restart now?',
               true, 
               async () => {
                 const btn = document.getElementById('update-btn');
