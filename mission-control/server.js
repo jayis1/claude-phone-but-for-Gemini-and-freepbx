@@ -451,14 +451,13 @@ app.get('/', (req, res) => {
                 <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
                 <button class="btn" onclick="apiAction('list-files')">📂 Files</button>
                 <button class="btn" onclick="apiAction('weather')">☀️ Weather</button>
-                <button class="btn" onclick="apiAction('ports')">🔌 Ports</button>
-                <button class="btn" onclick="apiAction('uptime')">⏱️ Uptime</button>
+                <!-- Ports/Uptime removed by user request -->
                 <button class="btn" onclick="apiAction('joke')">😄 Joke</button>
                 <button class="btn" onclick="apiAction('fortune')">🔮 Fortune</button>
                 <button class="btn" onclick="apiAction('system-info')">ℹ️ Info</button>
               </div>
 
-              <div id="api-result" style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; font-size: 0.8rem; min-height: 40px; color: #a5b4fc; max-height: 100px; overflow-y: auto;">
+              <div id="api-result" style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; font-size: 0.8rem; flex: 1; color: #a5b4fc; min-height: 150px; overflow-y: auto;">
                 Ready for commands...
               </div>
             </div>
