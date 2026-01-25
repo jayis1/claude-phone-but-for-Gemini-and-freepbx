@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.25
+            MISSION CONTROL v2.1.26
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -462,7 +462,7 @@ app.get('/', (req, res) => {
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">Connection</div>
-                  <div class="stat-value">HTTPS/REST</div>
+                  <div class="stat-value">HTTP/REST</div>
                 </div>
               </div>
 
