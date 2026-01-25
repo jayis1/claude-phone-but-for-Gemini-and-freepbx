@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.23
+            MISSION CONTROL v2.1.24
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -390,46 +390,9 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
-              <div class="control-group">
-                <div class="stat-label">Voice Speed</div>
-                <div class="slider-container">
-                  <span style="font-size: 0.8rem">0.5x</span>
-                  <input type="range" id="voice-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateSpeed(this.value)">
-                  <span id="speed-val" style="font-family: monospace; width: 40px">1.0x</span>
-                </div>
-              </div>
 
-              <div class="control-group">
-                <div class="stat-label">Music Speed (YouTube DJ)</div>
-                <div class="slider-container">
-                  <span style="font-size: 0.8rem">0.5x</span>
-                  <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
-                  <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
-                </div>
-              </div>
 
-              <!-- Gemini CLI Terminal -->
-              <div style="margin-bottom: 1rem;">
-                <div class="stat-label">Gemini CLI</div>
-                
-                <!-- Terminal Output -->
-                <div id="gemini-terminal" style="background: #000; border-radius: 6px 6px 0 0; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; height: 200px; overflow-y: auto; border: 1px solid var(--border);">
-                  <div style="color: var(--success);">$ gemini --help</div>
-                  <div style="color: var(--text-dim); font-size: 0.7rem; margin-bottom: 0.5rem;">Type a command and press Enter</div>
-                </div>
-                
-                <!-- Terminal Input -->
-                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
-                  <div style="margin-bottom: 0.5rem; padding: 0.25rem; border-left: 2px solid var(--accent); font-family: monospace;">$</span>
-                  <input 
-                    type="text" 
-                    id="gemini-cli-input" 
-                    placeholder="--help" 
-                    onkeypress="if(event.key==='Enter') executeGeminiCommand()"
-                    style="flex: 1; background: transparent; border: none; color: var(--text); font-family: monospace; font-size: 0.85rem; outline: none; padding: 0.5rem 0.5rem 0.5rem 0;">
-                  <button onclick="executeGeminiCommand()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Run</button>
-                </div>
-              </div>
+              <!-- Terminal Moved to API Panel -->
 
               <div style="margin-top: 1rem;">
                 <div class="stat-label">CLI Access & APIs</div>
@@ -485,10 +448,10 @@ app.get('/', (req, res) => {
             </div>
           </div>
 
-          <!-- GEMINI API SERVER -->
+          <!-- GEMINI API SERVER (Quadrant 3) -->
           <div class="panel">
             <div class="panel-header">
-              <span>⚡ GEMINI API SERVER</span>
+              <span>⚡ GEMINI API SERVER & CLI</span>
               <span class="status-badge" id="api-status" style="color: var(--warning)">Checking...</span>
             </div>
             <div class="panel-content">
@@ -503,19 +466,39 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
+              <!-- Gemini CLI Terminal (Moved Here) -->
+              <div style="margin-bottom: 1rem; margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
+                <div class="stat-label">Gemini Bridge Terminal</div>
+                
+                <!-- Terminal Output -->
+                <div id="gemini-terminal" style="background: #000; border-radius: 6px 6px 0 0; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex: 1; overflow-y: auto; border: 1px solid var(--border); min-height: 200px;">
+                  <div style="color: var(--success);">$ gemini --help</div>
+                  <div style="color: var(--text-dim); font-size: 0.7rem; margin-bottom: 0.5rem;">Type a command and press Enter</div>
+                </div>
+                
+                <!-- Terminal Input -->
+                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
+                  <div style="margin-bottom: 0.5rem; padding: 0.25rem; border-left: 2px solid var(--accent); font-family: monospace;">$</div>
+                  <input 
+                    type="text" 
+                    id="gemini-cli-input" 
+                    placeholder="Ask Gemini or run command..." 
+                    onkeypress="if(event.key==='Enter') executeGeminiCommand()"
+                    style="flex: 1; background: transparent; border: none; color: var(--text); font-family: monospace; font-size: 0.85rem; outline: none; padding: 0.5rem 0.5rem 0.5rem 0;">
+                  <button onclick="executeGeminiCommand()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Run</button>
+                </div>
+              </div>
+
               <div class="btn-grid">
                 <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
                 <button class="btn" onclick="apiAction('list-files')">📂 Files</button>
                 <button class="btn" onclick="apiAction('weather')">☀️ Weather</button>
-                <!-- Ports/Uptime removed by user request -->
                 <button class="btn" onclick="apiAction('joke')">😄 Joke</button>
                 <button class="btn" onclick="apiAction('fortune')">🔮 Fortune</button>
                 <button class="btn" onclick="apiAction('system-info')">ℹ️ Info</button>
               </div>
 
-              <div id="api-result" style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; font-size: 0.8rem; flex: 1; color: #a5b4fc; min-height: 150px; overflow-y: auto;">
-                Ready for commands...
-              </div>
+              <div id="api-result" style="display: none;"></div>
             </div>
           </div>
 
