@@ -380,11 +380,15 @@ app.get('/', (req, res) => {
 
               <div class="btn-grid">
                 <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
-                <button class="btn" onclick="apiAction('docker-check')">🐳 Check Docker</button>
-                <button class="btn" onclick="apiAction('git-status')">🐙 Git Status</button>
-                <button class="btn" onclick="apiAction('list-files')">📂 List Files</button>
+                <button class="btn" onclick="apiAction('docker-check')">🐳 Docker</button>
+                <button class="btn" onclick="apiAction('git-status')">🐙 Git</button>
+                <button class="btn" onclick="apiAction('list-files')">📂 Files</button>
                 <button class="btn" onclick="apiAction('weather')">☀️ Weather</button>
-                <button class="btn" onclick="apiAction('joke')">😄 Tell Joke</button>
+                <button class="btn" onclick="apiAction('network')">🖧 Network</button>
+                <button class="btn" onclick="apiAction('disk')">💾 Disk</button>
+                <button class="btn" onclick="apiAction('ports')">🔌 Ports</button>
+                <button class="btn" onclick="apiAction('uptime')">⏱️ Uptime</button>
+                <button class="btn" onclick="apiAction('joke')">😄 Joke</button>
                 <button class="btn" onclick="apiAction('fortune')">🔮 Fortune</button>
                 <button class="btn" onclick="apiAction('system-info')">ℹ️ Info</button>
               </div>
@@ -527,7 +531,11 @@ app.get('/', (req, res) => {
             'docker-check': 'Check status of all docker containers and return a summary.',
             'git-status': 'Check git status and recent commits.',
             'list-files': 'List files in the current directory.',
-            'weather': 'What is the weather like?'
+            'weather': 'What is the weather like?',
+            'network': 'Check network interfaces and IP addresses.',
+            'disk': 'Check disk usage.',
+            'ports': 'Check active listening ports.',
+            'uptime': 'Check system uptime.'
           };
 
           async function apiAction(action) {
