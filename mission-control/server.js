@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.32
+            MISSION CONTROL v2.1.34
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -718,6 +718,68 @@ app.get('/', (req, res) => {
             output.scrollTop = output.scrollHeight;
           }
 
+
+          async function checkForUpdates() {
+            const btn = document.getElementById('update-btn');
+            btn.innerHTML = '<span>⏳</span> Checking...';
+            btn.disabled = true;
+
+            try {
+              // 1. Check
+              const checkRes = await fetch('/api/update/check');
+              const checkData = await checkRes.json();
+
+              if (checkData.updateAvailable) {
+                // Update found!
+                if(confirm(`Update available: v${ checkData.remoteVersion }\n(Current: v${ checkData.localVersion }) \n\nInstall now ? This will reset local changes.`)) {
+                   btn.innerHTML = '<span>🔄</span> Installing...';
+                   
+                   // 2. Apply
+                   await fetch('/api/update/apply', { method: 'POST' });
+                   
+                   alert('Update started! Mission Control will restart in a few moments. Please reload the page shortly.');
+                   setTimeout(() => location.reload(), 5000);
+                } else {
+                   btn.innerHTML = '<span>🔄</span> Check Updates';
+                   btn.disabled = false;
+                }
+              } else {
+                alert('You are on the latest version (' + checkData.localVersion + ')');
+                btn.innerHTML = '<span>🔄</span> Check Updates';
+                btn.disabled = false;
+              }
+            } catch (e) {
+              alert('Update check failed: ' + e.message);
+              btn.innerHTML = '<span>⚠️</span> Error';
+              btn.disabled = false;
+            }
+          }
+
+          // Initial check (hidden unless update available)
+          async function autoCheckUpdate() {
+             try {
+               const res = await fetch('/api/update/check');
+               const d = await res.json();
+               if(d.updateAvailable) {
+                 const btn = document.getElementById('update-btn');
+                 btn.style.display = 'flex';
+                 btn.style.background = '#ec4899'; // Pink for alert
+                 btn.innerHTML = `< span >⬆️</span > Update to v${ d.remoteVersion }`;
+                 // Override onclick to skip the check step since we already gathered data
+                 btn.onclick = async () => {
+                    if(confirm('Install update now?')) {
+                       btn.innerHTML = '<span>🔄</span> Installing...';
+                       await fetch('/api/update/apply', { method: 'POST' });
+                       alert('Update installing. Reload shortly.');
+                       setTimeout(() => location.reload(), 5000);
+                    }
+                 };
+               }
+             } catch(e) {}
+          }
+          // Run auto-check on load
+          window.addEventListener('load', autoCheckUpdate);
+         
           // Inference Brain
           async function updateInference() {
             try {
