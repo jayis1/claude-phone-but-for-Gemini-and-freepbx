@@ -10,6 +10,7 @@ const si = require('systeminformation');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const generateHtopPage = require('./htop-page');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
@@ -67,269 +68,275 @@ app.get('/', (req, res) => {
         <style>
           :root {
             --bg: #09090b;
-            --panel: #18181b;
-            --border: #27272a;
-            --text: #e4e4e7;
-            --text-dim: #a1a1aa;
-            --accent: #8b5cf6;
-            --success: #10b981;
-            --error: #ef4444;
-            --warning: #f59e0b;
+          --panel: #18181b;
+          --border: #27272a;
+          --text: #e4e4e7;
+          --text-dim: #a1a1aa;
+          --accent: #8b5cf6;
+          --success: #10b981;
+          --error: #ef4444;
+          --warning: #f59e0b;
           }
-          * { margin: 0; padding: 0; box-sizing: border-box; }
+          * {margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            font - family: 'Inter', system-ui, sans-serif;
+          background-color: var(--bg);
+          color: var(--text);
+          height: 100vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
           }
           .header {
             height: 60px;
-            background: var(--panel);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.5rem;
-            flex-shrink: 0;
+          background: var(--panel);
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 1.5rem;
+          flex-shrink: 0;
           }
           .logo {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            background: linear-gradient(to right, #c084fc, #6366f1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            font - size: 1.25rem;
+          font-weight: 800;
+          letter-spacing: -0.025em;
+          background: linear-gradient(to right, #c084fc, #6366f1);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
           }
           .status-dot {
             width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 12px var(--success);
+          height: 8px;
+          background: var(--success);
+          border-radius: 50%;
+          box-shadow: 0 0 12px var(--success);
           }
           .service-status {
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-dim);
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.75rem;
+          color: var(--text-dim);
           }
           .service-dots {
             display: flex;
-            gap: 0.5rem;
+          gap: 0.5rem;
           }
           .service-dot {
             width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
+          height: 10px;
+          border-radius: 50%;
+          transition: all 0.3s ease;
           }
           .service-dot.online {
             background: var(--success);
-            box-shadow: 0 0 8px var(--success);
+          box-shadow: 0 0 8px var(--success);
           }
           .service-dot.offline {
             background: var(--error);
-            box-shadow: 0 0 8px var(--error);
+          box-shadow: 0 0 8px var(--error);
           }
           .grid {
             flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 1rem;
-            padding: 1rem;
-            height: calc(100vh - 60px);
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: 1fr 1fr;
+          gap: 1rem;
+          padding: 1rem;
+          height: calc(100vh - 60px);
           }
           .panel {
             background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           }
           .panel-header {
             padding: 1rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255,255,255,0.02);
+          font-weight: 600;
+          font-size: 0.9rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--border);
+          background: rgba(255,255,255,0.02);
           }
           .panel-content {
             padding: 1.25rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
           }
-          
+
           /* Stats Grid */
           .stat-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            width: 100%;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+          width: 100%;
           }
           .stat-card {
             background: rgba(0,0,0,0.3);
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            text-align: center;
+          padding: 1rem;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          text-align: center;
           }
           .stat-label {
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+            font - size: 0.7rem;
+          color: var(--text-dim);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.5rem;
           }
           .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            color: white;
+            font - size: 1.5rem;
+          font-weight: 700;
+          font-family: 'JetBrains Mono', monospace;
+          color: white;
           }
-          
+
           /* Controls */
           .control-group {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            border: 1px solid var(--border);
+            margin - top: 1rem;
+          padding: 1rem;
+          background: rgba(255,255,255,0.03);
+          border-radius: 8px;
+          border: 1px solid var(--border);
           }
           .slider-container {
             display: flex;
-            align-items: center;
-            gap: 1rem;
+          align-items: center;
+          gap: 1rem;
           }
           input[type=range] {
             flex: 1;
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
-            appearance: none;
+          height: 6px;
+          background: var(--border);
+          border-radius: 3px;
+          appearance: none;
           }
           input[type=range]::-webkit-slider-thumb {
             appearance: none;
-            width: 16px;
-            height: 16px;
-            background: var(--accent);
-            border-radius: 50%;
-            cursor: pointer;
+          width: 16px;
+          height: 16px;
+          background: var(--accent);
+          border-radius: 50%;
+          cursor: pointer;
           }
           select {
             width: 100%;
-            background: #09090b;
-            color: white;
-            border: 1px solid var(--border);
-            padding: 0.5rem;
-            border-radius: 6px;
-            font-family: inherit;
+          background: #09090b;
+          color: white;
+          border: 1px solid var(--border);
+          padding: 0.5rem;
+          border-radius: 6px;
+          font-family: inherit;
           }
 
           /* Buttons */
           .btn-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-top: 1rem;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.75rem;
+          margin-top: 1rem;
           }
           .btn {
             background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            color: var(--text);
-            padding: 0.75rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+          border: 1px solid rgba(139, 92, 246, 0.2);
+          color: var(--text);
+          padding: 0.75rem;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
           }
           .btn:hover {
             background: var(--accent);
-            color: white;
-            border-color: var(--accent);
+          color: white;
+          border-color: var(--accent);
           }
-          
+
           /* Monitors */
           .monitor-row {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.8rem;
           }
           .progress-bar {
             flex: 1;
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
-            margin: 0 1rem;
-            overflow: hidden;
+          height: 6px;
+          background: var(--border);
+          border-radius: 3px;
+          margin: 0 1rem;
+          overflow: hidden;
           }
           .progress-fill {
             height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.5s ease;
+          background: var(--accent);
+          width: 0%;
+          transition: width 0.5s ease;
           }
 
           /* Modal Styles */
           .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 2000;
-            display: none; justify-content: center; align-items: center;
-            backdrop-filter: blur(4px);
+          background: rgba(0,0,0,0.8); z-index: 2000;
+          display: none; justify-content: center; align-items: center;
+          backdrop-filter: blur(4px);
           }
           .modal {
             background: var(--panel); border: 1px solid var(--border);
-            padding: 2rem; border-radius: 12px; max-width: 450px; width: 90%;
-            text-align: center; color: var(--text);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-            transform: translateY(0);
-            transition: transform 0.2s;
+          padding: 2rem; border-radius: 12px; max-width: 450px; width: 90%;
+          text-align: center; color: var(--text);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+          transform: translateY(0);
+          transition: transform 0.2s;
           }
-          .modal h3 { margin-bottom: 0.5rem; color: #fff; font-size: 1.25rem; }
-          .modal p { margin-bottom: 1.5rem; color: var(--text-dim); line-height: 1.5; }
-          .modal-buttons { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
-          .btn-primary { background: var(--accent); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: filter 0.2s; }
-          .btn-primary:hover { filter: brightness(1.1); }
-          .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
-          .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+          .modal h3 {margin - bottom: 0.5rem; color: #fff; font-size: 1.25rem; }
+          .modal p {margin - bottom: 1.5rem; color: var(--text-dim); line-height: 1.5; }
+          .modal-buttons {display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+          .btn-primary {background: var(--accent); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: filter 0.2s; }
+          .btn-primary:hover {filter: brightness(1.1); }
+          .btn-secondary {background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
+          .btn-secondary:hover {background: rgba(255,255,255,0.05); }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.36
+            MISSION CONTROL v2.1.40
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
-             <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-               <span>🔄</span> Check Updates
-             </button>
-          
-             <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px;">FreePBX / SIP</span>
+            <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+              <span>🔄</span> Check Updates
+            </button>
+
+            <a href="/htop" style="text-decoration: none;">
+              <button style="padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+                <span>📊</span> htop
+              </button>
+            </a>
+
+            <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px;">FreePBX / SIP</span>
           </div>
           <div class="service-status">
             <span>Services:</span>
@@ -356,7 +363,7 @@ app.get('/', (req, res) => {
               <span class="status-badge" id="voice-status" style="color: var(--warning)">Checking...</span>
             </div>
             <div class="panel-content">
-              <div class="stat-grid" style="margin-bottom: 1rem;">
+              <div class="stat-grid" style="margin-bottom: 1rem; grid-template-columns: repeat(3, 1fr);">
                 <div class="stat-card">
                   <div class="stat-label">System</div>
                   <div class="stat-value" id="voice-system">Ready</div>
@@ -365,6 +372,10 @@ app.get('/', (req, res) => {
                   <div class="stat-label">Active Calls</div>
                   <div class="stat-value" id="voice-calls">0</div>
                 </div>
+                <div class="stat-card">
+                  <div class="stat-label">AI Sessions</div>
+                  <div class="stat-value" id="ai-sessions">0</div>
+                </div>
               </div>
 
               <div class="control-group">
@@ -372,7 +383,7 @@ app.get('/', (req, res) => {
                 <div class="slider-container">
                   <span style="font-size: 0.8rem">0.5x</span>
                   <input type="range" id="voice-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateSpeed(this.value)">
-                  <span id="speed-val" style="font-family: monospace; width: 40px">1.0x</span>
+                    <span id="speed-val" style="font-family: monospace; width: 40px">1.0x</span>
                 </div>
               </div>
 
@@ -381,7 +392,7 @@ app.get('/', (req, res) => {
                 <div class="slider-container">
                   <span style="font-size: 0.8rem">0.5x</span>
                   <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
-                  <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
+                    <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
                 </div>
               </div>
 
@@ -390,7 +401,7 @@ app.get('/', (req, res) => {
                 <div class="slider-container">
                   <span style="font-size: 0.8rem">0%</span>
                   <input type="range" id="music-volume" min="0" max="100" step="5" value="50" onchange="updateMusicVolume(this.value)">
-                  <span id="music-volume-val" style="font-family: monospace; width: 40px">50%</span>
+                    <span id="music-volume-val" style="font-family: monospace; width: 40px">50%</span>
                 </div>
               </div>
 
@@ -435,7 +446,7 @@ app.get('/', (req, res) => {
                 </div>
                 <div style="display: flex;">
                   <span style="background: #18181b; color: #10b981; border: 1px solid #3f3f46; border-right: none; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; border-radius: 0 0 0 6px;">$</span>
-                  <input type="text" id="terminal-input" placeholder="Ask Gemini..." 
+                  <input type="text" id="terminal-input" placeholder="Ask Gemini..."
                     onkeydown="if(event.key==='Enter') sendTerminalCommand()"
                     style="
                       flex: 1; 
@@ -460,34 +471,11 @@ app.get('/', (req, res) => {
               <span class="status-badge" id="inference-status" style="color: var(--warning)">Checking...</span>
             </div>
             <div class="panel-content">
-              <div class="stat-grid" style="margin-bottom: 1rem;">
-                <div class="stat-card">
-                  <div class="stat-label">Sessions</div>
-                  <div class="stat-value" id="ai-sessions">0</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">Load</div>
-                  <div class="stat-value" id="ai-load">--%</div>
-                </div>
-              </div>
-
-              <div class="control-group">
-                <div class="stat-label">Active Model</div>
-                <div style="display: flex; gap: 8px;">
-                  <select id="model-select" style="flex: 1; background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
-                    <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                  </select>
-                  <button onclick="updateModel()" style="padding: 4px 8px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Apply</button>
-                </div>
-              </div>
-
-               <div style="flex: 1; margin-top: 1rem; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="stat-label">Activity Log</div>
-                <div id="brain-log" class="log-container" style="background: rgba(0,0,0,0.3); border: none;">
-                  <div class="log-entry"><span class="log-time">--:--</span> Waiting for thoughts...</div>
+              <!-- Logs moved here from System Monitor -->
+              <div style="flex: 1; margin-top: 1rem; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="stat-label">Shared System Logs</div>
+                <div id="sys-logs" class="log-container" style="background: rgba(0,0,0,0.3); border: none;">
+                  <!-- Logs -->
                 </div>
               </div>
             </div>
@@ -511,28 +499,21 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
-              <!-- Gemini CLI Terminal (Moved Here) -->
-              <div style="margin-bottom: 1rem; margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
-                <div class="stat-label">Gemini Bridge Terminal</div>
-                
-                <!-- Terminal Output -->
-                <div id="gemini-terminal" style="background: #000; border-radius: 6px 6px 0 0; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex: 1; overflow-y: auto; border: 1px solid var(--border); min-height: 200px;">
-                  <div style="color: var(--success);">$ gemini --help</div>
-                  <div style="color: var(--text-dim); font-size: 0.7rem; margin-bottom: 0.5rem;">Type a command and press Enter</div>
-                </div>
-                
-                <!-- Terminal Input -->
-                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
-                  <div style="margin-bottom: 0.5rem; padding: 0.25rem; border-left: 2px solid var(--accent); font-family: monospace;">$</div>
-                  <input 
-                    type="text" 
-                    id="gemini-cli-input" 
-                    placeholder="Ask Gemini or run command..." 
-                    onkeypress="if(event.key==='Enter') executeGeminiCommand()"
-                    style="flex: 1; background: transparent; border: none; color: var(--text); font-family: monospace; font-size: 0.85rem; outline: none; padding: 0.5rem 0.5rem 0.5rem 0;">
-                  <button onclick="executeGeminiCommand()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Run</button>
+              <!-- Active Model (Moved Here from Inference Brain) -->
+              <div class="control-group" style="margin-bottom: 1rem; margin-top: 1rem;">
+                <div class="stat-label">Active Model</div>
+                <div style="display: flex; gap: 8px;">
+                  <select id="model-select" style="flex: 1; background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
+                    <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                  </select>
+                  <button onclick="updateModel()" style="padding: 4px 8px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Apply</button>
                 </div>
               </div>
+
+              <!-- Gemini CLI Terminal Moved to System Monitor -->
 
               <div class="btn-grid">
                 <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
@@ -560,7 +541,7 @@ app.get('/', (req, res) => {
                 <div class="progress-bar"><div class="progress-fill" id="bar-cpu"></div></div>
                 <span id="val-cpu">--%</span>
               </div>
-              
+
               <!-- GPU -->
               <div class="monitor-row">
                 <span style="width: 40px">GPU</span>
@@ -582,10 +563,33 @@ app.get('/', (req, res) => {
                 <span id="val-temp">--°C</span>
               </div>
 
-              <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-top: 1rem;">
-                <div class="stat-label">Shared System Logs</div>
-                <div id="sys-logs" class="log-container">
-                  <!-- Logs -->
+              <!-- AI LOAD (Moved Here) -->
+              <div class="monitor-row">
+                <span style="width: 40px">AI</span>
+                <div class="progress-bar"><div class="progress-fill" id="bar-ai-load" style="background: #a855f7"></div></div>
+                <span id="ai-load">--%</span>
+              </div>
+
+              <!-- Gemini CLI Terminal (Moved Here from API Server) -->
+              <div style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
+                <div class="stat-label">Gemini Bridge Terminal</div>
+
+                <!-- Terminal Output -->
+                <div id="gemini-terminal" style="background: #000; border-radius: 6px 6px 0 0; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; flex: 1; overflow-y: auto; border: 1px solid var(--border); min-height: 150px;">
+                  <div style="color: var(--success);">$ gemini --help</div>
+                  <div style="color: var(--text-dim); font-size: 0.7rem; margin-bottom: 0.5rem;">Type a command and press Enter</div>
+                </div>
+
+                <!-- Terminal Input -->
+                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
+                  <div style="margin-bottom: 0.5rem; padding: 0.25rem; border-left: 2px solid var(--accent); font-family: monospace;">$</div>
+                  <input
+                    type="text"
+                    id="gemini-cli-input"
+                    placeholder="Ask Gemini or run command..."
+                    onkeypress="if(event.key==='Enter') executeGeminiCommand()"
+                    style="flex: 1; background: transparent; border: none; color: var(--text); font-family: monospace; font-size: 0.85rem; outline: none; padding: 0.5rem 0.5rem 0.5rem 0;">
+                    <button onclick="executeGeminiCommand()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Run</button>
                 </div>
               </div>
             </div>
@@ -601,12 +605,12 @@ app.get('/', (req, res) => {
           // Update Helpers
           function setStatus(id, online) {
             const el = document.getElementById(id);
-            if(online) {
-              el.innerText = 'ONLINE';
-              el.style.color = 'var(--success)';
+          if(online) {
+            el.innerText = 'ONLINE';
+          el.style.color = 'var(--success)';
             } else {
-              el.innerText = 'OFFLINE';
-              el.style.color = 'var(--error)';
+            el.innerText = 'OFFLINE';
+          el.style.color = 'var(--error)';
             }
           }
 
@@ -615,143 +619,143 @@ app.get('/', (req, res) => {
             try {
               // Try health first
               const h = await fetch('/api/proxy/voice/health');
-              if(h.ok) {
-                setStatus('voice-status', true);
-                document.getElementById('dot-voice').className = 'service-dot online';
+          if(h.ok) {
+            setStatus('voice-status', true);
+          document.getElementById('dot-voice').className = 'service-dot online';
               } else throw new Error('Unhealthy');
 
-              // Get Config for speed
-              const c = await fetch('/api/proxy/voice/api/config?device=default'); // Assuming default device exists
-              const conf = await c.json();
-              if(conf.success) {
+          // Get Config for speed
+          const c = await fetch('/api/proxy/voice/api/config?device=default'); // Assuming default device exists
+          const conf = await c.json();
+          if(conf.success) {
                  const speed = conf.config.speed || 1.0;
-                 document.getElementById('voice-speed').value = speed;
-                 document.getElementById('speed-val').innerText = speed + 'x';
+          document.getElementById('voice-speed').value = speed;
+          document.getElementById('speed-val').innerText = speed + 'x';
               }
             } catch(e) {
-              setStatus('voice-status', false);
-              document.getElementById('dot-voice').className = 'service-dot offline';
+            setStatus('voice-status', false);
+          document.getElementById('dot-voice').className = 'service-dot offline';
             }
           }
 
           async function updateSpeed(val) {
             document.getElementById('speed-val').innerText = val + 'x';
-            try {
+          try {
               // Get first device to update
               const d = await fetch('/api/proxy/voice/api/devices');
-              const dd = await d.json();
+          const dd = await d.json();
               if(dd.devices && dd.devices.length > 0) {
-                await fetch('/api/proxy/voice/api/config/speed', {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({ device: dd.devices[0].extension, speed: parseFloat(val) })
-                });
+            await fetch('/api/proxy/voice/api/config/speed', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ device: dd.devices[0].extension, speed: parseFloat(val) })
+            });
               }
-            } catch(e) { console.error(e); }
+            } catch(e) {console.error(e); }
           }
 
           async function updateMusicSpeed(val) {
             document.getElementById('music-speed-val').innerText = val + 'x';
-            try {
-              // Send to Inference Server to control YouTube DJ playback speed
-              await fetch('/api/proxy/inference/music-speed', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ speed: parseFloat(val) })
-              });
-            } catch(e) { console.error('Music speed update failed:', e); }
+          try {
+            // Send to Inference Server to control YouTube DJ playback speed
+            await fetch('/api/proxy/inference/music-speed', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ speed: parseFloat(val) })
+            });
+            } catch(e) {console.error('Music speed update failed:', e); }
           }
 
           async function updateMusicVolume(val) {
             document.getElementById('music-volume-val').innerText = val + '%';
-            try {
-              // Send to Inference Server (or Voice App if it handles mixing)
-              // Currently Inference Brain handles YT DJ via yt-dlp, so we send there
-              await fetch('/api/proxy/inference/music-volume', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ volume: parseInt(val) })
-              });
-            } catch(e) { console.error('Music volume update failed:', e); }
+          try {
+            // Send to Inference Server (or Voice App if it handles mixing)
+            // Currently Inference Brain handles YT DJ via yt-dlp, so we send there
+            await fetch('/api/proxy/inference/music-volume', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ volume: parseInt(val) })
+            });
+            } catch(e) {console.error('Music volume update failed:', e); }
           }
 
           async function sendTerminalCommand() {
             const input = document.getElementById('terminal-input');
-            const output = document.getElementById('terminal-output');
-            const cmd = input.value.trim();
-            if (!cmd) return;
+          const output = document.getElementById('terminal-output');
+          const cmd = input.value.trim();
+          if (!cmd) return;
 
-            input.value = '';
-            
-            // Append command to output
-            const cmdLine = document.createElement('div');
-            cmdLine.innerHTML = '<span style="color:#10b981">$</span> ' + cmd;
-            output.appendChild(cmdLine);
-            output.scrollTop = output.scrollHeight;
+          input.value = '';
 
-            try {
+          // Append command to output
+          const cmdLine = document.createElement('div');
+          cmdLine.innerHTML = '<span style="color:#10b981">$</span> ' + cmd;
+          output.appendChild(cmdLine);
+          output.scrollTop = output.scrollHeight;
+
+          try {
               // Send to backend
               const res = await fetch('/api/terminal/command', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ command: cmd })
+            method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({command: cmd })
               });
-              
-              const data = await res.json();
-              
-              const respLine = document.createElement('div');
-              if (data.success) {
-                respLine.style.color = '#e2e8f0';
-                respLine.style.marginBottom = '10px';
-                respLine.innerText = data.response;
+
+          const data = await res.json();
+
+          const respLine = document.createElement('div');
+          if (data.success) {
+            respLine.style.color = '#e2e8f0';
+          respLine.style.marginBottom = '10px';
+          respLine.innerText = data.response;
               } else {
-                respLine.style.color = '#ef4444';
-                respLine.innerText = 'Error: ' + (data.error || 'Unknown error');
+            respLine.style.color = '#ef4444';
+          respLine.innerText = 'Error: ' + (data.error || 'Unknown error');
               }
-              output.appendChild(respLine);
+          output.appendChild(respLine);
             } catch (e) {
               const errLine = document.createElement('div');
-              errLine.style.color = '#ef4444';
-              errLine.innerText = 'Connection failed: ' + e.message;
-              output.appendChild(errLine);
+          errLine.style.color = '#ef4444';
+          errLine.innerText = 'Connection failed: ' + e.message;
+          output.appendChild(errLine);
             }
-            output.scrollTop = output.scrollHeight;
+          output.scrollTop = output.scrollHeight;
           }
 
 
           async function checkForUpdates() {
             const btn = document.getElementById('update-btn');
-            btn.innerHTML = '<span>⏳</span> Checking...';
-            btn.disabled = true;
+          btn.innerHTML = '<span>⏳</span> Checking...';
+          btn.disabled = true;
 
-            try {
+          try {
               // 1. Check
               const checkRes = await fetch('/api/update/check');
-              const checkData = await checkRes.json();
+          const checkData = await checkRes.json();
 
-              if (checkData.updateAvailable) {
+          if (checkData.updateAvailable) {
                 // Update found!
                 if(confirm('Update available: v' + checkData.remoteVersion + '\n(Current: v' + checkData.localVersion + ')\n\nInstall now? This will reset local changes.')) {
-                   btn.innerHTML = '<span>🔄</span> Installing...';
-                   
-                   // 2. Apply
-                   await fetch('/api/update/apply', { method: 'POST' });
-                   
-                   alert('Update started! Mission Control will restart in a few moments. Please reload the page shortly.');
+            btn.innerHTML = '<span>🔄</span> Installing...';
+
+          // 2. Apply
+          await fetch('/api/update/apply', {method: 'POST' });
+
+          alert('Update started! Mission Control will restart in a few moments. Please reload the page shortly.');
                    setTimeout(() => location.reload(), 5000);
                 } else {
-                   btn.innerHTML = '<span>🔄</span> Check Updates';
-                   btn.disabled = false;
+            btn.innerHTML = '<span>🔄</span> Check Updates';
+          btn.disabled = false;
                 }
               } else {
-                alert('You are on the latest version (' + checkData.localVersion + ')');
-                btn.innerHTML = '<span>🔄</span> Check Updates';
-                btn.disabled = false;
+            alert('You are on the latest version (' + checkData.localVersion + ')');
+          btn.innerHTML = '<span>🔄</span> Check Updates';
+          btn.disabled = false;
               }
             } catch (e) {
-              alert('Update check failed: ' + e.message);
-              btn.innerHTML = '<span>⚠️</span> Error';
-              btn.disabled = false;
+            alert('Update check failed: ' + e.message);
+          btn.innerHTML = '<span>⚠️</span> Error';
+          btn.disabled = false;
             }
           }
 
@@ -759,121 +763,124 @@ app.get('/', (req, res) => {
           async function autoCheckUpdate() {
              try {
                const res = await fetch('/api/update/check');
-               const d = await res.json();
-               if(d.updateAvailable) {
+          const d = await res.json();
+          if(d.updateAvailable) {
                  const btn = document.getElementById('update-btn');
-                 btn.style.display = 'flex';
-                 btn.style.background = '#ec4899'; // Pink for alert
-                 btn.innerHTML = '<span>⬆️</span> Update to v' + d.remoteVersion;
+          btn.style.display = 'flex';
+          btn.style.background = '#ec4899'; // Pink for alert
+          btn.innerHTML = '<span>⬆️</span> Update to v' + d.remoteVersion;
                  // Override onclick to skip the check step since we already gathered data
                  btn.onclick = async () => {
                     if(confirm('Install update now?')) {
-                       btn.innerHTML = '<span>🔄</span> Installing...';
-                       await fetch('/api/update/apply', { method: 'POST' });
-                       alert('Update installing. Reload shortly.');
+            btn.innerHTML = '<span>🔄</span> Installing...';
+          await fetch('/api/update/apply', {method: 'POST' });
+          alert('Update installing. Reload shortly.');
                        setTimeout(() => location.reload(), 5000);
                     }
                  };
                }
-             } catch(e) {}
+             } catch(e) { }
           }
           // Run auto-check on load
           window.addEventListener('load', autoCheckUpdate);
-         
+
           // Inference Brain
           async function updateInference() {
             try {
               const res = await fetch('/api/proxy/inference/stats');
-              const data = await res.json();
-              if(data.success) {
-                setStatus('inference-status', true);
-                document.getElementById('dot-brain').className = 'service-dot online';
-                document.getElementById('ai-sessions').innerText = data.sessions;
-                document.getElementById('model-select').value = data.model;
-                
-                // Mock load for now if not in stats
-                document.getElementById('ai-load').innerText = (data.cpu || 0) + '%';
+          const data = await res.json();
+          if(data.success) {
+            setStatus('inference-status', true);
+          document.getElementById('dot-brain').className = 'service-dot online';
+          document.getElementById('ai-sessions').innerText = data.sessions;
+          document.getElementById('model-select').value = data.model;
+
+          // Mock load for now if not in stats
+          const load = data.cpu || 0;
+          document.getElementById('ai-load').innerText = load + '%';
+          const loadBar = document.getElementById('bar-ai-load');
+          if(loadBar) loadBar.style.width = load + '%';
               }
             } catch(e) {
-              setStatus('inference-status', false);
-              document.getElementById('dot-brain').className = 'service-dot offline';
+            setStatus('inference-status', false);
+          document.getElementById('dot-brain').className = 'service-dot offline';
             }
           }
 
           async function updateModel() {
             const model = document.getElementById('model-select').value;
-            try {
-              await fetch('/api/proxy/inference/config', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ model })
-              });
-              alert('Model updated to ' + model);
-            } catch(e) { alert('Failed to change model'); }
+          try {
+            await fetch('/api/proxy/inference/config', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ model })
+            });
+          alert('Model updated to ' + model);
+            } catch(e) {alert('Failed to change model'); }
           }
-// ... (imports or other code if needed) ...
-  const provider = document.getElementById('provider-select').value;
-  // No confirm needed now, as we proceed to setup
-  
-  try {
-    document.getElementById('provider-select').disabled = true;
-    const res = await fetch('/api/config/provider', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ provider })
+          // ... (imports or other code if needed) ...
+          const provider = document.getElementById('provider-select').value;
+          // No confirm needed now, as we proceed to setup
+
+          try {
+            document.getElementById('provider-select').disabled = true;
+          const res = await fetch('/api/config/provider', {
+            method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({provider})
     });
-    
-    if(res.ok) {
-      // Redirect to Setup Page
-      window.location = '/setup';
+
+          if(res.ok) {
+            // Redirect to Setup Page
+            window.location = '/setup';
     } else {
-      alert('Failed to switch provider');
-      document.getElementById('provider-select').disabled = false;
+            alert('Failed to switch provider');
+          document.getElementById('provider-select').disabled = false;
     }
   } catch(e) {
-    alert('Error: ' + e.message);
-    document.getElementById('provider-select').disabled = false;
+            alert('Error: ' + e.message);
+          document.getElementById('provider-select').disabled = false;
   }
 }
 
           const PROMPTS = {
             'docker-check': 'Check status of all docker containers and return a summary.',
-            'git-status': 'Check git status and recent commits.',
-            'list-files': 'List files in the current directory.',
-            'weather': 'What is the weather like?',
-            'network': 'Check network interfaces and IP addresses.',
-            'disk': 'Check disk usage.',
-            'ports': 'Check active listening ports.',
-            'uptime': 'Check system uptime.'
+          'git-status': 'Check git status and recent commits.',
+          'list-files': 'List files in the current directory.',
+          'weather': 'What is the weather like?',
+          'network': 'Check network interfaces and IP addresses.',
+          'disk': 'Check disk usage.',
+          'ports': 'Check active listening ports.',
+          'uptime': 'Check system uptime.'
           };
 
           async function apiAction(action) {
             const out = document.getElementById('api-result');
-            out.innerText = 'Running...';
-            
-            try {
-              let res;
-              if(PROMPTS[action]) {
-                // Send as prompt to Gemini
-                res = await fetch('/api/proxy/api/ask', {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({ prompt: PROMPTS[action] })
-                });
-                const d = await res.json();
-                out.innerText = d.response || d.error;
+          out.innerText = 'Running...';
+
+          try {
+            let res;
+          if(PROMPTS[action]) {
+            // Send as prompt to Gemini
+            res = await fetch('/api/proxy/api/ask', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: PROMPTS[action] })
+            });
+          const d = await res.json();
+          out.innerText = d.response || d.error;
               } else {
-                // Standard Endpoint
-                res = await fetch('/api/proxy/api/' + action);
-                const d = await res.json();
-                out.innerText = JSON.stringify(d, null, 2);
+            // Standard Endpoint
+            res = await fetch('/api/proxy/api/' + action);
+          const d = await res.json();
+          out.innerText = JSON.stringify(d, null, 2);
               }
-              setStatus('api-status', true);
-              document.getElementById('dot-api').className = 'service-dot online';
+          setStatus('api-status', true);
+          document.getElementById('dot-api').className = 'service-dot online';
             } catch(e) {
-              out.innerText = 'Error: ' + e.message;
-              setStatus('api-status', false);
-              document.getElementById('dot-api').className = 'service-dot offline';
+            out.innerText = 'Error: ' + e.message;
+          setStatus('api-status', false);
+          document.getElementById('dot-api').className = 'service-dot offline';
             }
           }
 
@@ -881,315 +888,337 @@ app.get('/', (req, res) => {
           async function updateApiStatus() {
             try {
               const res = await fetch('/api/proxy/api/health');
-              if(res.ok) {
-                setStatus('api-status', true);
-                document.getElementById('dot-api').className = 'service-dot online';
+          if(res.ok) {
+            setStatus('api-status', true);
+          document.getElementById('dot-api').className = 'service-dot online';
               } else throw new Error('Unhealthy');
             } catch(e) {
-              setStatus('api-status', false);
-              document.getElementById('dot-api').className = 'service-dot offline';
+            setStatus('api-status', false);
+          document.getElementById('dot-api').className = 'service-dot offline';
             }
           }
 
           async function updateSystem() {
             try {
               const res = await fetch('/api/system-stats');
-              const data = await res.json();
-              
-              // CPU
-              document.getElementById('val-cpu').innerText = data.cpu + '%';
-              document.getElementById('bar-cpu').style.width = data.cpu + '%';
-              
-              // RAM
-              document.getElementById('val-mem').innerText = data.memory + '%';
-              document.getElementById('bar-mem').style.width = data.memory + '%';
-              
-              // GPU
-              document.getElementById('val-gpu').innerText = data.gpu + '%';
-              document.getElementById('bar-gpu').style.width = data.gpu + '%';
-              
-              // Temp
-              document.getElementById('val-temp').innerText = data.temp + '°C';
-              document.getElementById('bar-temp').style.width = Math.min(data.temp, 100) + '%';
-              
-              document.getElementById('dot-system').className = 'service-dot online';
+          const data = await res.json();
+
+          // CPU
+          document.getElementById('val-cpu').innerText = data.cpu + '%';
+          document.getElementById('bar-cpu').style.width = data.cpu + '%';
+
+          // RAM
+          document.getElementById('val-mem').innerText = data.memory + '%';
+          document.getElementById('bar-mem').style.width = data.memory + '%';
+
+          // GPU
+          document.getElementById('val-gpu').innerText = data.gpu + '%';
+          document.getElementById('bar-gpu').style.width = data.gpu + '%';
+
+          // Temp
+          document.getElementById('val-temp').innerText = data.temp + '°C';
+          document.getElementById('bar-temp').style.width = Math.min(data.temp, 100) + '%';
+
+          document.getElementById('dot-system').className = 'service-dot online';
             } catch(e) {
-              document.getElementById('dot-system').className = 'service-dot offline';
+            document.getElementById('dot-system').className = 'service-dot offline';
             }
           }
 
           async function updateLogs() {
             try {
                const res = await fetch('/api/logs');
-               const data = await res.json();
+          const data = await res.json();
                               // 1. Shared System Logs (All)
-                const html = data.logs.slice(0, 50).map(l => 
-                  \`<div class="log-entry">
-    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-    <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${(l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN')}]</span>
-    <span>\${l.message}</span>
-  </div>\`
-                ).join('');
-                document.getElementById('sys-logs').innerHTML = html;
+                const html = data.logs.slice(0, 50).map(l =>
+          \`<div class="log-entry">
+            <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
+            <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${(l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN')}]</span>
+            <span>\${l.message}</span>
+          </div>\`
+          ).join('');
+          document.getElementById('sys-logs').innerHTML = html;
 
                 // 2. Inference Brain Logs (Filtered)
                 const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
-                const brainHtml = brainLogs.slice(0, 20).map(l => 
-                  \`<div class="log-entry">
-    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-    <span style="color: #ec4899;">\${l.message}</span>
-  </div>\`
-                ).join('');
-                
-                const brainLogEl = document.getElementById('brain-log');
-                if (brainLogEl) {
-                  brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
+                const brainHtml = brainLogs.slice(0, 20).map(l =>
+          \`<div class="log-entry">
+            <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
+            <span style="color: #ec4899;">\${l.message}</span>
+          </div>\`
+          ).join('');
+
+          const brainLogEl = document.getElementById('brain-log');
+          if (brainLogEl) {
+            brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
                 }
 
              } catch (e) { }
           }
 
           // Gemini CLI Terminal
-let commandHistory = [];
-let historyIndex = -1;
+          let commandHistory = [];
+          let historyIndex = -1;
 
-async function executeGeminiCommand() {
+          async function executeGeminiCommand() {
   const input = document.getElementById('gemini-cli-input');
-  const terminal = document.getElementById('gemini-terminal');
-  const command = input.value.trim();
+          const terminal = document.getElementById('gemini-terminal');
+          const command = input.value.trim();
 
-  if (!command) return;
+          if (!command) return;
 
-  // Add to history
-  commandHistory.push(command);
-  historyIndex = commandHistory.length;
+          // Add to history
+          commandHistory.push(command);
+          historyIndex = commandHistory.length;
 
-  // Show command in terminal
-  const cmdDiv = document.createElement('div');
-  cmdDiv.style.color = 'var(--success)';
-  cmdDiv.style.marginTop = '0.5rem';
-            cmdDiv.textContent = \`$ gemini \${command}\`;
-  terminal.appendChild(cmdDiv);
+          // Show command in terminal
+          const cmdDiv = document.createElement('div');
+          cmdDiv.style.color = 'var(--success)';
+          cmdDiv.style.marginTop = '0.5rem';
+          cmdDiv.textContent = \`$ gemini \${command}\`;
+          terminal.appendChild(cmdDiv);
 
-  // Show loading
-  const loadingDiv = document.createElement('div');
-  loadingDiv.style.color = 'var(--warning)';
-  loadingDiv.textContent = 'Executing...';
-  terminal.appendChild(loadingDiv);
-  terminal.scrollTop = terminal.scrollHeight;
+          // Show loading
+          const loadingDiv = document.createElement('div');
+          loadingDiv.style.color = 'var(--warning)';
+          loadingDiv.textContent = 'Executing...';
+          terminal.appendChild(loadingDiv);
+          terminal.scrollTop = terminal.scrollHeight;
 
-  try {
+          try {
     const res = await fetch('/api/gemini-cli', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command })
+            method: 'POST',
+          headers: {'Content-Type': 'application/json' },
+          body: JSON.stringify({command})
     });
 
-    const data = await res.json();
-    terminal.removeChild(loadingDiv);
+          const data = await res.json();
+          terminal.removeChild(loadingDiv);
 
-    // Show output
-    const outputDiv = document.createElement('div');
-    outputDiv.style.color = data.success ? 'var(--text)' : 'var(--error)';
-    outputDiv.style.whiteSpace = 'pre-wrap';
-    outputDiv.textContent = data.output;
-    terminal.appendChild(outputDiv);
+          // Show output
+          const outputDiv = document.createElement('div');
+          outputDiv.style.color = data.success ? 'var(--text)' : 'var(--error)';
+          outputDiv.style.whiteSpace = 'pre-wrap';
+          outputDiv.textContent = data.output;
+          terminal.appendChild(outputDiv);
 
   } catch (error) {
-    terminal.removeChild(loadingDiv);
-    const errorDiv = document.createElement('div');
-    errorDiv.style.color = 'var(--error)';
-    errorDiv.textContent = \`Error: \${error.message}\`;
-    terminal.appendChild(errorDiv);
+            terminal.removeChild(loadingDiv);
+          const errorDiv = document.createElement('div');
+          errorDiv.style.color = 'var(--error)';
+          errorDiv.textContent = \`Error: \${error.message}\`;
+          terminal.appendChild(errorDiv);
   }
 
-  terminal.scrollTop = terminal.scrollHeight;
-  input.value = '';
+          terminal.scrollTop = terminal.scrollHeight;
+          input.value = '';
 }
 
 // Command history navigation
 setTimeout(() => {
   const input = document.getElementById('gemini-cli-input');
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (historyIndex > 0) {
-          historyIndex--;
-          e.target.value = commandHistory[historyIndex];
-        }
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (historyIndex < commandHistory.length - 1) {
-          historyIndex++;
-          e.target.value = commandHistory[historyIndex];
-        } else {
-          historyIndex = commandHistory.length;
-          e.target.value = '';
-        }
-      }
-    });
+          if (input) {
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                  historyIndex--;
+                  e.target.value = commandHistory[historyIndex];
+                }
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                  historyIndex++;
+                  e.target.value = commandHistory[historyIndex];
+                } else {
+                  historyIndex = commandHistory.length;
+                  e.target.value = '';
+                }
+              }
+            });
   }
 }, 100);
 
-// 3CX PBX connectivity check
-// PBX connectivity check
-async function updatePBXStatus() {
+          // 3CX PBX connectivity check
+          // PBX connectivity check
+          async function updatePBXStatus() {
   try {
     const res = await fetch('/api/proxy/voice/health');
-    if (res.ok) {
-      document.getElementById('dot-freepbx').className = 'service-dot online';
+          if (res.ok) {
+            document.getElementById('dot-freepbx').className = 'service-dot online';
     } else {
       throw new Error('Voice App unhealthy');
     }
   } catch (e) {
-    document.getElementById('dot-freepbx').className = 'service-dot offline';
+            document.getElementById('dot-freepbx').className = 'service-dot offline';
   }
 }
 
-// Docker container health check
-async function updateDockerStatus() {
+          // Docker container health check
+          async function updateDockerStatus() {
   try {
     const res = await fetch('/api/docker-health');
-    const data = await res.json();
+          const data = await res.json();
 
-    if (data.success) {
-      document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
-      document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
-      console.log('Docker health OK:', data);
+          if (data.success) {
+            document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
+          document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
+          console.log('Docker health OK:', data);
     }
   } catch (e) {
-    console.error('Docker health failed:', e);
-    document.getElementById('dot-drachtio').className = 'service-dot offline';
-    document.getElementById('dot-freeswitch').className = 'service-dot offline';
+            console.error('Docker health failed:', e);
+          document.getElementById('dot-drachtio').className = 'service-dot offline';
+          document.getElementById('dot-freeswitch').className = 'service-dot offline';
   }
 }
 
-// Python Brain Check
-async function updatePython() {
+          // Python Brain Check
+          async function updatePython() {
   try {
     // Send a minimal execution request
     const res = await fetch('/api/proxy/inference/run-python', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ script: 'mock_llm.py', prompt: 'ping' })
+            method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({script: 'mock_llm.py', prompt: 'ping' })
     });
-    // We expect a valid JSON response
-    const data = await res.json();
-    if(res.ok && data.status === 'success') {
-      document.getElementById('dot-python').className = 'service-dot online';
+          // We expect a valid JSON response
+          const data = await res.json();
+          if(res.ok && data.status === 'success') {
+            document.getElementById('dot-python').className = 'service-dot online';
     } else {
        throw new Error('Python script failed');
     }
   } catch(e) {
-    document.getElementById('dot-python').className = 'service-dot offline';
+            document.getElementById('dot-python').className = 'service-dot offline';
   }
 }
 
-setInterval(updatePBXStatus, 5000);
-setInterval(updateDockerStatus, 5000);
+          setInterval(updatePBXStatus, 5000);
+          setInterval(updateDockerStatus, 5000);
 
-setInterval(updateVoice, 5000);
-setInterval(updateInference, 5000);
-setInterval(updatePython, 10000); // Check every 10s (heavier)
-setInterval(updateApiStatus, 5000);
-setInterval(updateSystem, 2000);
-setInterval(updateLogs, 2000);
+          setInterval(updateVoice, 5000);
+          setInterval(updateInference, 5000);
+          setInterval(updatePython, 10000); // Check every 10s (heavier)
+          setInterval(updateApiStatus, 5000);
+          setInterval(updateSystem, 2000);
+          setInterval(updateLogs, 2000);
 
-// Provider Switcher
-// Provider functions removed
-async function silentUpdateCheck() {
+          // Provider Switcher
+          // Provider functions removed
+          async function silentUpdateCheck() {
   const btn = document.getElementById('update-btn');
-  try {
+          try {
     const res = await fetch('/api/update/check');
-    const data = await res.json();
-    
-    if (data.updateAvailable) {
-       btn.style.display = 'flex';
-       btn.innerText = '🚀 Update v' + data.remoteVersion;
+          const data = await res.json();
+
+          if (data.updateAvailable) {
+            btn.style.display = 'flex';
+          btn.innerText = '🚀 Update v' + data.remoteVersion;
        btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
     } else {
-       btn.style.display = 'none';
+            btn.style.display = 'none';
     }
   } catch (e) {
-    console.error('Update check failed:', e);
+            console.error('Update check failed:', e);
   }
 }
 
-function showUpdateModal(current, remote) {
-  showModal(
-     'Update Available 🚀', 
-     'A new version(' + remote + ') is available! You are on ' + current + '.\\n\\nDo you want to update and restart now ? ', 
-     true, 
-     async () => {
-       const btn = document.getElementById('update-btn');
-       btn.innerText = 'Updating...';
-       await fetch('/api/update/apply', { method: 'POST' });
-       showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
-       setTimeout(() => location.reload(), 15000);
-     }
-  );
+          function showUpdateModal(current, remote) {
+            showModal(
+              'Update Available 🚀',
+              'A new version(' + remote + ') is available! You are on ' + current + '.\\n\\nDo you want to update and restart now ? ',
+              true,
+              async () => {
+                const btn = document.getElementById('update-btn');
+                btn.innerText = 'Updating...';
+                await fetch('/api/update/apply', { method: 'POST' });
+                showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
+                setTimeout(() => location.reload(), 15000);
+              }
+            );
 }
 
-silentUpdateCheck();
-setInterval(silentUpdateCheck, 60000);
+          silentUpdateCheck();
+          setInterval(silentUpdateCheck, 60000);
 
-// Provider Switcher defined above
-async function updateProvider() {
+          // Provider Switcher defined above
+          async function updateProvider() {
   try {
     const res = await fetch('/api/config/provider');
-    const data = await res.json();
-    if (data.provider) {
-       document.getElementById('provider-select').value = data.provider;
+          const data = await res.json();
+          if (data.provider) {
+            document.getElementById('provider-select').value = data.provider;
     }
-  } catch(e) {}
+  } catch(e) { }
 }
 
-// Update Checker (Silent Background)
-async function silentUpdateCheck() {
+          // Update Checker (Silent Background)
+          async function silentUpdateCheck() {
   const btn = document.getElementById('update-btn');
-  try {
+          try {
     const res = await fetch('/api/update/check');
-    const data = await res.json();
-    
-    if (data.updateAvailable) {
-       // Update available: Show button
-       btn.style.display = 'flex';
-       btn.innerText = '🚀 Update v' + data.remoteVersion;
+          const data = await res.json();
+
+          if (data.updateAvailable) {
+            // Update available: Show button
+            btn.style.display = 'flex';
+          btn.innerText = '🚀 Update v' + data.remoteVersion;
        btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
     } else {
-       // Up to date: Hide button to prevent accidental clicks
-       btn.style.display = 'none';
+            // Up to date: Hide button to prevent accidental clicks
+            btn.style.display = 'none';
     }
   } catch (e) {
-    console.error('Update check failed:', e);
+            console.error('Update check failed:', e);
   }
 }
 
-function showUpdateModal(current, remote) {
-  showModal(
-     'Update Available 🚀', 
-     \`A new version (\${remote}) is available! You are on \${current}.\n\nDo you want to update and restart now?\`, 
-     true, 
+          function showUpdateModal(current, remote) {
+            showModal(
+              'Update Available 🚀',
+          \`A new version (\${remote}) is available! You are on \${current}.\n\nDo you want to update and restart now?\`,
+          true, 
      async () => {
        const btn = document.getElementById('update-btn');
-       btn.innerText = 'Updating...';
-       await fetch('/api/update/apply', { method: 'POST' });
-       showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
+          btn.innerText = 'Updating...';
+          await fetch('/api/update/apply', {method: 'POST' });
+          showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
        setTimeout(() => location.reload(), 15000);
      }
-  );
+          );
 }
 
-// Initial check and periodic poll
-silentUpdateCheck();
-setInterval(silentUpdateCheck, 60000); // Check every minute
+          // Initial check and periodic poll
+          silentUpdateCheck();
+          setInterval(silentUpdateCheck, 60000); // Check every minute
 
-updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
+          updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
         </script>
       </body>
     </html>
-  `);
+    `);
+});
+
+// ============================================
+// htop Page Route
+// ============================================
+app.get('/htop', (req, res) => {
+  res.send(generateHtopPage());
+});
+
+// htop Data API (Simulated htop using 'top' command for web safety)
+app.get('/api/htop', async (req, res) => {
+  const { exec } = require('child_process');
+  const util = require('util');
+  const execPromise = util.promisify(exec);
+
+  try {
+    // We use top in batch mode as a safe alternative to htop for raw text extraction
+    const { stdout } = await execPromise('top -b -n 1 | head -n 45');
+    res.json({ success: true, output: stdout });
+  } catch (error) {
+    res.json({ success: false, error: 'Failed to run top: ' + error.message });
+  }
 });
 
 // ============================================
@@ -1199,7 +1228,7 @@ updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updat
 const proxyRequest = async (url, options = {}) => {
   try {
     const response = await fetch(url, options);
-    // if (!response.ok) throw new Error(`HTTP ${ response.status } `); // Don't throw, let client handle
+    // if (!response.ok) throw new Error(`HTTP ${response.status} `); // Don't throw, let client handle
     return await response.json();
   } catch (err) {
     console.error(`Proxy Error to ${url}: `, err.message);
@@ -1341,7 +1370,7 @@ app.get('/api/system-stats', async (req, res) => {
 
     res.json({
       cpu: cpu.currentLoad.toFixed(1),
-      memory: ((mem.used / mem.total) * 100).toFixed(1),
+      memory: ((mem.active / mem.total) * 100).toFixed(1),
       gpu: typeof gpuLoad === 'number' ? gpuLoad.toFixed(1) : 0,
       temp: temp.main || 0
     });
@@ -1357,7 +1386,7 @@ app.get('/api/docker-health', async (req, res) => {
   const execPromise = util.promisify(exec);
 
   try {
-    const { stdout } = await execPromise('docker ps --format "{{.Names}},{{.Status}}" --filter "name=drachtio" --filter "name=freeswitch" --filter "name=voice-app"');
+    const { stdout } = await execPromise('docker ps --format "{{.Names }},{{.Status }}" --filter "name=drachtio" --filter "name=freeswitch" --filter "name=voice-app"');
     const containers = {};
 
     stdout.trim().split('\n').forEach(line => {
@@ -1422,7 +1451,7 @@ function writeEnv(env) {
 
 // Save Full Configuration (From Setup Page)
 app.post('/api/config/save', (req, res) => {
-  const config = req.body; // { SIP_DOMAIN, SIP_EXTENSION, ... }
+  const config = req.body; // {SIP_DOMAIN, SIP_EXTENSION, ... }
 
   // Update .env
   writeEnv(config);
@@ -1469,100 +1498,100 @@ app.get('/setup', (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html>
-    <head>
-      <title>Configure ${providerName}</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-      <style>
-        :root { --bg: #09090b; --panel: #18181b; --text: #e4e4e7; --accent: #8b5cf6; --input-bg: #27272a; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; }
-        .container { background: var(--panel); padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        h1 { margin-bottom: 1.5rem; font-size: 1.5rem; color: white; display:flex; align-items:center; gap:10px; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #a1a1aa; }
-        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #3f3f46; background: var(--input-bg); color: white; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--accent); }
-        .actions { margin-top: 2rem; display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-secondary { background: #3f3f46; color: white; }
-        .btn:hover { opacity: 0.9; }
-        .provider-badge { font-size: 0.8rem; padding: 4px 8px; background: #3f3f46; border-radius: 4px; color: #a5b4fc; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>
-           Configure PBX
-           <span class="provider-badge">${provider.toUpperCase()}</span>
-        </h1>
-        <p style="color: #a1a1aa; margin-bottom: 2rem;">Enter the details for your ${providerName} extension.</p>
-        
-        <form id="configForm" onsubmit="saveConfig(event)">
-          <div class="form-group">
-            <label>SIP Domain / IP Address</label>
-            <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="e.g. 192.168.1.50 or mypbx.3cx.us">
-          </div>
-          
-          <div class="form-group">
-            <label>Extension Number</label>
-            <input type="text" name="SIP_EXTENSION" value="${env.SIP_EXTENSION || ''}" required placeholder="e.g. 1001">
-          </div>
-          
-          <div class="form-group">
-            <label>Authentication ID ${provider === 'freepbx' ? '(Same as Extension)' : ''}</label>
-            <input type="text" name="SIP_AUTH_ID" value="${env.SIP_AUTH_ID || ''}" placeholder="Leave empty to use Extension">
-          </div>
-          
-          <div class="form-group">
-            <label>Secret / Password</label>
-            <input type="password" name="SIP_PASSWORD" value="${env.SIP_PASSWORD || ''}" required>
-          </div>
-          
-          <div class="form-group">
-             <label>Registrar Server (Optional)</label>
-             <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="Defaults to Domain if empty">
-          </div>
+      <head>
+        <title>Configure ${providerName}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+            <style>
+              :root {--bg: #09090b; --panel: #18181b; --text: #e4e4e7; --accent: #8b5cf6; --input-bg: #27272a; }
+              body {font - family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; }
+              .container {background: var(--panel); padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+              h1 {margin - bottom: 1.5rem; font-size: 1.5rem; color: white; display:flex; align-items:center; gap:10px; }
+              .form-group {margin - bottom: 1rem; }
+              label {display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #a1a1aa; }
+              input {width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #3f3f46; background: var(--input-bg); color: white; box-sizing: border-box; }
+              input:focus {outline: none; border-color: var(--accent); }
+              .actions {margin - top: 2rem; display: flex; gap: 10px; }
+              .btn {flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+              .btn-primary {background: var(--accent); color: white; }
+              .btn-secondary {background: #3f3f46; color: white; }
+              .btn:hover {opacity: 0.9; }
+              .provider-badge {font - size: 0.8rem; padding: 4px 8px; background: #3f3f46; border-radius: 4px; color: #a5b4fc; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>
+                Configure PBX
+                <span class="provider-badge">${provider.toUpperCase()}</span>
+              </h1>
+              <p style="color: #a1a1aa; margin-bottom: 2rem;">Enter the details for your ${providerName} extension.</p>
 
-          <div class="actions">
-            <button type="button" class="btn btn-secondary" onclick="window.location='/'">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save & Connect</button>
-          </div>
-        </form>
-      </div>
-      
-      <script>
-        async function saveConfig(e) {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          const data = Object.fromEntries(formData.entries());
-          
-          // Defaults
-          if(!data.SIP_AUTH_ID) data.SIP_AUTH_ID = data.SIP_EXTENSION;
-          if(!data.SIP_REGISTRAR) data.SIP_REGISTRAR = data.SIP_DOMAIN;
-          
-          const btn = e.target.querySelector('.btn-primary');
-          btn.innerText = 'Saving...';
-          btn.disabled = true;
-          
-          try {
-            await fetch('/api/config/save', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify(data)
-            });
-            alert('Settings saved! Connecting to PBX...');
-            window.location = '/';
+              <form id="configForm" onsubmit="saveConfig(event)">
+                <div class="form-group">
+                  <label>SIP Domain / IP Address</label>
+                  <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="e.g. 192.168.1.50 or mypbx.3cx.us">
+                </div>
+
+                <div class="form-group">
+                  <label>Extension Number</label>
+                  <input type="text" name="SIP_EXTENSION" value="${env.SIP_EXTENSION || ''}" required placeholder="e.g. 1001">
+                </div>
+
+                <div class="form-group">
+                  <label>Authentication ID ${provider === 'freepbx' ? '(Same as Extension)' : ''}</label>
+                  <input type="text" name="SIP_AUTH_ID" value="${env.SIP_AUTH_ID || ''}" placeholder="Leave empty to use Extension">
+                </div>
+
+                <div class="form-group">
+                  <label>Secret / Password</label>
+                  <input type="password" name="SIP_PASSWORD" value="${env.SIP_PASSWORD || ''}" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Registrar Server (Optional)</label>
+                  <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="Defaults to Domain if empty">
+                </div>
+
+                <div class="actions">
+                  <button type="button" class="btn btn-secondary" onclick="window.location='/'">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Save & Connect</button>
+                </div>
+              </form>
+            </div>
+
+            <script>
+              async function saveConfig(e) {
+                e.preventDefault();
+              const formData = new FormData(e.target);
+              const data = Object.fromEntries(formData.entries());
+
+              // Defaults
+              if(!data.SIP_AUTH_ID) data.SIP_AUTH_ID = data.SIP_EXTENSION;
+              if(!data.SIP_REGISTRAR) data.SIP_REGISTRAR = data.SIP_DOMAIN;
+
+              const btn = e.target.querySelector('.btn-primary');
+              btn.innerText = 'Saving...';
+              btn.disabled = true;
+
+              try {
+                await fetch('/api/config/save', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(data)
+                });
+              alert('Settings saved! Connecting to PBX...');
+              window.location = '/';
           } catch(err) {
-            alert('Error saving config');
-            btn.innerText = 'Save & Connect';
-            btn.disabled = false;
+                alert('Error saving config');
+              btn.innerText = 'Save & Connect';
+              btn.disabled = false;
           }
         }
-      </script>
-    </body>
-    </html>
-  `);
+            </script>
+          </body>
+        </html>
+        `);
 });
 
 
