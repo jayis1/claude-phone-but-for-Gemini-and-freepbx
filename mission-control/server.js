@@ -730,27 +730,7 @@ app.get('/', (req, res) => {
             }
           }
 
-          async function autoCheckUpdate() {
-            try {
-              const res = await fetch('/api/update/check');
-              const d = await res.json();
-              if(d.updateAvailable) {
-                const btn = document.getElementById('update-btn');
-                if(!btn) return;
-                btn.style.display = 'flex';
-                btn.style.background = '#ec4899';
-                btn.innerHTML = '<span>⬆️</span> Update to v' + d.remoteVersion;
-                btn.onclick = async () => {
-                  if(confirm('Install update now?')) {
-                    btn.innerHTML = '<span>🔄</span> Installing...';
-                    await fetch('/api/update/apply', {method: 'POST' });
-                    setTimeout(() => location.reload(), 5000);
-                  }
-                };
-              }
-            } catch(e) { }
-          }
-          window.addEventListener('load', autoCheckUpdate);
+          // Old autoCheckUpdate removed - now using silentUpdateCheck() instead
 
           // Inference Brain
           async function updateInference() {
