@@ -287,6 +287,28 @@ main() {
     echo "✓ Gemini CLI installed"
   fi
 
+  # Check and Install htop
+  if ! command -v htop &> /dev/null; then
+    echo "📦 Installing htop..."
+    case "$PKG_MANAGER" in
+      apt)
+        $SUDO apt-get update && $SUDO apt-get install -y htop
+        ;;
+      dnf)
+        $SUDO dnf install -y htop
+        ;;
+      pacman)
+        $SUDO pacman -S --noconfirm htop
+        ;;
+      brew)
+        brew install htop
+        ;;
+    esac
+    echo "✓ htop installed"
+  else
+    echo "✓ htop already installed"
+  fi
+
   # Clone or update repository
   echo ""
   if [ -d "$INSTALL_DIR" ]; then

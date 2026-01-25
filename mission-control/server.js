@@ -323,7 +323,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.40
+            MISSION CONTROL v2.1.41
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
             <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -1213,11 +1213,18 @@ app.get('/api/htop', async (req, res) => {
   const execPromise = util.promisify(exec);
 
   try {
-    // We use top in batch mode as a safe alternative to htop for raw text extraction
-    const { stdout } = await execPromise('top -b -n 1 | head -n 45');
+    // We try htop -b (batch mode) first, fallback to top -b
+    let cmd = 'htop -b -n 1 | head -n 45';
+    try {
+      await execPromise('command -v htop');
+    } catch (e) {
+      cmd = 'top -b -n 1 | head -n 45';
+    }
+
+    const { stdout } = await execPromise(cmd);
     res.json({ success: true, output: stdout });
   } catch (error) {
-    res.json({ success: false, error: 'Failed to run top: ' + error.message });
+    res.json({ success: false, error: 'Failed to run monitor: ' + error.message });
   }
 });
 
