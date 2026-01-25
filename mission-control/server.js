@@ -1418,15 +1418,16 @@ app.post('/api/update/apply', (req, res) => {
 
   console.log('[UPDATE] Starting update process...');
 
-  // We execute a FORCE UPDATE (Fresh Install from GitHub)
-  // git fetch origin && git reset --hard origin/main
-  const cmd = 'git fetch origin && git reset --hard origin/main';
+  // We execute the fresh-update.sh script
+  const scriptPath = path.join(projectRoot, 'scripts', 'fresh-update.sh');
+  const cmd = `bash "${scriptPath}"`;
 
-  console.log('[UPDATE] Starting fresh update process...');
+  console.log(`[UPDATE] Executing ${scriptPath}...`);
 
   exec(cmd, { cwd: projectRoot }, (error, stdout, stderr) => {
     if (error) {
       console.error(`[UPDATE] Update failed: ${error.message}`);
+      console.error(stderr);
       return res.status(500).json({ success: false, error: error.message });
     }
 

@@ -89,7 +89,7 @@ gemini-phone setup
 The interactive setup wizard helps you:
 
 1. **Choose Mode**: Voice Server, API Server, or Both (All-in-One).
-2. **Configure PBX**: Connect to **3CX** or **FreePBX**.
+2. **Configure PBX**: Connect to your **FreePBX** or SIP server.
 3. **API Keys**: Enter your ElevenLabs and OpenAI keys.
 
 ### 3. Start
