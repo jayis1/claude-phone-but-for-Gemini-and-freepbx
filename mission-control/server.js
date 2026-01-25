@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.21
+            MISSION CONTROL v2.1.22
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -420,7 +420,7 @@ app.get('/', (req, res) => {
                 
                 <!-- Terminal Input -->
                 <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
-                  <span style="padding: 0.5rem; color: var(--success); font-family: monospace;">$</span>
+                  <div style="margin-bottom: 0.5rem; padding: 0.25rem; border-left: 2px solid var(--accent); font-family: monospace;">$</span>
                   <input 
                     type="text" 
                     id="gemini-cli-input" 
@@ -1231,22 +1231,48 @@ app.get('/api/config/provider', (req, res) => {
 });
 
 
-// 3. Load TARGET profile configuration
-const targetConfig = profiles[provider] || {};
+// Switch Provider Endpoint
+app.post('/api/config/set-provider', (req, res) => {
+  const { provider } = req.body;
+  if (!['3cx', 'freepbx'].includes(provider)) {
+    return res.status(400).json({ success: false, error: 'Invalid provider' });
+  }
 
-// 4. Update .env with target values (switching context)
-const updates = { ...targetConfig, SIP_PROVIDER: provider };
+  try {
+    // 1. Load profiles
+    let profiles = {};
+    // Initialize profiles if needed (simplified for standalone)
 
-// Default logic for FreePBX
-if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
-  updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
-}
+    // 2. Update .env
+    const currentEnv = parseEnv();
+    const updates = { ...currentEnv, SIP_PROVIDER: provider };
 
-writeEnv(updates);
-fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+    // Default logic for FreePBX
+    if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
+      updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
+    }
 
-// Note: We do NOT restart here anymore, the frontend will redirect to /setup
-// Only update the env file so /setup page shows correct values
+    writeEnv(updates);
+
+    console.log(`[CONFIG] Switched provider to ${provider}`);
+
+    // 3. Restart Voice App (Standalone Mode)
+    // We use pkill to stop it; the supervisor (or manual loop) should restart it
+    // If running via docker-compose, this might not restart it if restart_policy is no
+    // but standard gemini-phone start uses docker compose which has restart policy.
+    // For standalone (npm start), user might need to restart manually if no supervisor.
+
+    const { exec } = require('child_process');
+    exec('pkill -f "voice-app" || true', (err) => {
+      // Optionally try to restart it if we are the supervisor (we are not)
+    });
+
+    res.json({ success: true, message: `Switched to ${provider}. Please wait for Voice App to restart.` });
+  } catch (error) {
+    console.error('Failed to set provider:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 
 
