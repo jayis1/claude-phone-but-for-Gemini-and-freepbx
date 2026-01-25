@@ -3,11 +3,37 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+import os from 'os';
+import { exec } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+/**
+ * Get current CPU Usage (%)
+ */
+function getCpuUsage() {
+    const loads = os.loadavg();
+    const cpuCount = os.cpus().length;
+    // loadavg is for 1 min, normalized by CPU count
+    const usage = (loads[0] / cpuCount) * 100;
+    return Math.min(Math.round(usage), 100);
+}
+
+/**
+ * Get GPU Usage (%) via nvidia-smi
+ */
+function getGpuUsage() {
+    return new Promise((resolve) => {
+        exec('nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits', (err, stdout) => {
+            if (err || !stdout) return resolve(0);
+            const usage = parseInt(stdout.trim(), 10);
+            resolve(isNaN(usage) ? 0 : usage);
+        });
+    });
+}
 
 const app = express();
 app.use(express.json());
@@ -168,6 +194,20 @@ app.post('/config', (req, res) => {
  * List active sessions
  */
 /**
+ * GET /stats
+ * System resource usage stats
+ */
+app.get('/stats', async (req, res) => {
+    res.json({
+        success: true,
+        cpu: getCpuUsage(),
+        gpu: await getGpuUsage(),
+        sessions: sessions.size,
+        model: currentModelName
+    });
+});
+
+/**
  * GET /
  * Home Page with Model Selector
  */
@@ -194,7 +234,7 @@ app.get('/', (req, res) => {
               --bg: #0f172a;
               --card: #1e293b;
               --text: #f8fafc;
-              --accent: #ec4899; /* Pink accent for Brain to distinguish from Blue API */
+              --accent: #ec4899;
               --accent-hover: #db2777;
               --success: #10b981;
               --border: #334155;
@@ -223,7 +263,7 @@ app.get('/', (req, res) => {
             h1 {
               font-size: 1.8rem;
               font-weight: 700;
-              background: linear-gradient(to right, #f472b6, #a78bfa); /* Pink/Purple gradient */
+              background: linear-gradient(to right, #f472b6, #a78bfa);
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
               margin-bottom: 0.5rem;
@@ -275,6 +315,30 @@ app.get('/', (req, res) => {
               font-weight: 600;
               font-family: monospace;
             }
+            .meter-container {
+              margin-top: 1.5rem;
+              text-align: left;
+            }
+            .meter-label {
+              font-size: 0.75rem;
+              color: #94a3b8;
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 4px;
+            }
+            .meter-bg {
+              height: 8px;
+              background: #334155;
+              border-radius: 4px;
+              overflow: hidden;
+              margin-bottom: 1rem;
+            }
+            .meter-fill {
+              height: 100%;
+              background: linear-gradient(to right, #ec4899, #8b5cf6);
+              width: 0%;
+              transition: width 0.5s ease;
+            }
             .endpoints {
               text-align: left;
               background: rgba(0,0,0,0.2);
@@ -296,7 +360,25 @@ app.get('/', (req, res) => {
             }
         </style>
         <script>
+          async function updateStats() {
+            try {
+              const res = await fetch('/stats');
+              const data = await res.json();
+              
+              document.getElementById('cpu-val').innerText = data.cpu + '%';
+              document.getElementById('cpu-fill').style.width = data.cpu + '%';
+              
+              document.getElementById('gpu-val').innerText = data.gpu + '%';
+              document.getElementById('gpu-fill').style.width = data.gpu + '%';
+              
+              document.getElementById('session-count').innerText = data.sessions + ' active';
+            } catch (e) {}
+          }
+
           document.addEventListener('DOMContentLoaded', () => {
+            setInterval(updateStats, 2000);
+            updateStats();
+
             const select = document.getElementById('model-select');
             select.addEventListener('change', async (e) => {
               const model = e.target.value;
@@ -307,9 +389,7 @@ app.get('/', (req, res) => {
                   body: JSON.stringify({ model })
                 });
                 const data = await res.json();
-                if (data.success) {
-                  // alert('Model updated to ' + model);
-                } else {
+                if (!data.success) {
                   alert('Failed to update: ' + data.error);
                 }
               } catch (err) {
@@ -339,12 +419,30 @@ app.get('/', (req, res) => {
             </div>
           </div>
 
+          <div class="meter-container">
+            <div class="meter-label">
+              <span>CPU USAGE</span>
+              <span id="cpu-val">0%</span>
+            </div>
+            <div class="meter-bg">
+              <div id="cpu-fill" class="meter-fill" style="width: 0%"></div>
+            </div>
+
+            <div class="meter-label">
+              <span>GPU USAGE</span>
+              <span id="gpu-val">0%</span>
+            </div>
+            <div class="meter-bg">
+              <div id="gpu-fill" class="meter-fill" style="width: 0%"></div>
+            </div>
+          </div>
+
           <div class="endpoints">
             <div class="info-label" style="margin-bottom:0.5rem">Endpoints</div>
             <div>POST /ask</div>
-            <div>POST /end-session</div>
+            <div>GET /stats</div>
             <div>POST /config</div>
-            <div>GET /sessions <span style="float:right; opacity:0.5">${sessions.size} active</span></div>
+            <div>GET /sessions <span id="session-count" style="float:right; opacity:0.5">${sessions.size} active</span></div>
           </div>
         </div>
       </body>
