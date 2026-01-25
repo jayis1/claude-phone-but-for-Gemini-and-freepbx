@@ -110,11 +110,16 @@ const apiKeys = Object.keys(geminiEnv).filter(k =>
 );
 console.log('[STARTUP] API keys loaded:', apiKeys.join(', '));
 
+// Voice App URL (for outbound calls)
+// Defaults to localhost:3000 (standard Docker networking)
+const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
+console.log(`[STARTUP] Voice App URL: ${VOICE_APP_URL}`);
+
 // Session storage: callId -> claudeSessionId
 const sessions = new Map();
 
 // Model selection - Sonnet for balanced speed/quality
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
+let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
 
 function parseGeminiStdout(stdout) {
   // Claude Code CLI may output JSONL; when it does, extract the `result` message.
@@ -481,6 +486,82 @@ app.post('/end-session', (req, res) => {
 });
 
 /**
+ * POST /config
+ * Update server configuration (e.g. model)
+ */
+app.post('/config', (req, res) => {
+  const { model } = req.body;
+  if (model) {
+    GEMINI_MODEL = model;
+    console.log(`[${new Date().toISOString()}] CONFIG UPDATED: Model set to ${GEMINI_MODEL}`);
+  }
+  res.json({ success: true, model: GEMINI_MODEL });
+});
+
+/**
+ * GET /sessions
+ * List active sessions
+ */
+app.get('/sessions', (req, res) => {
+  res.json({
+    success: true,
+    count: sessions.size,
+    sessions: Array.from(sessions.entries()).map(([callId, sessionId]) => ({ callId, sessionId }))
+  });
+});
+
+/**
+ * POST /call
+ * Initiate an outbound call via 3CX/voice-app
+ *
+ * Request body matches voice-app/outbound-call:
+ *   - to: Phone number/Extension
+ *   - message: Initial status message
+ *   - mode: 'announce' (default) or 'conversation'
+ */
+app.post('/call', async (req, res) => {
+  const { to, message, mode, device } = req.body;
+  const timestamp = new Date().toISOString();
+
+  if (!to || !message) {
+    return res.status(400).json({ success: false, error: 'Missing "to" or "message"' });
+  }
+
+  console.log(`[${timestamp}] OUTBOUND CALL REQUEST: to=${to} mode=${mode || 'announce'}`);
+
+  try {
+    const callRes = await fetch(`${VOICE_APP_URL}/api/outbound-call`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+
+    if (!callRes.ok) {
+      const errText = await callRes.text();
+      console.error(`[${timestamp}] CALL FAILED: ${callRes.status} ${errText}`);
+      return res.status(callRes.status).json({ success: false, error: `Voice App Error: ${errText}` });
+    }
+
+    const data = await callRes.json();
+    console.log(`[${timestamp}] CALL QUEUED: ${data.callId}`);
+    res.json(data);
+  } catch (error) {
+    console.error(`[${timestamp}] CALL ERROR: ${error.message}`);
+    res.status(500).json({ success: false, error: `Failed to contact voice-app: ${error.message}` });
+  }
+});
+
+/**
+ * DELETE /session/:callId
+ * Explicitly kill a session
+ */
+app.delete('/session/:callId', (req, res) => {
+  const { callId } = req.params;
+  const deleted = sessions.delete(callId);
+  res.json({ success: true, deleted });
+});
+
+/**
  * GET /health
  * Health check endpoint
  */
@@ -626,6 +707,15 @@ app.get('/', (req, res) => {
           <div class="endpoints">
             <div>POST /ask</div>
             <div>POST /ask-structured</div>
+            <div>POST /call</div>
+            <div>POST /end-session</div>
+            <div>POST /config</div>
+            <div>GET /sessions</div>
+            <div>DELETE /session/:callId</div>
+            <div>GET /health</div>
+            <div>POST /config</div>
+            <div>GET /sessions</div>
+            <div>DELETE /session/:callId</div>
             <div>GET /health</div>
           </div>
 
