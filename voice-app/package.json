@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone-voice-app",
-  "version": "1.0.0",
+  "version": "2.1.1",
   "description": "Voice interface for Gemini Code via SIP/3CX",
   "main": "index.js",
   "scripts": {
