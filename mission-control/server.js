@@ -319,9 +319,13 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.5
+            MISSION CONTROL v2.1.6
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
+             <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+               <span>🔄</span> Check Updates
+             </button>
+          
              <span style="font-size:0.8rem; color:var(--text-dim)">Provider:</span>
              <select id="provider-select" style="background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
                <option value="3cx">3CX</option>
@@ -929,6 +933,37 @@ async function updateProvider() {
   } catch(e) {}
 }
 
+// Update Checker
+async function checkForUpdates() {
+  const btn = document.getElementById('update-btn');
+  btn.innerText = 'Checking...';
+  
+  try {
+    const res = await fetch('/api/update/check');
+    const data = await res.json();
+    
+    if (data.updateAvailable) {
+       if (confirm(\`New version (\${data.remoteVersion}) available! Update from \${data.localVersion}?\n\nThis will restart Mission Control.\`)) {
+         btn.innerText = 'Updating...';
+         await fetch('/api/update/apply', { method: 'POST' });
+         alert('Update started! Please reload the page in 10-20 seconds.');
+         setTimeout(() => location.reload(), 15000);
+       } else {
+         btn.innerHTML = '<span>🔄</span> Check Updates';
+       }
+    } else {
+       alert('You are on the latest version (' + data.localVersion + ')');
+       btn.innerHTML = '<span>🔄</span> Check Updates';
+    }
+  } catch (e) {
+    alert('Update check failed: ' + e.message);
+    btn.innerHTML = '<span>🔄</span> Check Updates';
+  }
+}
+
+// Show update button on load
+document.getElementById('update-btn').style.display = 'flex';
+
 update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs(); updateProvider();
         </script >
       </body >
@@ -1335,7 +1370,80 @@ app.get('/setup', (req, res) => {
 });
 
 
-// Logs API - Aggregated
+// ===================================
+// Auto-Update System
+// ===================================
+
+app.get('/api/update/check', async (req, res) => {
+  try {
+    // 1. Get Local Version
+    const localPkg = require('./package.json');
+    const localVersion = localPkg.version;
+
+    // 2. Get Remote Version
+    const fetch = (await import('node-fetch')).default || global.fetch;
+    const remoteRes = await fetch('https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/mission-control/package.json');
+    if (!remoteRes.ok) throw new Error('Failed to check GitHub');
+
+    const remotePkg = await remoteRes.json();
+    const remoteVersion = remotePkg.version;
+
+    // Simple semantic check (assume newer string != older string means update)
+    const updateAvailable = localVersion !== remoteVersion;
+
+    res.json({
+      success: true,
+      updateAvailable,
+      localVersion,
+      remoteVersion
+    });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/update/apply', (req, res) => {
+  const { exec } = require('child_process');
+
+  // We execute git pull in the ROOT project directory
+  // mission-control is in /subdir, so go up one level
+  const projectRoot = path.join(__dirname, '..');
+
+  console.log('[UPDATE] Starting update process...');
+
+  exec('git pull origin main', { cwd: projectRoot }, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`[UPDATE] Git pull failed: ${error.message}`);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+
+    console.log('[UPDATE] Git pull success:', stdout);
+
+    // Restart logic: We need to restart the mission-control process itself.
+    // In many setups (like npm start), killing it might trigger a restart if using nodemon or pm2.
+    // If running via `node server.js` manually, it will just die.
+    // But since the user asked for it, we'll try to restart via the start script or just exit 
+    // and hope the outer supervisor handles it.
+
+    // For this environment, we can re-execute the start command in background and exit.
+
+    setTimeout(() => {
+      // If we are running via npm start, we might just be able to exit?
+      // Let's try to spawn a new one then exit.
+      const subprocess = require('child_process').spawn('nohup', ['node', 'mission-control/server.js'], {
+        cwd: projectRoot,
+        detached: true,
+        stdio: 'ignore'
+      });
+      subprocess.unref();
+      process.exit(0);
+    }, 1000);
+
+    res.json({ success: true, message: 'Update applied. Restarting...' });
+  });
+});
+
+// Logs API - Aggregated (Existing)
 app.post('/api/logs', (req, res) => {
   const { level, service, message, data } = req.body;
   if (!message) return res.status(400).send({ error: 'Message required' });
