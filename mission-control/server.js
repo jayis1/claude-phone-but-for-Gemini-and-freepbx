@@ -319,7 +319,15 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.2
+            MISSION CONTROL v2.1.5
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
+             <span style="font-size:0.8rem; color:var(--text-dim)">Provider:</span>
+             <select id="provider-select" style="background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
+               <option value="3cx">3CX</option>
+               <option value="freepbx">FreePBX</option>
+             </select>
+             <button onclick="switchProvider()" style="padding: 4px 8px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Apply</button>
           </div>
           <div class="service-status">
             <span>Services:</span>
@@ -423,12 +431,15 @@ app.get('/', (req, res) => {
 
               <div class="control-group">
                 <div class="stat-label">Active Model</div>
-                <select id="model-select" onchange="updateModel(this.value)">
-                  <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                </select>
+                <div style="display: flex; gap: 8px;">
+                  <select id="model-select" style="flex: 1; background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
+                    <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                  </select>
+                  <button onclick="updateModel()" style="padding: 4px 8px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Apply</button>
+                </div>
               </div>
 
                <div style="flex: 1; margin-top: 1rem; display: flex; flex-direction: column; overflow: hidden;">
@@ -597,15 +608,42 @@ app.get('/', (req, res) => {
             }
           }
 
-          async function updateModel(model) {
+          async function updateModel() {
+            const model = document.getElementById('model-select').value;
             try {
               await fetch('/api/proxy/inference/config', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ model })
               });
+              alert('Model updated to ' + model);
             } catch(e) { alert('Failed to change model'); }
           }
+// ... (imports or other code if needed) ...
+async function switchProvider() {
+  const provider = document.getElementById('provider-select').value;
+  // No confirm needed now, as we proceed to setup
+  
+  try {
+    document.getElementById('provider-select').disabled = true;
+    const res = await fetch('/api/config/provider', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ provider })
+    });
+    
+    if(res.ok) {
+      // Redirect to Setup Page
+      window.location = '/setup';
+    } else {
+      alert('Failed to switch provider');
+      document.getElementById('provider-select').disabled = false;
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+    document.getElementById('provider-select').disabled = false;
+  }
+}
 
           const PROMPTS = {
             'docker-check': 'Check status of all docker containers and return a summary.',
@@ -869,7 +907,29 @@ setInterval(updateApiStatus, 5000);
 setInterval(updateSystem, 2000);
 setInterval(updateLogs, 2000);
 
-update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
+// Provider Switcher
+async function updateProvider() {
+  try {
+    const res = await fetch('/api/config/provider');
+    const data = await res.json();
+    if (data.provider) {
+       document.getElementById('provider-select').value = data.provider;
+    }
+  } catch(e) {}
+}
+
+// Provider Switcher defined above
+async function updateProvider() {
+  try {
+    const res = await fetch('/api/config/provider');
+    const data = await res.json();
+    if (data.provider) {
+       document.getElementById('provider-select').value = data.provider;
+    }
+  } catch(e) {}
+}
+
+update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs(); updateProvider();
         </script >
       </body >
     </html >
@@ -1040,6 +1100,240 @@ app.get('/api/docker-health', async (req, res) => {
     res.json({ success: false, error: error.message });
   }
 });
+
+// ===================================
+// Provider Switching (3CX <-> FreePBX)
+// ===================================
+
+const PROFILES_FILE = path.join(__dirname, 'profiles.json');
+const ENV_FILE = path.join(__dirname, '../.env');
+
+// Helper: Read .env into object
+function parseEnv() {
+  try {
+    const content = fs.readFileSync(ENV_FILE, 'utf8');
+    const env = {};
+    content.split('\n').forEach(line => {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) env[match[1].trim()] = match[2].trim();
+    });
+    return env;
+  } catch (e) { return {}; }
+}
+
+// Helper: Write object to .env
+function writeEnv(env) {
+  let content = fs.readFileSync(ENV_FILE, 'utf8');
+  for (const [key, val] of Object.entries(env)) {
+    const regex = new RegExp(`^${key}=.*$`, 'm');
+    if (regex.test(content)) {
+      content = content.replace(regex, `${key}=${val}`);
+    } else {
+      content += `\n${key}=${val}`;
+    }
+  }
+  fs.writeFileSync(ENV_FILE, content);
+}
+
+// Get Current Provider info
+app.get('/api/config/provider', (req, res) => {
+  const env = parseEnv();
+  // We determine provider based on simple heuristic or stored tag
+  // Default to 3CX if unknown
+  const provider = env.SIP_PROVIDER || (env.SIP_DOMAIN && env.SIP_DOMAIN.includes('3cx') ? '3cx' : 'freepbx');
+  res.json({ provider });
+});
+
+// Switch Provider
+// Switch Provider
+app.post('/api/config/provider', (req, res) => {
+  const { provider } = req.body; // '3cx' or 'freepbx'
+  if (!['3cx', 'freepbx'].includes(provider)) return res.status(400).json({ error: 'Invalid provider' });
+
+  // 1. Load profiles storage
+  let profiles = {};
+  if (fs.existsSync(PROFILES_FILE)) {
+    profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+  }
+
+  // 2. Save CURRENT config to its profile (before switching)
+  const currentEnv = parseEnv();
+  const currentProvider = currentEnv.SIP_PROVIDER || '3cx';
+
+  profiles[currentProvider] = {
+    SIP_DOMAIN: currentEnv.SIP_DOMAIN,
+    SIP_REGISTRAR: currentEnv.SIP_REGISTRAR,
+    SIP_EXTENSION: currentEnv.SIP_EXTENSION,
+    SIP_AUTH_ID: currentEnv.SIP_AUTH_ID,
+    SIP_PASSWORD: currentEnv.SIP_PASSWORD,
+    DRACHTIO_SIP_PORT: currentEnv.DRACHTIO_SIP_PORT
+  };
+
+  // 3. Load TARGET profile configuration
+  const targetConfig = profiles[provider] || {};
+
+  // 4. Update .env with target values (switching context)
+  const updates = { ...targetConfig, SIP_PROVIDER: provider };
+
+  // Default logic for FreePBX
+  if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
+    updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
+  }
+
+  writeEnv(updates);
+  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+
+  // Note: We do NOT restart here anymore, the frontend will redirect to /setup
+  // Only update the env file so /setup page shows correct values
+
+  res.json({ success: true, provider });
+});
+
+// Save Full Configuration (From Setup Page)
+app.post('/api/config/save', (req, res) => {
+  const config = req.body; // { SIP_DOMAIN, SIP_EXTENSION, ... }
+
+  // Update .env
+  writeEnv(config);
+
+  // Also update the Profile for the CURRENT provider
+  let profiles = {};
+  if (fs.existsSync(PROFILES_FILE)) {
+    profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+  }
+
+  const env = parseEnv();
+  const provider = env.SIP_PROVIDER || '3cx';
+
+  profiles[provider] = {
+    SIP_DOMAIN: config.SIP_DOMAIN,
+    SIP_REGISTRAR: config.SIP_REGISTRAR || config.SIP_DOMAIN, // Default registrar to domain
+    SIP_EXTENSION: config.SIP_EXTENSION,
+    SIP_AUTH_ID: config.SIP_AUTH_ID,
+    SIP_PASSWORD: config.SIP_PASSWORD,
+    DRACHTIO_SIP_PORT: config.DRACHTIO_SIP_PORT
+  };
+
+  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+
+  // Trigger Restart of Voice App
+  const { exec } = require('child_process');
+  console.log(`[CONFIG] Configuration saved for ${provider}. Restarting...`);
+
+  exec('pkill -f "voice-app"', (err) => {
+    setTimeout(() => {
+      exec('cd ../voice-app && nohup npm start > ../voice-app.log 2>&1 &');
+    }, 1000);
+  });
+
+  res.json({ success: true });
+});
+
+// Setup Page
+app.get('/setup', (req, res) => {
+  const env = parseEnv();
+  const provider = env.SIP_PROVIDER || '3cx';
+  const providerName = provider === '3cx' ? '3CX Phone System' : 'FreePBX / Asterisk';
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Configure ${providerName}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+      <style>
+        :root { --bg: #09090b; --panel: #18181b; --text: #e4e4e7; --accent: #8b5cf6; --input-bg: #27272a; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; }
+        .container { background: var(--panel); padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        h1 { margin-bottom: 1.5rem; font-size: 1.5rem; color: white; display:flex; align-items:center; gap:10px; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #a1a1aa; }
+        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #3f3f46; background: var(--input-bg); color: white; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--accent); }
+        .actions { margin-top: 2rem; display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-secondary { background: #3f3f46; color: white; }
+        .btn:hover { opacity: 0.9; }
+        .provider-badge { font-size: 0.8rem; padding: 4px 8px; background: #3f3f46; border-radius: 4px; color: #a5b4fc; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>
+           Configure PBX
+           <span class="provider-badge">${provider.toUpperCase()}</span>
+        </h1>
+        <p style="color: #a1a1aa; margin-bottom: 2rem;">Enter the details for your ${providerName} extension.</p>
+        
+        <form id="configForm" onsubmit="saveConfig(event)">
+          <div class="form-group">
+            <label>SIP Domain / IP Address</label>
+            <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="e.g. 192.168.1.50 or mypbx.3cx.us">
+          </div>
+          
+          <div class="form-group">
+            <label>Extension Number</label>
+            <input type="text" name="SIP_EXTENSION" value="${env.SIP_EXTENSION || ''}" required placeholder="e.g. 1001">
+          </div>
+          
+          <div class="form-group">
+            <label>Authentication ID ${provider === 'freepbx' ? '(Same as Extension)' : ''}</label>
+            <input type="text" name="SIP_AUTH_ID" value="${env.SIP_AUTH_ID || ''}" placeholder="Leave empty to use Extension">
+          </div>
+          
+          <div class="form-group">
+            <label>Secret / Password</label>
+            <input type="password" name="SIP_PASSWORD" value="${env.SIP_PASSWORD || ''}" required>
+          </div>
+          
+          <div class="form-group">
+             <label>Registrar Server (Optional)</label>
+             <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="Defaults to Domain if empty">
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" onclick="window.location='/'">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save & Connect</button>
+          </div>
+        </form>
+      </div>
+      
+      <script>
+        async function saveConfig(e) {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData.entries());
+          
+          // Defaults
+          if(!data.SIP_AUTH_ID) data.SIP_AUTH_ID = data.SIP_EXTENSION;
+          if(!data.SIP_REGISTRAR) data.SIP_REGISTRAR = data.SIP_DOMAIN;
+          
+          const btn = e.target.querySelector('.btn-primary');
+          btn.innerText = 'Saving...';
+          btn.disabled = true;
+          
+          try {
+            await fetch('/api/config/save', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(data)
+            });
+            alert('Settings saved! Connecting to PBX...');
+            window.location = '/';
+          } catch(err) {
+            alert('Error saving config');
+            btn.innerText = 'Save & Connect';
+            btn.disabled = false;
+          }
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
 
 // Logs API - Aggregated
 app.post('/api/logs', (req, res) => {

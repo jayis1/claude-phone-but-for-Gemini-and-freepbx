@@ -23,19 +23,23 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 
 ## Architecture
 
-Gemini Phone v2.1.2 uses a 3-tier architecture:
+## Architecture
+
+Gemini Phone v2.1.5 uses a 3-tier architecture:
 
 ```text
 ┌─────────────────────────────────────────────┐
 │  Voice App (Port 3434)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
 │  + FreePBX / 3CX Integration                │
+│  + YouTube DJ Hold Music 🎵                 │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
 │  Inference Brain (Port 4000)                │
 │  🧠 The Brain - AI reasoning & decisions    │
 │  + Python Script Execution 🐍               │
+│  + yt-dlp Audio Streaming                   │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
@@ -69,20 +73,15 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.5/install.sh | bash
 ```
 
 The installer performs the following steps:
 
-1. **System Checks**: Verifies Node.js 18+, Docker, and git are installed (and offers to install them).
+1. **System Checks**: Verifies Node.js 18+, Docker, and git are installed.
 2. **Cloning**: Clones the repository to `~/.gemini-phone-cli`.
 3. **Dependencies**: Installs local CLI dependencies.
 4. **Command Setup**: Makes the `gemini-phone` command easy to use.
-    - **Linux**: Automatically creates a shortcut so you can run the program.
-        - **Non-root**: Shortcut in `~/.local/bin` (updates `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`).
-        - **Root**: Global shortcut in `/usr/local/bin`.
-        *What this means for you:* You don't need to configure anything. Just open a new terminal window after installing, and you can type `gemini-phone` to get started.
-    - **macOS**: Installs the command to `/usr/local/bin` (may require password for sudo).
 
 ### 2. Setup
 
@@ -90,13 +89,24 @@ The installer performs the following steps:
 gemini-phone setup
 ```
 
-The setup wizard asks what you're installing:
+The interactive setup wizard helps you:
 
-| Type | Use Case | What It Configures |
-| :--- | :--- | :--- |
-| **Voice Server** | Pi or dedicated voice box | Docker containers, connects to remote API server |
-| **API Server** | Mac/Linux with Claude Code | Just the Claude API wrapper |
-| **Both** | All-in-one single machine | Everything on one box |
+1. **Choose Mode**: Voice Server, API Server, or Both (All-in-One).
+2. **Configure PBX**: Connect to **3CX** or **FreePBX**.
+3. **API Keys**: Enter your ElevenLabs and OpenAI keys.
+
+### 3. Start
+
+```bash
+gemini-phone start
+```
+
+## New in v2.1.5
+
+- **Provider Switching**: Toggle between 3CX and FreePBX instantly from Mission Control.
+- **Setup UI**: Dedicated configuration page for easy PBX setup.
+- **YouTube DJ Brain**: The AI now plays dynamic hold music from YouTube (Lofi Beats) while thinking! 🎧
+- **Mission Control v2.1.5**: "Apply" buttons prevent accidental changes, plus full CLI terminal.
 
 ### 3. Start
 
