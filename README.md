@@ -2,15 +2,15 @@
 
 ![Gemini Phone](assets/logo.png)
 
-Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call you.
+Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.1.26
+## What's New in v2.1.27
 
 💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
 grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
 🎵 **YouTube DJ Brain** - The AI plays Lofi Beats while thinking (now with speed control).
 🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
-📞 **FreePBX Support** - Full compatibility with Asterisk/FreePBX.
+📞 **FreePBX Only** - Simplified stack strictly for FreePBX/Asterisk.
 
 ## What is this?
 
@@ -27,7 +27,7 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 ┌─────────────────────────────────────────────┐
 │  Voice App (Port 3000)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
-│  + Native 3CX & FreePBX Support 🔀          │
+│  + Native FreePBX / Asterisk Support 🔀      │
 │  + YouTube DJ Hold Music 🎵                 │
 │  + Speed Control Sliders 🎚️                 │
 └─────────────────┬───────────────────────────┘
@@ -52,7 +52,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 
 | Requirement | Where to Get It | Notes |
 | :--- | :--- | :--- |
-| **SIP PBX Account** | 3CX / FreePBX / Asterisk | Any SIP-compliant server |
+| **SIP PBX Account** | FreePBX / Asterisk | Any SIP-compliant server |
 | **ElevenLabs API Key** | [elevenlabs.io](https://elevenlabs.io/) | For text-to-speech |
 | **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/) | For Whisper STT |
 | **Gemini Code CLI** | [geminicli.com](https://geminicli.com/) | Requires Gemini subscription |
@@ -70,7 +70,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.26/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.27/install.sh | bash
 ```
 
 The installer performs the following steps:

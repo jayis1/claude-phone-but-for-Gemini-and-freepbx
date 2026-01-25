@@ -659,9 +659,9 @@ async function setupPi(config) {
   console.log(chalk.bold('\n📡 API Configuration'));
   config = await setupAPIKeys(config);
 
-  // Step 2: 3CX SBC Configuration (Pi mode uses SBC)
-  console.log(chalk.bold('\n📡 3CX SBC Connection'));
-  config = await setupSBC(config);
+  // Step 2: SIP Configuration (Generic, not 3CX SBC specific anymore)
+  console.log(chalk.bold('\n☎️  SIP Configuration'));
+  config = await setupSIP(config);
 
   // Step 3: Device Configuration
   console.log(chalk.bold('\n🤖 Device Configuration'));
@@ -904,7 +904,7 @@ async function setupSIP(config) {
     {
       type: 'input',
       name: 'domain',
-      message: '3CX domain (e.g., your-3cx.3cx.us):',
+      message: 'SIP Domain / IP (e.g., 192.168.1.50 or pbx.example.com):',
       default: config.sip.domain,
       validate: (input) => {
         if (!input || input.trim() === '') {
@@ -919,14 +919,14 @@ async function setupSIP(config) {
     {
       type: 'input',
       name: 'registrar',
-      message: '3CX registrar IP (e.g., 192.168.1.100):',
+      message: 'Registrar / Proxy (Optional - Leave empty to use Domain):',
       default: config.sip.registrar,
       validate: (input) => {
-        if (!input || input.trim() === '') {
-          return 'SIP registrar IP is required';
-        }
-        if (!validateIP(input)) {
-          return 'Invalid IP address format';
+        // Optional
+        if (input && input.trim() !== '' && !validateHostname(input)) {
+          // Basic check, though validateHostname is strict on IPs too usually
+          // Let's just allow it if not empty
+          return true;
         }
         return true;
       }
@@ -934,7 +934,8 @@ async function setupSIP(config) {
   ]);
 
   config.sip.domain = answers.domain;
-  config.sip.registrar = answers.registrar;
+  // If registrar is empty, use domain
+  config.sip.registrar = answers.registrar && answers.registrar.trim() !== '' ? answers.registrar : answers.domain;
 
   return config;
 }

@@ -322,24 +322,19 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.26
+            MISSION CONTROL v2.1.27
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
                <span>🔄</span> Check Updates
              </button>
           
-             <span style="font-size:0.8rem; color:var(--text-dim)">Provider:</span>
-             <select id="provider-select" style="background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
-               <option value="3cx">3CX</option>
-               <option value="freepbx">FreePBX</option>
-             </select>
-             <button onclick="switchProvider()" style="padding: 4px 8px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Apply</button>
+             <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px;">FreePBX / SIP</span>
           </div>
           <div class="service-status">
             <span>Services:</span>
             <div class="service-dots">
-              <span class="service-dot offline" id="dot-3cx" title="3CX PBX"></span>
+              <span class="service-dot offline" id="dot-pbx" title="PBX Connection"></span>
               <span class="service-dot offline" id="dot-drachtio" title="Drachtio (SIP)"></span>
               <span class="service-dot offline" id="dot-freeswitch" title="FreeSWITCH (Media)"></span>
               <span class="service-dot offline" id="dot-freepbx" title="FreePBX/Asterisk"></span>
@@ -871,16 +866,17 @@ setTimeout(() => {
 }, 100);
 
 // 3CX PBX connectivity check
-async function update3CXStatus() {
+// PBX connectivity check
+async function updatePBXStatus() {
   try {
     const res = await fetch('/api/proxy/voice/health');
     if (res.ok) {
-      document.getElementById('dot-3cx').className = 'service-dot online';
+      document.getElementById('dot-pbx').className = 'service-dot online';
     } else {
       throw new Error('Voice App unhealthy');
     }
   } catch (e) {
-    document.getElementById('dot-3cx').className = 'service-dot offline';
+    document.getElementById('dot-pbx').className = 'service-dot offline';
   }
 }
 
@@ -926,7 +922,7 @@ async function updatePython() {
   }
 }
 
-setInterval(update3CXStatus, 5000);
+setInterval(updatePBXStatus, 5000);
 setInterval(updateDockerStatus, 5000);
 
 setInterval(updateVoice, 5000);
@@ -937,52 +933,7 @@ setInterval(updateSystem, 2000);
 setInterval(updateLogs, 2000);
 
 // Provider Switcher
-async function updateProvider() {
-  try {
-    const res = await fetch('/api/config/provider');
-    const data = await res.json();
-    if (data.provider) {
-       document.getElementById('provider-select').value = data.provider;
-    }
-  } catch(e) {}
-}
-
-async function switchProvider() {
-  const val = document.getElementById('provider-select').value;
-  const btn = document.querySelector('button[onclick="switchProvider()"]');
-  
-  if(btn) {
-      btn.innerText = 'Switching...';
-      btn.disabled = true;
-  }
-
-  try {
-    const res = await fetch('/api/config/set-provider', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ provider: val })
-    });
-    
-    const data = await res.json();
-    if (data.success) {
-      // Use string concatenation to avoid backticks inside outer template literal
-      const msg = data.message || 'Switched to ' + val.toUpperCase() + '.';
-      showModal('Success 🚀', msg, false);
-      setTimeout(() => location.reload(), 2000);
-    } else {
-      throw new Error(data.error || 'Unknown error');
-    }
-  } catch(e) {
-    showModal('Error ❌', 'Failed to switch provider: ' + e.message, false);
-    console.error(e);
-  } finally {
-    if (btn) {
-        btn.innerText = 'Apply';
-        btn.disabled = false;
-    }
-  }
-}
-
+// Provider functions removed
 async function silentUpdateCheck() {
   const btn = document.getElementById('update-btn');
   try {
@@ -1070,7 +1021,7 @@ function showUpdateModal(current, remote) {
 silentUpdateCheck();
 setInterval(silentUpdateCheck, 60000); // Check every minute
 
-update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs(); updateProvider();
+updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
         </script>
       </body>
     </html>
@@ -1276,58 +1227,7 @@ function writeEnv(env) {
   fs.writeFileSync(ENV_FILE, content);
 }
 
-// Get Current Provider info
-app.get('/api/config/provider', (req, res) => {
-  const env = parseEnv();
-  // We determine provider based on simple heuristic or stored tag
-  // Default to 3CX if unknown
-  const provider = env.SIP_PROVIDER || (env.SIP_DOMAIN && env.SIP_DOMAIN.includes('3cx') ? '3cx' : 'freepbx');
-  res.json({ provider });
-});
-
-
-// Switch Provider Endpoint
-app.post('/api/config/set-provider', (req, res) => {
-  const { provider } = req.body;
-  if (!['3cx', 'freepbx'].includes(provider)) {
-    return res.status(400).json({ success: false, error: 'Invalid provider' });
-  }
-
-  try {
-    // 1. Load profiles
-    let profiles = {};
-    // Initialize profiles if needed (simplified for standalone)
-
-    // 2. Update .env
-    const currentEnv = parseEnv();
-    const updates = { ...currentEnv, SIP_PROVIDER: provider };
-
-    // Default logic for FreePBX
-    if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
-      updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
-    }
-
-    writeEnv(updates);
-
-    console.log(`[CONFIG] Switched provider to ${provider}`);
-
-    // 3. Restart Voice App (Standalone Mode)
-    // We use pkill to stop it; the supervisor (or manual loop) should restart it
-    // If running via docker-compose, this might not restart it if restart_policy is no
-    // but standard gemini-phone start uses docker compose which has restart policy.
-    // For standalone (npm start), user might need to restart manually if no supervisor.
-
-    const { exec } = require('child_process');
-    exec('pkill -f "voice-app" || true', (err) => {
-      // Optionally try to restart it if we are the supervisor (we are not)
-    });
-
-    res.json({ success: true, message: `Switched to ${provider}. Please wait for Voice App to restart.` });
-  } catch (error) {
-    console.error('Failed to set provider:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// Provider logic removed - defaults to FreePBX/SIP
 
 
 
@@ -1518,13 +1418,19 @@ app.post('/api/update/apply', (req, res) => {
 
   console.log('[UPDATE] Starting update process...');
 
-  exec('git pull origin main', { cwd: projectRoot }, (error, stdout, stderr) => {
+  // We execute a FORCE UPDATE (Fresh Install from GitHub)
+  // git fetch origin && git reset --hard origin/main
+  const cmd = 'git fetch origin && git reset --hard origin/main';
+
+  console.log('[UPDATE] Starting fresh update process...');
+
+  exec(cmd, { cwd: projectRoot }, (error, stdout, stderr) => {
     if (error) {
-      console.error(`[UPDATE] Git pull failed: ${error.message}`);
+      console.error(`[UPDATE] Update failed: ${error.message}`);
       return res.status(500).json({ success: false, error: error.message });
     }
 
-    console.log('[UPDATE] Git pull success:', stdout);
+    console.log('[UPDATE] Fresh install success:', stdout);
 
     // Restart logic: We need to restart the mission-control process itself.
     // In many setups (like npm start), killing it might trigger a restart if using nodemon or pm2.
