@@ -1,6 +1,6 @@
 {
     "name": "mission-control",
-    "version": "2.1.43",
+    "version": "2.1.45",
     "description": "Unified dashboard for Gemini Phone system",
     "main": "server.js",
     "scripts": {
