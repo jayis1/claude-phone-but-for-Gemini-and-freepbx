@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3030;
 // Voice App: 3000 (Docker mapping)
 // Brain: 4000
 // API: 3333
-const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://127.0.0.1:3434';
+const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://127.0.0.1:3000';
 const INFERENCE_URL = process.env.INFERENCE_URL || process.env.INFERENCE_BRAIN_URL || 'http://127.0.0.1:4000';
 const API_SERVER_URL = process.env.API_SERVER_URL || 'http://127.0.0.1:3333';
 
@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.12
+            MISSION CONTROL v2.1.15
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -936,21 +936,25 @@ async function updateProvider() {
   } catch(e) {}
 }
 
-// Update Checker (Silent Background)
-async function silentUpdateCheck() {
+// Update Checker
+async function updateCheck() {
   const btn = document.getElementById('update-btn');
   try {
     const res = await fetch('/api/update/check');
     const data = await res.json();
     
+    // Always show button
+    btn.style.display = 'flex';
+    
     if (data.updateAvailable) {
-       // Update available: Show button
-       btn.style.display = 'flex';
        btn.innerText = '🚀 Update v' + data.remoteVersion;
+       btn.className = 'btn-update-avail'; // Optional styling
+       btn.style.background = '#8b5cf6'; // Accent
        btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
     } else {
-       // Up to date: Hide button to prevent accidental clicks
-       btn.style.display = 'none';
+       btn.innerText = '✅ Up to Date';
+       btn.style.background = '#27272a'; // Neutral
+       btn.onclick = () => showForceUpdateModal(data.localVersion);
     }
   } catch (e) {
     console.error('Update check failed:', e);
@@ -972,9 +976,24 @@ function showUpdateModal(current, remote) {
   );
 }
 
+function showForceUpdateModal(current) {
+  showModal(
+     'Using Latest Version', 
+     \`You are already on the latest version (\${current}).\n\nDo you want to FORCE re-install the update anyway?\`, 
+     true, 
+     async () => {
+       const btn = document.getElementById('update-btn');
+       btn.innerText = 'Re-installing...';
+       await fetch('/api/update/apply', { method: 'POST' });
+       showModal('Re-installing...', 'System is re-installing version ' + current + '. Please wait...', false);
+       setTimeout(() => location.reload(), 15000);
+     }
+  );
+}
+
 // Initial check and periodic poll
-silentUpdateCheck();
-setInterval(silentUpdateCheck, 60000); // Check every minute
+updateCheck();
+setInterval(updateCheck, 60000); // Check every minute
 
 update3CXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs(); updateProvider();
         </script>
@@ -1197,92 +1216,190 @@ app.post('/api/config/provider', (req, res) => {
   const { provider } = req.body; // '3cx' or 'freepbx'
   if (!['3cx', 'freepbx'].includes(provider)) return res.status(400).json({ error: 'Invalid provider' });
 
-  // 1. Load profiles storage
-  let profiles = {};
-  if (fs.existsSync(PROFILES_FILE)) {
-    profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+  // ===================================
+  // Configuration & Provider Switching
+  // ===================================
+
+  const CONFIG_DIR = path.join(process.env.HOME || process.env.USERPROFILE, '.gemini-phone');
+  const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+  const PROFILES_FILE = path.join(CONFIG_DIR, 'profiles.json');
+  const ENV_FILE = path.join(CONFIG_DIR, '.env');
+
+  // Helper: Load Config
+  function loadSystemConfig() {
+    if (fs.existsSync(CONFIG_FILE)) {
+      return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    }
+    return null;
   }
 
-  // 2. Save CURRENT config to its profile (before switching)
-  const currentEnv = parseEnv();
-  const currentProvider = currentEnv.SIP_PROVIDER || '3cx';
-
-  profiles[currentProvider] = {
-    SIP_DOMAIN: currentEnv.SIP_DOMAIN,
-    SIP_REGISTRAR: currentEnv.SIP_REGISTRAR,
-    SIP_EXTENSION: currentEnv.SIP_EXTENSION,
-    SIP_AUTH_ID: currentEnv.SIP_AUTH_ID,
-    SIP_PASSWORD: currentEnv.SIP_PASSWORD,
-    DRACHTIO_SIP_PORT: currentEnv.DRACHTIO_SIP_PORT
-  };
-
-  // 3. Load TARGET profile configuration
-  const targetConfig = profiles[provider] || {};
-
-  // 4. Update .env with target values (switching context)
-  const updates = { ...targetConfig, SIP_PROVIDER: provider };
-
-  // Default logic for FreePBX
-  if (provider === 'freepbx' && !updates.SIP_AUTH_ID && updates.SIP_EXTENSION) {
-    updates.SIP_AUTH_ID = updates.SIP_EXTENSION;
+  // Helper: Save Config
+  function saveSystemConfig(config) {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
   }
 
-  writeEnv(updates);
-  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+  // Helper: Update .env file (Critical for Docker)
+  function updateDockerEnv(config) {
+    // We reconstruct the .env file content based on the CLI's logic
+    // This ensures Docker picks up the changes immediately
+    let envContent = fs.existsSync(ENV_FILE) ? fs.readFileSync(ENV_FILE, 'utf8') : '';
 
-  // Note: We do NOT restart here anymore, the frontend will redirect to /setup
-  // Only update the env file so /setup page shows correct values
+    // Helper regex to replace or append
+    const setEnv = (key, val) => {
+      const regex = new RegExp(`^${key}=.*`, 'm');
+      if (regex.test(envContent)) {
+        envContent = envContent.replace(regex, `${key}=${val}`);
+      } else {
+        envContent += `\n${key}=${val}`;
+      }
+    };
 
-  res.json({ success: true, provider });
-});
+    if (config.sip) {
+      setEnv('SIP_DOMAIN', config.sip.domain || '');
+      setEnv('SIP_REGISTRAR', config.sip.registrar || '');
+      // Handle auth_id/extension logic
+      const device = config.devices && config.devices[0] ? config.devices[0] : {};
+      setEnv('SIP_EXTENSION', device.extension || '');
+      setEnv('SIP_AUTH_ID', device.authId || device.extension || ''); // Essential for FreePBX
+      setEnv('SIP_PASSWORD', device.password || '');
+    }
 
-// Save Full Configuration (From Setup Page)
-app.post('/api/config/save', (req, res) => {
-  const config = req.body; // { SIP_DOMAIN, SIP_EXTENSION, ... }
-
-  // Update .env
-  writeEnv(config);
-
-  // Also update the Profile for the CURRENT provider
-  let profiles = {};
-  if (fs.existsSync(PROFILES_FILE)) {
-    profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+    fs.writeFileSync(ENV_FILE, envContent);
   }
 
-  const env = parseEnv();
-  const provider = env.SIP_PROVIDER || '3cx';
+  // API: Set Provider (Switch and Restart)
+  app.post('/api/config/set-provider', (req, res) => {
+    const { provider } = req.body; // '3cx' or 'freepbx'
 
-  profiles[provider] = {
-    SIP_DOMAIN: config.SIP_DOMAIN,
-    SIP_REGISTRAR: config.SIP_REGISTRAR || config.SIP_DOMAIN, // Default registrar to domain
-    SIP_EXTENSION: config.SIP_EXTENSION,
-    SIP_AUTH_ID: config.SIP_AUTH_ID,
-    SIP_PASSWORD: config.SIP_PASSWORD,
-    DRACHTIO_SIP_PORT: config.DRACHTIO_SIP_PORT
-  };
+    try {
+      const config = loadSystemConfig();
+      if (!config) throw new Error('Config not found');
 
-  fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+      let profiles = {};
+      if (fs.existsSync(PROFILES_FILE)) {
+        profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+      }
 
-  // Trigger Restart of Voice App
-  const { exec } = require('child_process');
-  console.log(`[CONFIG] Configuration saved for ${provider}. Restarting...`);
+      // 1. Save CURRENT settings to the OLD provider profile
+      const currentProvider = config.provider || '3cx';
+      const currentDevice = config.devices[0] || {};
 
-  exec('pkill -f "voice-app"', (err) => {
-    setTimeout(() => {
-      exec('cd ../voice-app && nohup npm start > ../voice-app.log 2>&1 &');
-    }, 1000);
+      profiles[currentProvider] = {
+        domain: config.sip.domain,
+        registrar: config.sip.registrar,
+        extension: currentDevice.extension,
+        authId: currentDevice.authId,
+        password: currentDevice.password
+      };
+
+      // 2. Load TARGET settings from the NEW provider profile (if exists)
+      const target = profiles[provider] || {};
+
+      // 3. Apply to Config
+      config.provider = provider;
+      if (target.domain) {
+        config.sip.domain = target.domain;
+        config.sip.registrar = target.registrar;
+        config.devices[0].extension = target.extension;
+        config.devices[0].authId = target.authId;
+        config.devices[0].password = target.password;
+      }
+
+      // 4. Save Everything
+      saveSystemConfig(config);
+      fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+      updateDockerEnv(config);
+
+      // 5. Restart Voice App (Standalone Mode - No Docker)
+      const { exec } = require('child_process');
+      console.log(`[SWITCH] Switching to ${provider}. Restarting voice-app...`);
+
+      // Kill existing voice-app and restart it
+      exec('pkill -f "voice-app" || true', (err) => {
+        setTimeout(() => {
+          // Assume directory structure: /ROOT/mission-control/.. /voice-app
+          // We need to run this relative to where mission-control is running
+          const voiceAppDir = path.join(__dirname, '../voice-app');
+          console.log('[SWITCH] Starting voice-app in', voiceAppDir);
+
+          exec('npm start', { cwd: voiceAppDir, detached: true, stdio: 'ignore' });
+        }, 1000);
+      });
+
+      res.json({ success: true, provider });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: e.message });
+    }
   });
 
-  res.json({ success: true });
-});
+  // API: Get Current Provider
+  app.get('/api/config/provider', (req, res) => {
+    const config = loadSystemConfig();
+    res.json({ provider: config ? (config.provider || '3cx') : '3cx' });
+  });
 
-// Setup Page
-app.get('/setup', (req, res) => {
-  const env = parseEnv();
-  const provider = env.SIP_PROVIDER || '3cx';
-  const providerName = provider === '3cx' ? '3CX Phone System' : 'FreePBX / Asterisk';
+  // API: Save Configuration (From Setup UI)
+  app.post('/api/config/save', (req, res) => {
+    const data = req.body;
 
-  res.send(`
+    try {
+      const config = loadSystemConfig() || { sip: {}, devices: [{}] };
+
+      // Update Config Object
+      config.sip.domain = data.SIP_DOMAIN;
+      config.sip.registrar = data.SIP_REGISTRAR || data.SIP_DOMAIN;
+
+      if (!config.devices) config.devices = [{}];
+      config.devices[0].extension = data.SIP_EXTENSION;
+      config.devices[0].authId = data.SIP_AUTH_ID || data.SIP_EXTENSION;
+      config.devices[0].password = data.SIP_PASSWORD;
+
+      // Default provider logic
+      if (!config.provider) config.provider = '3cx';
+
+      saveSystemConfig(config);
+      updateDockerEnv(config); // Update .env just incase
+
+      // Update Profile
+      let profiles = {};
+      if (fs.existsSync(PROFILES_FILE)) profiles = JSON.parse(fs.readFileSync(PROFILES_FILE, 'utf8'));
+
+      profiles[config.provider] = {
+        domain: config.sip.domain,
+        registrar: config.sip.registrar,
+        extension: config.devices[0].extension,
+        authId: config.devices[0].authId,
+        password: config.devices[0].password
+      };
+      fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+
+      // Restart Voice App (Standalone)
+      const { exec } = require('child_process');
+      console.log(`[CONFIG] Saved. Restarting voice-app...`);
+
+      exec('pkill -f "voice-app" || true', (err) => {
+        setTimeout(() => {
+          const voiceAppDir = path.join(__dirname, '../voice-app');
+          exec('npm start', { cwd: voiceAppDir, detached: true, stdio: 'ignore' });
+        }, 1000);
+      });
+
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Serve Setup Page (Updated to read from config.json)
+  app.get('/setup', (req, res) => {
+    const config = loadSystemConfig() || { sip: {}, devices: [{}] };
+    const provider = config.provider || '3cx';
+    const providerName = provider === '3cx' ? '3CX Phone System' : 'FreePBX / Asterisk';
+
+    const device = config.devices[0] || {};
+
+    res.send(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -1317,27 +1434,27 @@ app.get('/setup', (req, res) => {
         <form id="configForm" onsubmit="saveConfig(event)">
           <div class="form-group">
             <label>SIP Domain / IP Address</label>
-            <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="e.g. 192.168.1.50 or mypbx.3cx.us">
+            <input type="text" name="SIP_DOMAIN" value="${config.sip.domain || ''}" required placeholder="e.g. 192.168.1.50 or mypbx.3cx.us">
           </div>
           
           <div class="form-group">
             <label>Extension Number</label>
-            <input type="text" name="SIP_EXTENSION" value="${env.SIP_EXTENSION || ''}" required placeholder="e.g. 1001">
+            <input type="text" name="SIP_EXTENSION" value="${device.extension || ''}" required placeholder="e.g. 1001">
           </div>
           
           <div class="form-group">
             <label>Authentication ID ${provider === 'freepbx' ? '(Same as Extension)' : ''}</label>
-            <input type="text" name="SIP_AUTH_ID" value="${env.SIP_AUTH_ID || ''}" placeholder="Leave empty to use Extension">
+            <input type="text" name="SIP_AUTH_ID" value="${device.authId || ''}" placeholder="Leave empty to use Extension">
           </div>
           
           <div class="form-group">
             <label>Secret / Password</label>
-            <input type="password" name="SIP_PASSWORD" value="${env.SIP_PASSWORD || ''}" required>
+            <input type="password" name="SIP_PASSWORD" value="${device.password || ''}" required>
           </div>
           
           <div class="form-group">
              <label>Registrar Server (Optional)</label>
-             <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="Defaults to Domain if empty">
+             <input type="text" name="SIP_REGISTRAR" value="${config.sip.registrar || ''}" placeholder="Defaults to Domain if empty">
           </div>
 
           <div class="actions">
@@ -1379,146 +1496,152 @@ app.get('/setup', (req, res) => {
     </body>
     </html>
   `);
-});
+  });
 
 
-// ===================================
-// Auto-Update System
-// ===================================
+  // ===================================
+  // Auto-Update System
+  // ===================================
 
-app.get('/api/update/check', async (req, res) => {
+  app.get('/api/update/check', async (req, res) => {
+    try {
+      // 1. Get Local Version
+      const localPkg = require('./package.json');
+      const localVersion = localPkg.version;
+
+      // 2. Get Remote Version
+      const fetch = (await import('node-fetch')).default || global.fetch;
+      const remoteRes = await fetch('https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/mission-control/package.json');
+      if (!remoteRes.ok) throw new Error('Failed to check GitHub');
+
+      const remotePkg = await remoteRes.json();
+      const remoteVersion = remotePkg.version;
+
+      // Simple semantic check
+      const updateAvailable = localVersion !== remoteVersion;
+      // Force update modal if major version differs or if remote is significantly newer
+      const localMajor = parseInt(localVersion.split('.')[0]);
+      const remoteMajor = parseInt(remoteVersion.split('.')[0]);
+      const showForceUpdateModal = updateAvailable && (remoteMajor > localMajor);
+
+
+      res.json({
+        success: true,
+        updateAvailable,
+        localVersion,
+        remoteVersion,
+        showForceUpdateModal // Added for client-side logic
+      });
+    } catch (error) {
+      res.json({ success: false, error: error.message });
+    }
+  });
+
+  app.post('/api/update/apply', (req, res) => {
+    const { exec } = require('child_process');
+
+    // We execute git pull in the ROOT project directory
+    // mission-control is in /subdir, so go up one level
+    const projectRoot = path.join(__dirname, '..');
+
+    console.log('[UPDATE] Starting update process...');
+
+    exec('git pull origin main', { cwd: projectRoot }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`[UPDATE] Git pull failed: ${error.message}`);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+
+      console.log('[UPDATE] Git pull success:', stdout);
+
+      // Restart logic: We need to restart the mission-control process itself.
+      // In many setups (like npm start), killing it might trigger a restart if using nodemon or pm2.
+      // If running via `node server.js` manually, it will just die.
+      // But since the user asked for it, we'll try to restart via the start script or just exit 
+      // and hope the outer supervisor handles it.
+
+      // For this environment, we can re-execute the start command in background and exit.
+
+      setTimeout(() => {
+        // If we are running via npm start, we might just be able to exit?
+        // Let's try to spawn a new one then exit.
+        const subprocess = require('child_process').spawn('nohup', ['node', 'mission-control/server.js'], {
+          cwd: projectRoot,
+          detached: true,
+          stdio: 'ignore'
+        });
+        subprocess.unref();
+        process.exit(0);
+      }, 1000);
+
+      res.json({ success: true, message: 'Update applied. Restarting...' });
+    });
+  });
+
+  // Logs API - Aggregated (Existing)
+  app.post('/api/logs', (req, res) => {
+    const { level, service, message, data } = req.body;
+    if (!message) return res.status(400).send({ error: 'Message required' });
+
+    addLog(level || 'INFO', service || 'UNKNOWN', message, data);
+    res.send({ success: true });
+  });
+
+  app.get('/api/logs', async (req, res) => {
+    try {
+      let combinedLogs = [...systemLogs];
+
+      // Fetch Voice App Logs
+      try {
+        const vRes = await fetch(`${VOICE_APP_URL} /api/logs`);
+        const vData = await vRes.json();
+        if (vData.logs) combinedLogs = combinedLogs.concat(vData.logs);
+      } catch (e) { }
+
+      // Fetch Inference Logs
+      try {
+        const iRes = await fetch(`${INFERENCE_URL}/logs`);
+        const iData = await iRes.json();
+        if (iData.logs) combinedLogs = combinedLogs.concat(iData.logs);
+      } catch (e) { }
+
+      // Fetch API Server Logs
+      try {
+        const aRes = await fetch(`${API_SERVER_URL}/logs`);
+        const aData = await aRes.json();
+        if (aData.logs) combinedLogs = combinedLogs.concat(aData.logs);
+      } catch (e) { }
+
+      // Sort by timestamp desc
+      combinedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // Limit
+      combinedLogs = combinedLogs.slice(0, 100);
+
+      res.json({ logs: combinedLogs });
+    } catch (e) {
+      res.json({ logs: systemLogs });
+    }
+  });
+
+  const https = require('https');
+  // fs and path are already required at top
+
   try {
-    // 1. Get Local Version
-    const localPkg = require('./package.json');
-    const localVersion = localPkg.version;
+    const options = {
+      key: fs.readFileSync(path.join(__dirname, 'certs/key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, 'certs/cert.pem'))
+    };
 
-    // 2. Get Remote Version
-    const fetch = (await import('node-fetch')).default || global.fetch;
-    const remoteRes = await fetch('https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/mission-control/package.json');
-    if (!remoteRes.ok) throw new Error('Failed to check GitHub');
-
-    const remotePkg = await remoteRes.json();
-    const remoteVersion = remotePkg.version;
-
-    // Simple semantic check (assume newer string != older string means update)
-    const updateAvailable = localVersion !== remoteVersion;
-
-    res.json({
-      success: true,
-      updateAvailable,
-      localVersion,
-      remoteVersion
+    https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
+      console.log(`Mission Control started on port ${PORT} (HTTPS)`);
+      addLog('INFO', 'MISSION-CONTROL', `Server started on https://localhost:${PORT}`);
     });
   } catch (error) {
-    res.json({ success: false, error: error.message });
+    console.error('Failed to start HTTPS server:', error.message);
+    // Fallback to HTTP for safety, though user requested HTTPS
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Mission Control started on port ${PORT} (HTTP - Certificate Error)`);
+      addLog('WARN', 'MISSION-CONTROL', 'Falling back to HTTP due to certificate error');
+    });
   }
-});
-
-app.post('/api/update/apply', (req, res) => {
-  const { exec } = require('child_process');
-
-  // We execute git pull in the ROOT project directory
-  // mission-control is in /subdir, so go up one level
-  const projectRoot = path.join(__dirname, '..');
-
-  console.log('[UPDATE] Starting update process...');
-
-  exec('git pull origin main', { cwd: projectRoot }, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`[UPDATE] Git pull failed: ${error.message}`);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-
-    console.log('[UPDATE] Git pull success:', stdout);
-
-    // Restart logic: We need to restart the mission-control process itself.
-    // In many setups (like npm start), killing it might trigger a restart if using nodemon or pm2.
-    // If running via `node server.js` manually, it will just die.
-    // But since the user asked for it, we'll try to restart via the start script or just exit 
-    // and hope the outer supervisor handles it.
-
-    // For this environment, we can re-execute the start command in background and exit.
-
-    setTimeout(() => {
-      // If we are running via npm start, we might just be able to exit?
-      // Let's try to spawn a new one then exit.
-      const subprocess = require('child_process').spawn('nohup', ['node', 'mission-control/server.js'], {
-        cwd: projectRoot,
-        detached: true,
-        stdio: 'ignore'
-      });
-      subprocess.unref();
-      process.exit(0);
-    }, 1000);
-
-    res.json({ success: true, message: 'Update applied. Restarting...' });
-  });
-});
-
-// Logs API - Aggregated (Existing)
-app.post('/api/logs', (req, res) => {
-  const { level, service, message, data } = req.body;
-  if (!message) return res.status(400).send({ error: 'Message required' });
-
-  addLog(level || 'INFO', service || 'UNKNOWN', message, data);
-  res.send({ success: true });
-});
-
-app.get('/api/logs', async (req, res) => {
-  try {
-    let combinedLogs = [...systemLogs];
-
-    // Fetch Voice App Logs
-    try {
-      const vRes = await fetch(`${VOICE_APP_URL} /api/logs`);
-      const vData = await vRes.json();
-      if (vData.logs) combinedLogs = combinedLogs.concat(vData.logs);
-    } catch (e) { }
-
-    // Fetch Inference Logs
-    try {
-      const iRes = await fetch(`${INFERENCE_URL}/logs`);
-      const iData = await iRes.json();
-      if (iData.logs) combinedLogs = combinedLogs.concat(iData.logs);
-    } catch (e) { }
-
-    // Fetch API Server Logs
-    try {
-      const aRes = await fetch(`${API_SERVER_URL}/logs`);
-      const aData = await aRes.json();
-      if (aData.logs) combinedLogs = combinedLogs.concat(aData.logs);
-    } catch (e) { }
-
-    // Sort by timestamp desc
-    combinedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    // Limit
-    combinedLogs = combinedLogs.slice(0, 100);
-
-    res.json({ logs: combinedLogs });
-  } catch (e) {
-    res.json({ logs: systemLogs });
-  }
-});
-
-const https = require('https');
-// fs and path are already required at top
-
-try {
-  const options = {
-    key: fs.readFileSync(path.join(__dirname, 'certs/key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'certs/cert.pem'))
-  };
-
-  https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
-    console.log(`Mission Control started on port ${PORT} (HTTPS)`);
-    addLog('INFO', 'MISSION-CONTROL', `Server started on https://localhost:${PORT}`);
-  });
-} catch (error) {
-  console.error('Failed to start HTTPS server:', error.message);
-  // Fallback to HTTP for safety, though user requested HTTPS
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Mission Control started on port ${PORT} (HTTP - Certificate Error)`);
-    addLog('WARN', 'MISSION-CONTROL', 'Falling back to HTTP due to certificate error');
-  });
-}
