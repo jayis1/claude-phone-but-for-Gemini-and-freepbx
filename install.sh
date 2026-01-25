@@ -334,6 +334,12 @@ main() {
   cd "$INSTALL_DIR/gemini-api-server"
   npm install --silent --production
 
+  # Install Inference Server dependencies
+  echo ""
+  echo "Installing Inference Server dependencies..."
+  cd "$INSTALL_DIR/inference-server"
+  npm install --silent --production
+
   # Create symlink
   echo ""
   if [ -L "$BIN_DIR/gemini-phone" ]; then
