@@ -9,7 +9,6 @@ import { isGeminiInstalled, sleep } from '../utils.js';
 import { checkGeminiApiServer } from '../network.js';
 
 import { runPrereqChecks } from '../prereqs.js';
-import { isGitRepo, updateViaGit } from './update.js';
 
 /**
  * Start command - Launch all services
@@ -18,16 +17,6 @@ import { isGitRepo, updateViaGit } from './update.js';
 export async function startCommand() {
   console.log(chalk.bold.cyan('\n🚀 Starting Gemini Phone\n'));
 
-  // Auto-update if possible
-  if (isGitRepo(process.cwd())) {
-    try {
-      await updateViaGit(process.cwd(), { silent: true });
-      console.log(chalk.gray('✓ Auto-updated to latest version'));
-    } catch (err) {
-      // Ignore update errors so we don't block startup
-      console.log(chalk.yellow(`⚠️  Auto-update failed: ${err.message}`));
-    }
-  }
 
   // Check if configured
   if (!configExists()) {
@@ -345,6 +334,24 @@ async function startBoth(config, isPiMode) {
     }
   }
 
+  // Start Mission Control Dashboard
+  if (!isPiMode) {
+    const missionControlPath = path.resolve(config.paths.geminiApiServer, '../mission-control');
+    if (fs.existsSync(missionControlPath)) {
+      spinner.start('Starting Mission Control Dashboard...');
+      try {
+        await startInferenceServer(missionControlPath, 3030, null);
+        spinner.succeed('Mission Control Dashboard started on port 3030');
+      } catch (error) {
+        if (error.message.includes('already running')) {
+          spinner.warn('Mission Control already running');
+        } else {
+          spinner.fail(`Failed to start Mission Control: ${error.message}`);
+        }
+      }
+    }
+  }
+
   // Start gemini-api-server
   if (!isPiMode) {
     spinner.start('Starting Gemini API server...');
@@ -371,12 +378,5 @@ async function startBoth(config, isPiMode) {
     console.log(chalk.gray(`  • Voice App:         http://localhost:${config.server.httpPort} (Voice Controls)`));
     console.log(chalk.gray(`  • Inference Brain:   http://localhost:4000 (AI Reasoning)`));
     console.log(chalk.gray(`  • API Server:        http://localhost:${config.server.geminiApiPort} (Tool Execution)`));
-    console.log(chalk.gray(`  • Mission Control:   http://localhost:8080 (Unified Dashboard)`));
+    console.log();
   }
-  console.log();
-  console.log(chalk.gray('Ready to receive calls on:'));
-  for (const device of config.devices) {
-    console.log(chalk.gray(`  • ${device.name}: extension ${device.extension}`));
-  }
-  console.log();
-}

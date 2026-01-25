@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.MISSION_CONTROL_PORT || 8080;
+const PORT = process.env.MISSION_CONTROL_PORT || 3030;
 
 // Middleware
 app.use(express.json());
