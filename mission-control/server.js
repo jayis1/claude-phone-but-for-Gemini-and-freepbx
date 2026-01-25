@@ -381,15 +381,6 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
-              <div class="control-group">
-                <div class="stat-label">Music Speed (YouTube DJ)</div>
-                <div class="slider-container">
-                  <span style="font-size: 0.8rem">0.5x</span>
-                  <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
-                  <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
-                </div>
-              </div>
-
               <!-- Gemini CLI Terminal -->
               <div style="margin-bottom: 1rem;">
                 <div class="stat-label">Gemini CLI</div>
@@ -402,7 +393,7 @@ app.get('/', (req, res) => {
                 
                 <!-- Terminal Input -->
                 <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
-                  <div style="margin-bottom:0.5rem;padding:0.25rem;border-left:2px solid var(--accent);">$</div>
+                  <span style="padding: 0.5rem; color: var(--success); font-family: monospace;">$</span>
                   <input 
                     type="text" 
                     id="gemini-cli-input" 
@@ -602,18 +593,6 @@ app.get('/', (req, res) => {
                 });
               }
             } catch(e) { console.error(e); }
-          }
-
-          async function updateMusicSpeed(val) {
-            document.getElementById('music-speed-val').innerText = val + 'x';
-            try {
-              // Send to Inference Server to control YouTube DJ playback speed
-              await fetch('/api/proxy/inference/music-speed', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ speed: parseFloat(val) })
-              });
-            } catch(e) { console.error('Music speed update failed:', e); }
           }
 
           // Inference Brain
@@ -1666,4 +1645,3 @@ app.post('/api/config/provider', (req, res) => {
       addLog('WARN', 'MISSION-CONTROL', 'Falling back to HTTP due to certificate error');
     });
   }
-
