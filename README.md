@@ -4,39 +4,37 @@
 
 Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call you.
 
-## What's New in v2.1.2
+## What's New in v2.1.25
 
-🎵 **Hold Music** - No more dead air! Music plays while AI "thinks" (customizable).
+💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
+grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
+🎵 **YouTube DJ Brain** - The AI plays Lofi Beats while thinking (now with speed control).
 🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
 📞 **FreePBX Support** - Full compatibility with Asterisk/FreePBX.
-💻 **Interactive Terminal** - Run Gemini CLI commands directly from Mission Control.
-🛡️ **Enhanced Mission Control** - HTTPS support, Unified Logging, and FreePBX status.
 
 ## What is this?
 
-Gemini Phone gives your Gemini Code installation a phone number. You can:
+Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautiful Stack" of 4 powerful components:
 
-- **Inbound**: Call an extension and talk to Gemini - run commands, check status, ask questions
-- **Outbound**: Your server can call YOU with alerts, then have a conversation about what to do
-- **Monitor**: View all services in a unified dashboard with real-time stats
-- **Customize**: Configure voice and speed settings per device
+1. **Mission Control** (The Dashboard) - Unified generic interface.
+2. **Voice App** (The Ears & Mouth) - SIP/RTP handling & TTS/STT.
+3. **Inference Brain** (The Mind) - AI reasoning & decisions.
+4. **Gemini API Server** (The Hands) - Tool execution & CLI access.
 
 ## Architecture
 
-Gemini Phone v2.1.14 uses a 3-tier architecture:
-
 ```text
 ┌─────────────────────────────────────────────┐
-│  Voice App (Port 3434)                      │
+│  Voice App (Port 3000)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
 │  + Native 3CX & FreePBX Support 🔀          │
 │  + YouTube DJ Hold Music 🎵                 │
-│  + Standalone Node.js Service               │
+│  + Speed Control Sliders 🎚️                 │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
 │  Inference Brain (Port 4000)                │
-│  🧠 The Brain - AI reasoning & decisions    │
+│  🧠 The Mind - AI reasoning & decisions     │
 │  + Python Script Execution 🐍               │
 │  + yt-dlp Audio Streaming                   │
 └─────────────────┬───────────────────────────┘
