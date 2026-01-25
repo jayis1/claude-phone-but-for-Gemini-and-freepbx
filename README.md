@@ -4,13 +4,15 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.1.43
+## What's New in v2.2.2
 
-💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
-grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
-🎵 **YouTube DJ Brain** - The AI plays Lofi Beats while thinking (now with speed control).
-🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
-📞 **FreePBX Only** - Simplified stack strictly for FreePBX/Asterisk.
++ ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
++ 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
++ 💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
++ grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
++ 🎵 **YouTube DJ Brain** - The AI plays Lofi Beats while thinking (now with speed control).
++ 🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
++ 📞 **FreePBX Only** - Simplified stack strictly for FreePBX/Asterisk.
 
 ## What is this?
 
@@ -70,7 +72,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.43/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.2.2/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -98,22 +100,22 @@ The interactive setup wizard helps you:
 gemini-phone start
 ```
 
-## New in v2.1.14 🚀
+## Previous Updates (v2.1.x) 🚀
 
-- **Multi-Provider Switching**:
-  - Hot-swap between **3CX** and **FreePBX** directly from Mission Control.
-  - **Smart Profiles**: The system remembers your credentials for each provider, so switching is just one click.
-  - **Standalone Restart**: Automatically restarts the Voice App service (no Docker requirement) to apply changes immediately.
++ **Multi-Provider Switching**:
+  + Hot-swap between **3CX** and **FreePBX** directly from Mission Control.
+  + **Smart Profiles**: The system remembers your credentials for each provider, so switching is just one click.
+  + **Standalone Restart**: Automatically restarts the Voice App service (no Docker requirement) to apply changes immediately.
 
-- **Mission Control UI 2.0**:
-  - **Custom Modals**: Replaced ugly browser alerts with sleek, dark-mode confirmation dialogs.
-  - **Smart Update Button**: Always visible with intelligent behavior:
-    - ✅ **Up-to-Date?**: Click to force a re-install (useful for debugging).
-    - 🚀 **Update Available?**: Click to one-tap update your entire stack.
++ **Mission Control UI 2.0**:
+  + **Custom Modals**: Replaced ugly browser alerts with sleek, dark-mode confirmation dialogs.
+  + **Smart Update Button**: Always visible with intelligent behavior:
+    + ✅ **Up-to-Date?**: Click to force a re-install (useful for debugging).
+    + 🚀 **Update Available?**: Click to one-tap update your entire stack.
 
-- **Infrastructure**:
-  - **Red Dot Fix**: Solved port conflicts to ensure Mission Control always sees the Voice App.
-  - **YouTube DJ Brain**: The AI now plays Lofi Beats from YouTube while thinking or holding. 🎧
++ **Infrastructure**:
+  + **Red Dot Fix**: Solved port conflicts to ensure Mission Control always sees the Voice App.
+  + **YouTube DJ Brain**: The AI now plays Lofi Beats from YouTube while thinking or holding. 🎧
 
 ## Deployment Modes
 
@@ -216,8 +218,8 @@ gemini-phone device add
 
 Example devices:
 
-- **Morpheus** (ext 9000) - General assistant
-- **Cephanie** (ext 9002) - Storage monitoring bot
++ **Morpheus** (ext 9000) - General assistant
++ **Cephanie** (ext 9002) - Storage monitoring bot
 
 ## Mission Control Dashboard
 
@@ -225,24 +227,28 @@ Access the unified dashboard at `http://your-server-ip:3030`
 
 **Features:**
 
-- **2x2 Grid Layout**: View all services simultaneously
-  - Voice App (top-left) - Voice customization & Terminal
-  - API Server (top-right) - Interactive endpoints
-  - Inference Brain (bottom-left) - Model selection & Activity Log
-  - System Monitor (bottom-right) - Live stats
++ **2x2 Grid Layout**: View all services simultaneously
+  + Voice App (top-left) - Voice customization & Terminal
+  + API Server (top-right) - Interactive endpoints
+  + Inference Brain (bottom-left) - Model selection & Activity Log
+  + System Monitor (bottom-right) - Live stats
 
-- **Status Indicators**:
-  - Real-time dots for FreePBX, Drachtio, Brain, and Python status.
++ **Status Indicators**:
+  + Real-time dots for FreePBX, Drachtio, Brain, and Python status.
 
-- **Real-time Monitoring**:
-  - CPU & Memory usage
-  - Active calls counter
-  - System uptime
-  - Live log stream (last 10 entries, auto-refresh every 5s)
++ **Quick Access**:
++ **📊 htop view** (one-click access)
++ **⚙️ Settings Gear**: Configure API keys and SIP settings directly in browser
+  
++ **Real-time Monitoring**:
+  + CPU & Memory usage
+  + Active calls counter
+  + System uptime
+  + Live log stream (last 10 entries, auto-refresh every 5s)
 
-- **Quick Actions**:
-  - Refresh stats
-  - Clear logs
++ **Quick Actions**:
+  + Refresh stats
+  + Clear logs
 
 ## Voice Customization
 
@@ -250,15 +256,15 @@ Configure voice and speed settings per device via the Voice App dashboard (`http
 
 **Available Voices** (10 ElevenLabs options):
 
-- Rachel, Antoni, Elli, Josh, Arnold
-- Adam, Sam, Bella, Charlie, Daniel
++ Rachel, Antoni, Elli, Josh, Arnold
++ Adam, Sam, Bella, Charlie, Daniel
 
 **Speed Control**:
 
-- Range: 0.5x to 2.0x
-- Real-time adjustment
-- Per-device settings
-- Persistent across calls
++ Range: 0.5x to 2.0x
++ Real-time adjustment
++ Per-device settings
++ Persistent across calls
 
 **How to Use**:
 
@@ -275,7 +281,7 @@ All services provide interactive web dashboards:
 | Service | Port | URL | Features |
 | :--- | :--- | :--- | :--- |
 | **Mission Control** | 3030 | `http://localhost:3030` | Unified view, system stats, logs |
-| **Voice App** | 3434 | `http://localhost:3434` | Voice/speed config, API endpoints |
+| **Voice App** | 3000 | `http://localhost:3000` | Voice/speed config, API endpoints |
 | **Inference Brain** | 4000 | `http://localhost:4000` | Model selection, endpoints |
 | **API Server** | 3333 | `http://localhost:3333` | Interactive endpoints, testing |
 
@@ -385,12 +391,12 @@ npm run lint:fix
 
 ## Documentation
 
-- [CLI Reference](cli/README.md) - Detailed CLI documentation
-- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [Outbound API](voice-app/README-OUTBOUND.md) - Outbound calling API reference
-- [Deployment](voice-app/DEPLOYMENT.md) - Production deployment guide
-- [FreePBX Guide](docs/FREEPBX.md) - Setup for FreePBX / Asterisk
-- [Gemini Code Skill](docs/GEMINI-CODE-SKILL.md) - Build a "call me" skill for Gemini Code
++ [CLI Reference](cli/README.md) - Detailed CLI documentation
++ [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
++ [Outbound API](voice-app/README-OUTBOUND.md) - Outbound calling API reference
++ [Deployment](voice-app/DEPLOYMENT.md) - Production deployment guide
++ [FreePBX Guide](docs/FREEPBX.md) - Setup for FreePBX / Asterisk
++ [Gemini Code Skill](docs/GEMINI-CODE-SKILL.md) - Build a "call me" skill for Gemini Code
 
 ## License
 
