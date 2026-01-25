@@ -9,17 +9,22 @@ const express = require('express');
 const si = require('systeminformation');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
 
-// Service URLs
-const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3434';
+// Service URLs - Default to standard ports
+// Voice App: 3000 (Docker mapping)
+// Brain: 4000
+// API: 3333
+const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
 const INFERENCE_URL = process.env.INFERENCE_URL || process.env.INFERENCE_BRAIN_URL || 'http://localhost:4000';
 const API_SERVER_URL = process.env.API_SERVER_URL || 'http://localhost:3333';
 
 // Middleware
 app.use(express.json());
+app.use(cors());
 
 // Store for active calls and logs
 let activeCalls = [];
@@ -48,20 +53,23 @@ app.get('/', (req, res) => {
       <head>
         <title>Mission Control - Gemini Phone</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
         <style>
           :root {
-            --bg: #0f172a;
-            --panel: rgba(30, 41, 59, 0.7);
-            --border: rgba(139, 92, 246, 0.2);
-            --text: #f8fafc;
-            --text-dim: #94a3b8;
-            --accent: #c084fc;
+            --bg: #09090b;
+            --panel: #18181b;
+            --border: #27272a;
+            --text: #e4e4e7;
+            --text-dim: #a1a1aa;
+            --accent: #8b5cf6;
             --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
           }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            background-color: var(--bg);
             color: var(--text);
             height: 100vh;
             overflow: hidden;
@@ -69,8 +77,8 @@ app.get('/', (req, res) => {
             flex-direction: column;
           }
           .header {
-            height: 50px;
-            background: rgba(15, 23, 42, 0.9);
+            height: 60px;
+            background: var(--panel);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -79,67 +87,60 @@ app.get('/', (req, res) => {
             flex-shrink: 0;
           }
           .logo {
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
             background: linear-gradient(to right, #c084fc, #6366f1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
           }
           .status-dot {
             width: 8px;
             height: 8px;
             background: var(--success);
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--success);
+            box-shadow: 0 0 12px var(--success);
           }
           .grid {
             flex: 1;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            height: calc(100vh - 50px);
+            gap: 1rem;
+            padding: 1rem;
+            height: calc(100vh - 60px);
           }
           .panel {
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative;
-            height: 100%;
-            width: 100%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           }
           .panel-header {
-            background: rgba(139, 92, 246, 0.05);
-            padding: 0.5rem 1rem;
+            padding: 1rem;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
+            background: rgba(255,255,255,0.02);
           }
           .panel-content {
-            padding: 1rem;
+            padding: 1.25rem;
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Center content vertically */
             overflow-y: auto;
           }
           
-          /* Specific overrides for scrolling content panels */
-          .panel-content.scrollable {
-            justify-content: flex-start;
-          }
-
           /* Stats Grid */
           .stat-grid {
             display: grid;
@@ -148,86 +149,135 @@ app.get('/', (req, res) => {
             width: 100%;
           }
           .stat-card {
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.3);
             padding: 1rem;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
           }
           .stat-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
           }
           .stat-value {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--accent);
-            font-family: monospace;
+            font-family: 'JetBrains Mono', monospace;
+            color: white;
+          }
+          
+          /* Controls */
+          .control-group {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+          }
+          .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+          }
+          input[type=range] {
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            appearance: none;
+          }
+          input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+          }
+          select {
+            width: 100%;
+            background: #09090b;
+            color: white;
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-family: inherit;
           }
 
-          /* Interactive Buttons */
+          /* Buttons */
           .btn-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 0.75rem;
             margin-top: 1rem;
-            width: 100%;
           }
           .btn {
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid var(--border);
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
             color: var(--text);
             padding: 0.75rem;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.85rem;
+            font-weight: 500;
             transition: all 0.2s;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
           }
           .btn:hover {
             background: var(--accent);
-            color: black;
+            color: white;
             border-color: var(--accent);
-            font-weight: 600;
           }
-
-          /* Logs & Lists */
-          .log-entry {
-            font-family: monospace;
-            font-size: 0.7rem;
-            padding: 0.3rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            display: flex;
-            gap: 0.5rem;
-            line-height: 1.4;
-          }
-          .device-item {
+          
+          /* Monitors */
+          .monitor-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255,255,255,0.03);
-            padding: 0.75rem;
-            border-radius: 6px;
             margin-bottom: 0.5rem;
-            border-left: 3px solid var(--success);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
           }
-          
-          /* Status Badges */
-          .status-badge {
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-            text-transform: uppercase;
+          .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin: 0 1rem;
+            overflow: hidden;
           }
+          .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.5s ease;
+          }
+
+          /* Logs */
+          .log-container {
+            flex: 1;
+            background: #000;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+          }
+          .log-entry {
+            margin-bottom: 4px;
+            line-height: 1.4;
+            display: flex;
+            gap: 8px;
+          }
+          .log-time { color: var(--text-dim); }
+          .log-service { color: var(--accent); }
         </style>
       </head>
       <body>
@@ -236,102 +286,155 @@ app.get('/', (req, res) => {
             <span class="status-dot"></span>
             MISSION CONTROL
           </div>
-          <div>
-            <span id="clock" style="font-family: monospace; color: var(--accent); font-size: 0.9rem;">--:--:--</span>
-          </div>
+          <div id="clock" style="font-family: 'JetBrains Mono', monospace; color: var(--text-dim);">--:--:--</div>
         </div>
 
         <div class="grid">
-          <!-- PANEL 1: VOICE APP -->
+          <!-- VOICE APP PANEL -->
           <div class="panel">
             <div class="panel-header">
-              <span>📞 VOICE APP</span>
-              <span class="status-badge" id="voice-status"> Checking...</span>
+              <span>🎙️ VOICE APP</span>
+              <span class="status-badge" id="voice-status" style="color: var(--warning)">Checking...</span>
             </div>
-            <div class="panel-content scrollable" id="voice-content">
-              <div style="flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text-dim);">
-                Connecting...
+            <div class="panel-content">
+              <div class="stat-grid" style="margin-bottom: 1rem;">
+                <div class="stat-card">
+                  <div class="stat-label">System</div>
+                  <div class="stat-value" id="voice-system">Ready</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Active Calls</div>
+                  <div class="stat-value" id="voice-calls">0</div>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="stat-label">Voice Speed</div>
+                <div class="slider-container">
+                  <span style="font-size: 0.8rem">0.5x</span>
+                  <input type="range" id="voice-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateSpeed(this.value)">
+                  <span id="speed-val" style="font-family: monospace; width: 40px">1.0x</span>
+                </div>
+              </div>
+
+              <div style="margin-top: 1rem;">
+                <div class="stat-label">CLI Access</div>
+                <div style="font-size: 0.8rem; color: var(--success);">✓ Enabled (Gemini Bridge)</div>
               </div>
             </div>
           </div>
 
-          <!-- PANEL 2: INFERENCE BRAIN -->
+          <!-- INFERENCE BRAIN PANEL -->
           <div class="panel">
             <div class="panel-header">
               <span>🧠 INFERENCE BRAIN</span>
-              <span class="status-badge" id="inference-status">Checking...</span>
+              <span class="status-badge" id="inference-status" style="color: var(--warning)">Checking...</span>
             </div>
             <div class="panel-content">
-              <div class="stat-grid" style="height: 50%;">
+              <div class="stat-grid" style="margin-bottom: 1rem;">
                 <div class="stat-card">
-                  <div class="stat-label">Active Model</div>
-                  <div class="stat-value" id="ai-model" style="font-size: 1.1rem;">--</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">Total Sessions</div>
+                  <div class="stat-label">Sessions</div>
                   <div class="stat-value" id="ai-sessions">0</div>
                 </div>
+                <div class="stat-card">
+                  <div class="stat-label">Load</div>
+                  <div class="stat-value" id="ai-load">--%</div>
+                </div>
               </div>
-              <div style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
-                <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Recent Activity</div>
-                <div id="ai-thoughts" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; flex: 1; font-family: monospace; font-size: 0.8rem; overflow-y: auto; color: #a5b4fc;">
-                  Waiting for activity...
+
+              <div class="control-group">
+                <div class="stat-label">Active Model</div>
+                <select id="model-select" onchange="updateModel(this.value)">
+                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                </select>
+              </div>
+
+               <div style="flex: 1; margin-top: 1rem; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="stat-label">Activity Log</div>
+                <div id="brain-log" class="log-container" style="background: rgba(0,0,0,0.3); border: none;">
+                  <div class="log-entry"><span class="log-time">--:--</span> Waiting for thoughts...</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- PANEL 3: GEMINI API -->
+          <!-- GEMINI API SERVER -->
           <div class="panel">
             <div class="panel-header">
-              <span>⚡ GEMINI API</span>
-              <span class="status-badge" id="api-status">Checking...</span>
+              <span>⚡ GEMINI API SERVER</span>
+              <span class="status-badge" id="api-status" style="color: var(--warning)">Checking...</span>
             </div>
             <div class="panel-content">
               <div class="stat-grid">
                 <div class="stat-card">
-                  <div class="stat-label">Connection</div>
-                  <div class="stat-value">HTTP</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">System Status</div>
+                  <div class="stat-label">Status</div>
                   <div class="stat-value" style="color: var(--success); font-size: 1.2rem;">OPERATIONAL</div>
                 </div>
-              </div>
-              
-              <div class="btn-grid">
-                <button class="btn" onclick="apiAction('ping')">📡 Ping Service</button>
-                <button class="btn" onclick="apiAction('system-info')">ℹ️ System Info</button>
-                <button class="btn" onclick="apiAction('joke')">😄 Tell Joke</button>
-                <button class="btn" onclick="apiAction('fortune')">🔮 Fortune</button>
+                <div class="stat-card">
+                  <div class="stat-label">Connection</div>
+                  <div class="stat-value">HTTP/REST</div>
+                </div>
               </div>
 
-              <div id="api-result" style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 6px; font-family: monospace; font-size: 0.8rem; min-height: 40px; text-align: center; color: #a5b4fc; display: flex; align-items: center; justify-content: center;">
+              <div class="btn-grid">
+                <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
+                <button class="btn" onclick="apiAction('docker-check')">🐳 Check Docker</button>
+                <button class="btn" onclick="apiAction('git-status')">🐙 Git Status</button>
+                <button class="btn" onclick="apiAction('list-files')">📂 List Files</button>
+                <button class="btn" onclick="apiAction('weather')">☀️ Weather</button>
+                <button class="btn" onclick="apiAction('joke')">😄 Tell Joke</button>
+                <button class="btn" onclick="apiAction('fortune')">🔮 Fortune</button>
+                <button class="btn" onclick="apiAction('system-info')">ℹ️ Info</button>
+              </div>
+
+              <div id="api-result" style="margin-top: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; font-size: 0.8rem; min-height: 40px; color: #a5b4fc; max-height: 100px; overflow-y: auto;">
                 Ready for commands...
               </div>
             </div>
           </div>
 
-          <!-- PANEL 4: SYSTEM MONITOR -->
+          <!-- SYSTEM MONITOR -->
           <div class="panel">
             <div class="panel-header">
               <span>📊 SYSTEM MONITOR</span>
-              <div style="font-size: 0.75rem; color: var(--text-dim);">Live Metrics</div>
+              <div style="font-size: 0.75rem; color: var(--success);">LIVE</div>
             </div>
-            <div class="panel-content" style="display: flex; flex-direction: column; height: 100%;">
-              <div class="stat-grid" style="margin-bottom: 1rem;">
-                <div class="stat-card">
-                  <div class="stat-label">CPU Load</div>
-                  <div class="stat-value" id="sys-cpu">--%</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">Memory</div>
-                  <div class="stat-value" id="sys-mem">--%</div>
-                </div>
+            <div class="panel-content">
+              <!-- CPU -->
+              <div class="monitor-row">
+                <span style="width: 40px">CPU</span>
+                <div class="progress-bar"><div class="progress-fill" id="bar-cpu"></div></div>
+                <span id="val-cpu">--%</span>
               </div>
-              <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase;">Shared System Logs</div>
-                <div id="sys-logs" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.5rem;"></div>
+              
+              <!-- GPU -->
+              <div class="monitor-row">
+                <span style="width: 40px">GPU</span>
+                <div class="progress-bar"><div class="progress-fill" id="bar-gpu" style="background: #ec4899"></div></div>
+                <span id="val-gpu">--%</span>
+              </div>
+
+              <!-- RAM -->
+              <div class="monitor-row">
+                <span style="width: 40px">RAM</span>
+                <div class="progress-bar"><div class="progress-fill" id="bar-mem" style="background: #3b82f6"></div></div>
+                <span id="val-mem">--%</span>
+              </div>
+
+              <!-- TEMP -->
+              <div class="monitor-row">
+                <span style="width: 40px">TMP</span>
+                <div class="progress-bar"><div class="progress-fill" id="bar-temp" style="background: #f59e0b"></div></div>
+                <span id="val-temp">--°C</span>
+              </div>
+
+              <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-top: 1rem;">
+                <div class="stat-label">Shared System Logs</div>
+                <div id="sys-logs" class="log-container">
+                  <!-- Logs -->
+                </div>
               </div>
             </div>
           </div>
@@ -343,101 +446,163 @@ app.get('/', (req, res) => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
           }, 1000);
 
-          // Voice App Data
-          async function updateVoice() {
-            try {
-              const res = await fetch('/api/proxy/voice/devices');
-              const data = await res.json();
-              
-              if (data.devices) {
-                document.getElementById('voice-status').innerText = 'Online';
-                const html = data.devices.map(d => \`
-                  <div class="device-item">
-                    <div class="device-info">
-                      <span class="device-ext">\${d.extension}</span>
-                      <span>\${d.name}</span>
-                    </div>
-                    \${d.hasVoice ? '🎤' : '⚪'}
-                  </div>
-                \`).join('');
-                document.getElementById('voice-content').innerHTML = html || '<div class="loading">No devices found</div>';
-              }
-            } catch (e) {
-              document.getElementById('voice-status').innerText = 'Offline';
-              document.getElementById('voice-status').style.color = '#ef4444';
+          // Update Helpers
+          function setStatus(id, online) {
+            const el = document.getElementById(id);
+            if(online) {
+              el.innerText = 'ONLINE';
+              el.style.color = 'var(--success)';
+            } else {
+              el.innerText = 'OFFLINE';
+              el.style.color = 'var(--error)';
             }
           }
 
-          // Inference Data
+          // Voice App
+          async function updateVoice() {
+            try {
+              // Try health first
+              const h = await fetch('/api/proxy/voice/health');
+              if(h.ok) setStatus('voice-status', true);
+              else throw new Error('Unhealthy');
+
+              // Get Config for speed
+              const c = await fetch('/api/proxy/voice/api/config?device=default'); // Assuming default device exists
+              const conf = await c.json();
+              if(conf.success) {
+                 const speed = conf.config.speed || 1.0;
+                 document.getElementById('voice-speed').value = speed;
+                 document.getElementById('speed-val').innerText = speed + 'x';
+              }
+            } catch(e) {
+              setStatus('voice-status', false);
+            }
+          }
+
+          async function updateSpeed(val) {
+            document.getElementById('speed-val').innerText = val + 'x';
+            try {
+              // Get first device to update
+              const d = await fetch('/api/proxy/voice/api/devices');
+              const dd = await d.json();
+              if(dd.devices && dd.devices.length > 0) {
+                await fetch('/api/proxy/voice/api/config/speed', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ device: dd.devices[0].extension, speed: parseFloat(val) })
+                });
+              }
+            } catch(e) { console.error(e); }
+          }
+
+          // Inference Brain
           async function updateInference() {
             try {
               const res = await fetch('/api/proxy/inference/stats');
               const data = await res.json();
-              if (data.success) {
-                document.getElementById('inference-status').innerText = 'Online';
-                document.getElementById('ai-model').innerText = data.model || 'Unknown';
-                document.getElementById('ai-sessions').innerText = data.sessions || 0;
+              if(data.success) {
+                setStatus('inference-status', true);
+                document.getElementById('ai-sessions').innerText = data.sessions;
+                document.getElementById('model-select').value = data.model;
+                
+                // Mock load for now if not in stats
+                document.getElementById('ai-load').innerText = (data.cpu || 0) + '%';
               }
-            } catch (e) {
-              document.getElementById('inference-status').innerText = 'Offline';
-              document.getElementById('inference-status').style.color = '#ef4444';
+            } catch(e) {
+              setStatus('inference-status', false);
             }
           }
 
-          // API Actions
-          async function apiAction(endpoint) {
-            const apiResult = document.getElementById('api-result');
-            apiResult.innerText = 'Requesting...';
+          async function updateModel(model) {
             try {
-              const res = await fetch('/api/proxy/api/' + endpoint);
-              const data = await res.json();
-              
-              if (data.joke) apiResult.innerText = '😄 ' + data.joke;
-              else if (data.fortune) apiResult.innerText = '🔮 ' + data.fortune;
-              else apiResult.innerText = JSON.stringify(data, null, 2);
-              
-              document.getElementById('api-status').innerText = 'Active';
-            } catch (e) {
-              apiResult.innerText = 'Error: ' + e.message;
+              await fetch('/api/proxy/inference/config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ model })
+              });
+            } catch(e) { alert('Failed to change model'); }
+          }
+
+          const PROMPTS = {
+            'docker-check': 'Check status of all docker containers and return a summary.',
+            'git-status': 'Check git status and recent commits.',
+            'list-files': 'List files in the current directory.',
+            'weather': 'What is the weather like?'
+          };
+
+          async function apiAction(action) {
+            const out = document.getElementById('api-result');
+            out.innerText = 'Running...';
+            
+            try {
+              let res;
+              if(PROMPTS[action]) {
+                // Send as prompt to Gemini
+                res = await fetch('/api/proxy/api/ask', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ prompt: PROMPTS[action] })
+                });
+                const d = await res.json();
+                out.innerText = d.response || d.error;
+              } else {
+                // Standard Endpoint
+                res = await fetch('/api/proxy/api/' + action);
+                const d = await res.json();
+                out.innerText = JSON.stringify(d, null, 2);
+              }
+              setStatus('api-status', true);
+            } catch(e) {
+              out.innerText = 'Error: ' + e.message;
+              setStatus('api-status', false);
             }
           }
 
-          // System Stats
           async function updateSystem() {
             try {
               const res = await fetch('/api/system-stats');
               const data = await res.json();
-              document.getElementById('sys-cpu').innerText = data.cpu + '%';
-              document.getElementById('sys-mem').innerText = data.memory + '%';
-            } catch (e) {}
+              
+              // CPU
+              document.getElementById('val-cpu').innerText = data.cpu + '%';
+              document.getElementById('bar-cpu').style.width = data.cpu + '%';
+              
+              // RAM
+              document.getElementById('val-mem').innerText = data.memory + '%';
+              document.getElementById('bar-mem').style.width = data.memory + '%';
+              
+              // GPU
+              document.getElementById('val-gpu').innerText = data.gpu + '%';
+              document.getElementById('bar-gpu').style.width = data.gpu + '%';
+              
+              // Temp
+              document.getElementById('val-temp').innerText = data.temp + '°C';
+              document.getElementById('bar-temp').style.width = Math.min(data.temp, 100) + '%';
+              
+            } catch(e) {}
           }
 
-          // Logs
           async function updateLogs() {
             try {
-              const res = await fetch('/api/logs');
-              const data = await res.json();
-              const logsHtml = data.logs.slice(0, 50).map(l => \`
-                <div class="log-entry">
-                  <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-                  <span class="log-srv">[\${l.service}]</span>
-                  <span>\${l.message}</span>
-                </div>
-              \`).join('');
-              document.getElementById('sys-logs').innerHTML = logsHtml;
-            } catch (e) {}
+               const res = await fetch('/api/logs');
+               const data = await res.json();
+               const html = data.logs.slice(0, 50).map(l => 
+                 \`<div class="log-entry">
+                    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
+                    <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${l.service}]</span>
+                    <span>\${l.message}</span>
+                  </div>\`
+               ).join('');
+               document.getElementById('sys-logs').innerHTML = html;
+            } catch(e) {}
           }
 
-          // Init
           setInterval(updateVoice, 5000);
           setInterval(updateInference, 5000);
           setInterval(updateSystem, 2000);
           setInterval(updateLogs, 2000);
           
-          updateVoice();
-          updateInference();
-          updateSystem();
-          updateLogs();
+          updateVoice(); updateInference(); updateSystem(); updateLogs();
         </script>
       </body>
     </html>
@@ -448,11 +613,10 @@ app.get('/', (req, res) => {
 // PROXY ROUTES
 // ============================================
 
-// Helper for proxy requests
-const proxyRequest = async (url) => {
+const proxyRequest = async (url, options = {}) => {
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const response = await fetch(url, options);
+    // if (!response.ok) throw new Error(`HTTP ${response.status}`); // Don't throw, let client handle
     return await response.json();
   } catch (err) {
     console.error(`Proxy Error to ${url}:`, err.message);
@@ -460,78 +624,120 @@ const proxyRequest = async (url) => {
   }
 };
 
-// Voice App Proxy
-app.get('/api/proxy/voice/devices', async (req, res) => {
+// Voice App Proxies
+app.use('/api/proxy/voice', async (req, res) => {
+  const targetPath = req.path === '/' ? '' : req.path; // Strip leading slash issues
+  const url = `${VOICE_APP_URL}${targetPath}`;
   try {
-    const data = await proxyRequest(`${VOICE_APP_URL}/api/devices`);
+    const opts = {
+      method: req.method,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (req.method !== 'GET') opts.body = JSON.stringify(req.body);
+
+    const data = await proxyRequest(url, opts);
     res.json(data);
-  } catch (err) {
+  } catch (e) {
     res.status(502).json({ error: 'Voice App Unreachable' });
   }
 });
 
-// Inference Brain Proxy
-app.get('/api/proxy/inference/stats', async (req, res) => {
+// Inference Proxies
+app.use('/api/proxy/inference', async (req, res) => {
+  const targetPath = req.path === '/' ? '' : req.path;
+  const url = `${INFERENCE_URL}${targetPath}`;
   try {
-    const data = await proxyRequest(`${INFERENCE_URL}/stats`);
+    const opts = {
+      method: req.method, // Forward POST/GET
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (req.method !== 'GET') opts.body = JSON.stringify(req.body);
+
+    const data = await proxyRequest(url, opts);
     res.json(data);
-  } catch (err) {
+  } catch (e) {
     res.status(502).json({ error: 'Inference Brain Unreachable' });
   }
 });
 
-// Gemini API Proxy
-app.get('/api/proxy/api/:endpoint', async (req, res) => {
+// API Server Proxies
+app.use('/api/proxy/api', async (req, res) => {
+  const targetPath = req.path === '/' ? '' : req.path;
+  const url = `${API_SERVER_URL}${targetPath}`;
   try {
-    const endpoint = req.params.endpoint;
-    const data = await proxyRequest(`${API_SERVER_URL}/${endpoint}`);
+    const opts = {
+      method: req.method,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (req.method !== 'GET') opts.body = JSON.stringify(req.body);
+
+    const data = await proxyRequest(url, opts);
     res.json(data);
-  } catch (err) {
+  } catch (e) {
     res.status(502).json({ error: 'API Server Unreachable' });
   }
 });
-
 
 // ============================================
 // LOCAL API ROUTES
 // ============================================
 
-// System stats API
 app.get('/api/system-stats', async (req, res) => {
   try {
     const cpu = await si.currentLoad();
     const mem = await si.mem();
-    const time = await si.time();
+    const graphics = await si.graphics();
+    const temp = await si.cpuTemperature();
+
+    // Attempt to find GPU load
+    let gpuLoad = 0;
+    if (graphics.controllers && graphics.controllers.length > 0) {
+      gpuLoad = graphics.controllers[0].utilizationGpu || 0;
+    }
 
     res.json({
       cpu: cpu.currentLoad.toFixed(1),
       memory: ((mem.used / mem.total) * 100).toFixed(1),
-      uptime: formatUptime(time.uptime)
+      gpu: gpuLoad || 0,
+      temp: temp.main || 0
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Logs API
-app.get('/api/logs', (req, res) => {
-  res.json({ logs: systemLogs });
+// Logs API - Aggregated
+app.get('/api/logs', async (req, res) => {
+  try {
+    let combinedLogs = [...systemLogs];
+
+    // Fetch Voice App Logs
+    try {
+      const vRes = await fetch(`${VOICE_APP_URL}/api/logs`);
+      const vData = await vRes.json();
+      if (vData.logs) combinedLogs = combinedLogs.concat(vData.logs);
+    } catch (e) { }
+
+    // Fetch Inference Logs
+    try {
+      const iRes = await fetch(`${INFERENCE_URL}/logs`);
+      const iData = await iRes.json();
+      if (iData.logs) combinedLogs = combinedLogs.concat(iData.logs);
+    } catch (e) { }
+
+    // Sort by timestamp desc
+    combinedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Limit
+    combinedLogs = combinedLogs.slice(0, 100);
+
+    res.json({ logs: combinedLogs });
+  } catch (e) {
+    res.json({ logs: systemLogs });
+  }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
-});
-
-function formatUptime(seconds) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
-}
-
-// Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[${new Date().toISOString()}] Mission Control started on port ${PORT}`);
-  console.log(`[${new Date().toISOString()}] Dashboard: http://localhost:${PORT}`);
+  console.log(`Mission Control started on port ${PORT}`);
   addLog('INFO', 'MISSION-CONTROL', 'Server started on port ' + PORT);
 });

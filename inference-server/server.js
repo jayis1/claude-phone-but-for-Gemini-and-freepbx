@@ -193,6 +193,35 @@ app.post('/config', (req, res) => {
  * GET /sessions
  * List active sessions
  */
+// Log storage
+const logs = [];
+const MAX_LOGS = 100;
+
+function addLog(level, message, meta = {}) {
+  const timestamp = new Date().toISOString();
+  // Keep in memory
+  logs.unshift({ timestamp, level, message, meta });
+  if (logs.length > MAX_LOGS) logs.pop();
+
+  // Also print to stdout for Docker/PM2
+  const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : '';
+  process.stdout.write(`[${timestamp}] [${level}] ${message} ${metaStr}\n`);
+}
+
+// Override console methods to capture logs
+const originalLog = console.log;
+const originalError = console.error;
+
+console.log = (msg, ...args) => {
+  addLog('INFO', msg, args);
+};
+
+console.error = (msg, ...args) => {
+  addLog('ERROR', msg, args);
+};
+
+// ... existing code ...
+
 /**
  * GET /stats
  * System resource usage stats
@@ -205,6 +234,14 @@ app.get('/stats', async (req, res) => {
     sessions: sessions.size,
     model: currentModelName
   });
+});
+
+/**
+ * GET /logs
+ * Retrieve recent logs
+ */
+app.get('/logs', (req, res) => {
+  res.json({ success: true, logs });
 });
 
 /**

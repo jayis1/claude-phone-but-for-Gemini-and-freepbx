@@ -222,6 +222,11 @@ function initializeServers() {
   httpServer.app.use("/api", queryRouter);
   console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
 
+  // Log Endpoint
+  httpServer.app.get('/api/logs', (req, res) => {
+    res.json({ success: true, logs: globalLogs || [] });
+  });
+
   // Finalize HTTP server
   httpServer.finalize();
 
@@ -230,6 +235,32 @@ function initializeServers() {
     cleanupOldFiles(config.audio_dir, 5 * 60 * 1000);
   }, 60 * 1000);
 }
+
+// Global Log Storage for "Shared System Log"
+var globalLogs = [];
+const MAX_LOGS = 100;
+
+// Override console methods
+const originalLog = console.log;
+const originalError = console.error;
+
+console.log = function (msg, ...args) {
+  const timestamp = new Date().toISOString();
+  // Store
+  globalLogs.unshift({ timestamp, level: 'INFO', service: 'VOICE-APP', message: msg });
+  if (globalLogs.length > MAX_LOGS) globalLogs.pop();
+  // Print
+  originalLog.apply(console, [msg, ...args]);
+};
+
+console.error = function (msg, ...args) {
+  const timestamp = new Date().toISOString();
+  // Store
+  globalLogs.unshift({ timestamp, level: 'ERROR', service: 'VOICE-APP', message: msg });
+  if (globalLogs.length > MAX_LOGS) globalLogs.pop();
+  // Print
+  originalError.apply(console, [msg, ...args]);
+};
 
 // Check ready state
 function checkReadyState() {
