@@ -1,6 +1,6 @@
 // htop Page HTML Generator
 module.exports = function generateHtopPage() {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -117,9 +117,12 @@ module.exports = function generateHtopPage() {
             <span>📊</span>
             htop - System Monitor
           </div>
-          <a href="/" class="btn-return">
-            <span>←</span> Return to Mission Control
-          </a>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="/" class="btn-return">
+              <span>←</span> Return to Mission Control
+            </a>
+            <div id="clock" style="font-family: 'JetBrains Mono', monospace; color: var(--text-dim); font-size: 0.9rem;">--:--:--</div>
+          </div>
         </div>
 
         <div class="terminal-container">
@@ -156,6 +159,14 @@ module.exports = function generateHtopPage() {
           // Update every 2 seconds
           updateHtop();
           setInterval(updateHtop, 2000);
+
+          // Clock
+          setInterval(() => {
+            const clockEl = document.getElementById('clock');
+            if (clockEl) {
+              clockEl.innerText = new Date().toLocaleTimeString();
+            }
+          }, 1000);
         </script>
       </body>
     </html>

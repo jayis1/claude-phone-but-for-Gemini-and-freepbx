@@ -79,13 +79,13 @@ app.get('/', (req, res) => {
           }
           * {margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font - family: 'Inter', system-ui, sans-serif;
-          background-color: var(--bg);
-          color: var(--text);
-          height: 100vh;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
           }
           .header {
             height: 60px;
@@ -98,15 +98,15 @@ app.get('/', (req, res) => {
           flex-shrink: 0;
           }
           .logo {
-            font - size: 1.25rem;
-          font-weight: 800;
-          letter-spacing: -0.025em;
-          background: linear-gradient(to right, #c084fc, #6366f1);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #c084fc, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
           }
           .status-dot {
             width: 8px;
@@ -192,22 +192,22 @@ app.get('/', (req, res) => {
           text-align: center;
           }
           .stat-label {
-            font - size: 0.7rem;
-          color: var(--text-dim);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 0.5rem;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
           }
           .stat-value {
-            font - size: 1.5rem;
-          font-weight: 700;
-          font-family: 'JetBrains Mono', monospace;
-          color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: white;
           }
 
           /* Controls */
           .control-group {
-            margin - top: 1rem;
+            margin-top: 1rem;
           padding: 1rem;
           background: rgba(255,255,255,0.03);
           border-radius: 8px;
@@ -310,32 +310,47 @@ app.get('/', (req, res) => {
           transform: translateY(0);
           transition: transform 0.2s;
           }
-          .modal h3 {margin - bottom: 0.5rem; color: #fff; font-size: 1.25rem; }
-          .modal p {margin - bottom: 1.5rem; color: var(--text-dim); line-height: 1.5; }
+          .modal h3 { margin-bottom: 0.5rem; color: #fff; font-size: 1.25rem; }
+          .modal p { margin-bottom: 1.5rem; color: var(--text-dim); line-height: 1.5; }
           .modal-buttons {display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
           .btn-primary {background: var(--accent); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: filter 0.2s; }
           .btn-primary:hover {filter: brightness(1.1); }
           .btn-secondary {background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
           .btn-secondary:hover {background: rgba(255,255,255,0.05); }
+
+          /* Logs */
+          .log-container {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            overflow-y: auto;
+            flex: 1;
+          }
+          .log-entry { margin-bottom: 0.25rem; white-space: pre-wrap; word-break: break-all; }
+          .log-time { color: var(--text-dim); margin-right: 0.5rem; }
+          .log-service { font-weight: 700; margin-right: 0.5rem; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.43
+            MISSION CONTROL v2.1.44
+            <div style="display:flex; gap:10px; margin-left: 20px;">
+              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; align-items: center; gap: 5px;">
+                <span>🔄</span> Check Updates
+              </button>
+              <a href="/htop" style="text-decoration: none;">
+                <button style="padding: 4px 8px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+                  <span>📊</span> Page 2
+                </button>
+              </a>
+            </div>
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
-            <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-              <span>🔄</span> Check Updates
-            </button>
-
-            <a href="/htop" style="text-decoration: none;">
-              <button style="padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-                <span>📊</span> htop
-              </button>
-            </a>
-
             <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px;">FreePBX / SIP</span>
           </div>
           <div class="service-status">
@@ -363,20 +378,18 @@ app.get('/', (req, res) => {
               <span class="status-badge" id="voice-status" style="color: var(--warning)">Checking...</span>
             </div>
             <div class="panel-content">
-              <div class="stat-grid" style="margin-bottom: 1rem; grid-template-columns: repeat(3, 1fr);">
+              <div class="stat-grid" style="margin-bottom: 1rem; grid-template-columns: repeat(2, 1fr);">
                 <div class="stat-card">
-                  <div class="stat-label">System</div>
-                  <div class="stat-value" id="voice-system">Ready</div>
+                  <div class="stat-label">AI Sessions</div>
+                  <div class="stat-value" id="ai-sessions">0</div>
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">Active Calls</div>
                   <div class="stat-value" id="voice-calls">0</div>
                 </div>
-                <div class="stat-card">
-                  <div class="stat-label">AI Sessions</div>
-                  <div class="stat-value" id="ai-sessions">0</div>
-                </div>
               </div>
+
+               <!-- Model Selector Removed from here -->
 
               <div class="control-group">
                 <div class="stat-label">Voice Speed</div>
@@ -429,20 +442,20 @@ app.get('/', (req, res) => {
               <span>🧠 INFERENCE BRAIN</span>
               <span class="status-badge" id="inference-status" style="color: var(--warning)">Checking...</span>
             </div>
-            <div class="panel-content" style="display: flex; gap: 1rem; flex: 1; overflow: hidden;">
-               <!-- Shared System Logs (Left Half) -->
-               <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="stat-label">Shared System Logs</div>
-                <div id="sys-logs" class="log-container" style="background: rgba(0,0,0,0.3); border: none; flex: 1;">
-                  <!-- Logs -->
+            <div class="panel-content">
+              <!-- Top Stats Grid - Removed Brain Load from here -->
+              <div class="stat-grid" style="margin-bottom: 1rem; display:none;">
+                <div class="stat-card">
+                  <div class="stat-label">Brain Load</div>
+                  <div class="stat-value" id="ai-load-old">0%</div>
                 </div>
               </div>
 
-               <!-- Activity of Thoughts (Right Half) -->
-               <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="stat-label">Activity of Thoughts</div>
-                <div id="brain-log" class="log-container" style="background: rgba(0,0,0,0.3); border: none; flex: 1;">
-                  <div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>
+              <!-- Shared Logs View -->
+              <div style="display: flex; gap: 1rem; flex: 1; overflow: hidden; min-height: 250px;">
+                <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                  <div class="stat-label">Shared System Logs (Inference/API/Brain)</div>
+                  <div id="sys-logs" class="log-container"></div>
                 </div>
               </div>
             </div>
@@ -466,8 +479,8 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
-              <!-- Active Model (Moved Here from Inference Brain) -->
-              <div class="control-group" style="margin-bottom: 1rem; margin-top: 1rem;">
+              <!-- Active Model (Removed from here as it is now in Voice App) -->
+              <div class="control-group" style="display:none; margin-bottom: 1rem; margin-top: 1rem;">
                 <div class="stat-label">Active Model</div>
                 <div style="display: flex; gap: 8px;">
                   <select id="model-select" style="flex: 1; background:#27272a; color:#fff; border:1px solid #3f3f46; padding:4px 8px; border-radius:4px;">
@@ -507,6 +520,34 @@ app.get('/', (req, res) => {
                 <span id="val-cpu">--%</span>
               </div>
 
+               <!-- Brain Load & Model (Moved Here) -->
+              <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--border);">
+                <div style="display: flex; gap: 1rem;">
+                  <div style="flex: 1;">
+                    <div class="stat-label">Brain Load</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <div class="stat-value" id="ai-load" style="font-size: 1.2rem;">0%</div>
+                      <div class="progress-bar" style="margin: 0; height: 6px; flex:1;">
+                        <div class="progress-fill" id="bar-ai-load" style="background: #ec4899; width: 0%;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="margin-top: 0.75rem;">
+                   <div class="stat-label" style="margin-bottom: 0.25rem;">Active Model</div>
+                   <div style="display: flex; gap: 6px;">
+                    <select id="model-select" style="flex: 1; background:#000; color:#fff; border:1px solid #3f3f46; padding:2px 6px; border-radius:4px; font-size: 0.8rem;">
+                      <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                      <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                    </select>
+                    <button onclick="updateModel()" style="padding: 2px 6px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Apply</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- GPU -->
               <div class="monitor-row">
                 <span style="width: 40px">GPU</span>
@@ -528,12 +569,7 @@ app.get('/', (req, res) => {
                 <span id="val-temp">--°C</span>
               </div>
 
-              <!-- AI LOAD (Moved Here) -->
-              <div class="monitor-row">
-                <span style="width: 40px">AI</span>
-                <div class="progress-bar"><div class="progress-fill" id="bar-ai-load" style="background: #a855f7"></div></div>
-                <span id="ai-load">--%</span>
-              </div>
+
 
               <!-- Gemini CLI Terminal (Moved Here from API Server) -->
               <div style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
@@ -558,6 +594,15 @@ app.get('/', (req, res) => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Modal Overlay -->
+        <div class="modal-overlay" id="modal-overlay">
+          <div class="modal">
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+            <div class="modal-buttons" id="modal-buttons"></div>
           </div>
         </div>
 
@@ -1012,6 +1057,50 @@ app.get('/', (req, res) => {
             }
           }
 
+          // Modal Helper Function
+          function showModal(title, message, showConfirm, onConfirm) {
+            const overlay = document.getElementById('modal-overlay');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const buttonsEl = document.getElementById('modal-buttons');
+            
+            if (!overlay) return;
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            buttonsEl.innerHTML = '';
+            
+            if (showConfirm) {
+              const confirmBtn = document.createElement('button');
+              confirmBtn.className = 'btn-primary';
+              confirmBtn.textContent = 'Confirm';
+              confirmBtn.onclick = () => {
+                overlay.style.display = 'none';
+                if (onConfirm) onConfirm();
+              };
+              
+              const cancelBtn = document.createElement('button');
+              cancelBtn.className = 'btn-secondary';
+              cancelBtn.textContent = 'Cancel';
+              cancelBtn.onclick = () => {
+                overlay.style.display = 'none';
+              };
+              
+              buttonsEl.appendChild(confirmBtn);
+              buttonsEl.appendChild(cancelBtn);
+            } else {
+              const okBtn = document.createElement('button');
+              okBtn.className = 'btn-primary';
+              okBtn.textContent = 'OK';
+              okBtn.onclick = () => {
+                overlay.style.display = 'none';
+              };
+              buttonsEl.appendChild(okBtn);
+            }
+            
+            overlay.style.display = 'flex';
+          }
+
           function showUpdateModal(current, remote) {
             showModal(
               'Update Available 🚀',
@@ -1291,7 +1380,7 @@ function writeEnv(env) {
   fs.writeFileSync(ENV_FILE, content);
 }
 
-// Provider logic removed - defaults to FreePBX/SIP
+// Provider logic removed-defaults to FreePBX/SIP
 
 
 
@@ -1350,19 +1439,19 @@ app.get('/setup', (req, res) => {
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
             <style>
               :root {--bg: #09090b; --panel: #18181b; --text: #e4e4e7; --accent: #8b5cf6; --input-bg: #27272a; }
-              body {font - family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; }
+              body {font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; }
               .container {background: var(--panel); padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-              h1 {margin - bottom: 1.5rem; font-size: 1.5rem; color: white; display:flex; align-items:center; gap:10px; }
-              .form-group {margin - bottom: 1rem; }
+              h1 {margin-bottom: 1.5rem; font-size: 1.5rem; color: white; display:flex; align-items:center; gap:10px; }
+              .form-group {margin-bottom: 1rem; }
               label {display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #a1a1aa; }
               input {width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #3f3f46; background: var(--input-bg); color: white; box-sizing: border-box; }
               input:focus {outline: none; border-color: var(--accent); }
-              .actions {margin - top: 2rem; display: flex; gap: 10px; }
+              .actions {margin-top: 2rem; display: flex; gap: 10px; }
               .btn {flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
               .btn-primary {background: var(--accent); color: white; }
               .btn-secondary {background: #3f3f46; color: white; }
               .btn:hover {opacity: 0.9; }
-              .provider-badge {font - size: 0.8rem; padding: 4px 8px; background: #3f3f46; border-radius: 4px; color: #a5b4fc; }
+              .provider-badge {font-size: 0.8rem; padding: 4px 8px; background: #3f3f46; border-radius: 4px; color: #a5b4fc; }
             </style>
           </head>
           <body>
