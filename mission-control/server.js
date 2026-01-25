@@ -586,13 +586,13 @@ app.get('/', (req, res) => {
                 </div>
 
                 <!-- Terminal Input -->
-                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none;">
+                <div style="display: flex; gap: 0; background: #000; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none; position: relative; z-index: 10;">
                   <div style="margin-bottom: 0.5rem; padding: 0.25rem; border-left: 2px solid var(--accent); font-family: monospace;">$</div>
                   <input
                     type="text"
                     id="gemini-cli-input"
                     placeholder="Ask Gemini or run command..."
-                    onkeypress="if(event.key==='Enter') executeGeminiCommand()"
+                    onkeypress="if(event.key==='Enter') { event.preventDefault(); executeGeminiCommand(); }"
                     style="flex: 1; background: transparent; border: none; color: var(--text); font-family: monospace; font-size: 0.85rem; outline: none; padding: 0.5rem 0.5rem 0.5rem 0;">
                     <button onclick="executeGeminiCommand()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Run</button>
                 </div>
@@ -1203,7 +1203,7 @@ app.use('/api/proxy/voice', async (req, res) => {
 // Inference Proxies
 app.use('/api/proxy/inference', async (req, res) => {
   const targetPath = req.path === '/' ? '' : req.path;
-  const url = `${INFERENCE_URL}${targetPath} `;
+  const url = `${INFERENCE_URL}${targetPath}`;
   try {
     const opts = {
       method: req.method, // Forward POST/GET
@@ -1246,7 +1246,7 @@ app.post('/api/terminal/command', async (req, res) => {
 // API Server Proxies
 app.use('/api/proxy/api', async (req, res) => {
   const targetPath = req.path === '/' ? '' : req.path;
-  const url = `${API_SERVER_URL}${targetPath} `;
+  const url = `${API_SERVER_URL}${targetPath}`;
   try {
     const opts = {
       method: req.method,
@@ -1272,7 +1272,7 @@ app.post('/api/gemini-cli', async (req, res) => {
   const execPromise = util.promisify(exec);
 
   try {
-    const { stdout, stderr } = await execPromise(`gemini ${command} `, {
+    const { stdout, stderr } = await execPromise(`gemini ${command}`, {
       timeout: 30000,
       maxBuffer: 1024 * 1024 // 1MB
     });
@@ -1280,13 +1280,14 @@ app.post('/api/gemini-cli', async (req, res) => {
     res.json({
       success: true,
       output: stdout || stderr,
-      command: `gemini ${command} `
+      command: `gemini ${command}`
     });
   } catch (error) {
+    console.error('Gemini CLI Error:', error.message);
     res.json({
       success: false,
       output: error.message,
-      command: `gemini ${command} `
+      command: `gemini ${command}`
     });
   }
 });
@@ -1760,7 +1761,7 @@ app.get('/api/logs', async (req, res) => {
 
     // Fetch Voice App Logs
     try {
-      const vRes = await fetch(`${VOICE_APP_URL} /api/logs`);
+      const vRes = await fetch(`${VOICE_APP_URL}/api/logs`);
       const vData = await vRes.json();
       if (vData.logs) combinedLogs = combinedLogs.concat(vData.logs);
     } catch (e) { }
