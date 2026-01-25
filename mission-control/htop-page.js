@@ -121,6 +121,9 @@ module.exports = function generateHtopPage() {
             <a href="/" class="btn-return">
               <span>←</span> Return to Mission Control
             </a>
+            <a href="/settings" style="text-decoration:none; color:var(--text-dim); margin: 0 10px;" title="Settings">
+              <span style="font-size: 1.2rem; cursor: pointer; vertical-align: middle;">⚙️</span>
+            </a>
             <div id="clock" style="font-family: 'JetBrains Mono', monospace; color: var(--text-dim); font-size: 0.9rem;">--:--:--</div>
           </div>
         </div>

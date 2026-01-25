@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const generateHtopPage = require('./htop-page');
+const generateSettingsPage = require('./settings-page');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
@@ -338,7 +339,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.1
+            MISSION CONTROL v2.2.2
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
@@ -355,6 +356,9 @@ app.get('/', (req, res) => {
               <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#8b5cf6'; this.style.color='#fff'" onmouseout="this.style.borderColor='#3f3f46'; this.style.color='var(--text-dim)'">
                 FreePBX / SIP
               </span>
+            </a>
+            <a href="/settings" style="text-decoration:none; color:var(--text-dim); margin-left: 5px;" title="Settings">
+              <span style="font-size: 1.2rem; cursor: pointer; vertical-align: middle;">⚙️</span>
             </a>
           </div>
           <div class="service-status">
@@ -1345,7 +1349,11 @@ app.get('/api/docker-health', async (req, res) => {
 // ===================================
 
 const PROFILES_FILE = path.join(__dirname, 'profiles.json');
-const ENV_FILE = path.join(__dirname, '../.env');
+// Preference: Use the CLI config folder for .env persistence
+const os = require('os');
+const HOME_ENV = path.join(os.homedir(), '.gemini-phone', '.env');
+const LOCAL_ENV = path.join(__dirname, '../.env');
+const ENV_FILE = fs.existsSync(HOME_ENV) ? HOME_ENV : LOCAL_ENV;
 
 // Helper: Read .env into object
 function parseEnv() {
@@ -1414,6 +1422,40 @@ app.post('/api/config/save', (req, res) => {
       exec('cd ../voice-app && nohup npm start > ../voice-app.log 2>&1 &');
     }, 1000);
   });
+
+  res.json({ success: true });
+});
+
+// Settings Page
+app.get('/settings', (req, res) => {
+  const env = parseEnv();
+  res.send(generateSettingsPage(env));
+});
+
+// Save Settings from Web UI
+app.post('/api/settings/save', (req, res) => {
+  const newEnv = req.body;
+
+  // Only update allowed keys
+  const allowedKeys = [
+    'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ELEVENLABS_API_KEY',
+    'EXTERNAL_IP', 'HTTP_PORT', 'SIP_DOMAIN', 'SIP_REGISTRAR'
+  ];
+
+  const currentEnv = parseEnv();
+  const updatedEnv = { ...currentEnv };
+
+  allowedKeys.forEach(key => {
+    if (newEnv[key] !== undefined) updatedEnv[key] = newEnv[key];
+  });
+
+  writeEnv(updatedEnv);
+
+  console.log('[SETTINGS] Settings updated via web view. Restarting Voice App...');
+
+  // Trigger Background Restart
+  const { exec } = require('child_process');
+  exec('pkill -f "voice-app" || true');
 
   res.json({ success: true });
 });
@@ -1713,14 +1755,12 @@ app.post('/api/update/apply', (req, res) => {
     // For this environment, we can re-execute the start command in background and exit.
 
     setTimeout(() => {
-      // If we are running via npm start, we might just be able to exit?
-      // Let's try to spawn a new one then exit.
-      const subprocess = require('child_process').spawn('nohup', ['node', 'mission-control/server.js'], {
-        cwd: projectRoot,
-        detached: true,
-        stdio: 'ignore'
-      });
-      subprocess.unref();
+      // Improved Restart: Kill by port then spawn
+      console.log('[UPDATE] Restarting Mission Control...');
+      const projectRoot = path.join(__dirname, '..');
+      const spawnCmd = `lsof -ti :${PORT} | xargs -r kill -9 && sleep 2 && nohup node mission-control/server.js > /home/jais/mission-control.log 2>&1 &`;
+
+      require('child_process').exec(spawnCmd, { cwd: projectRoot });
       process.exit(0);
     }, 1000);
 
