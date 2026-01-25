@@ -7,6 +7,10 @@ import inquirer from 'inquirer';
 import { getConfigDir, configExists } from '../config.js';
 import { stopContainers } from '../docker.js';
 import { stopServer, isServerRunning } from '../process-manager.js';
+import { exec } from 'child_process';
+import util from 'util';
+
+const execAsync = util.promisify(exec);
 
 /**
  * Get the CLI install directory path
@@ -140,6 +144,49 @@ export async function uninstallCommand() {
     spinner.succeed('Docker containers stopped');
   } catch (error) {
     spinner.warn(`Could not stop containers: ${error.message}`);
+  }
+
+  // Step 1.5: Stop Mission Control (Port 3030)
+  spinner = ora('Stopping Mission Control...').start();
+  try {
+    // Try to find PID on port 3030
+    const { stdout } = await execAsync('lsof -t -i:3030');
+    if (stdout && stdout.trim()) {
+      const pid = stdout.trim();
+      process.kill(pid, 'SIGKILL');
+      spinner.succeed('Mission Control stopped');
+    } else {
+      spinner.info('Mission Control not running');
+    }
+  } catch (error) {
+    // lsof returns error code 1 if no process found, which is fine
+    spinner.info('Mission Control not running or already stopped');
+  }
+
+  // Step 1.6: Stop Inference Brain (Port 4000)
+  spinner = ora('Stopping Inference Brain...').start();
+  try {
+    const { stdout } = await execAsync('lsof -t -i:4000');
+    if (stdout && stdout.trim()) {
+      const pid = stdout.trim();
+      process.kill(pid, 'SIGKILL');
+      spinner.succeed('Inference Brain stopped');
+    } else {
+      spinner.info('Inference Brain not running');
+    }
+  } catch (error) {
+    spinner.info('Inference Brain not running');
+  }
+
+  // Step 1.7: Ensure API Server is dead (Port 3333)
+  try {
+    const { stdout } = await execAsync('lsof -t -i:3333');
+    if (stdout && stdout.trim()) {
+      const pid = stdout.trim();
+      process.kill(pid, 'SIGKILL');
+    }
+  } catch (error) {
+    // Ignore
   }
 
   // Step 2: Remove configuration directory
