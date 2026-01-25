@@ -340,11 +340,11 @@ app.get('/', (req, res) => {
             <span class="status-dot"></span>
             MISSION CONTROL v2.1.44
             <div style="display:flex; gap:10px; margin-left: 20px;">
-              <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+              <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
               </button>
               <a href="/htop" style="text-decoration: none;">
-                <button style="padding: 4px 8px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+                <button style="padding: 4px 8px; background: #8b5cf6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
                   <span>📊</span> htop
                 </button>
               </a>
