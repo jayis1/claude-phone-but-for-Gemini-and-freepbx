@@ -314,28 +314,6 @@ async function startBoth(config, isPiMode) {
   await sleep(3000);
   spinner.succeed('Containers initialized');
 
-  // Start Voice App (Local Process)
-  if (!isPiMode) {
-    const voiceAppPath = config.paths.voiceApp;
-    if (fs.existsSync(voiceAppPath)) {
-      spinner.start('Starting Voice App...');
-      try {
-        // Start Voice App on port 3434 (HTTP) and 3001 (WS)
-        // We override HTTP_PORT env var when starting
-        const voiceAppPort = config.server.voiceAppPort || 3434;
-        process.env.HTTP_PORT = voiceAppPort;
-        await startInferenceServer(voiceAppPath, voiceAppPort, null, 'voice-app.pid', 'index.js'); // Re-using startInferenceServer as generic node starter
-        spinner.succeed(`Voice App started on port ${voiceAppPort}`);
-      } catch (error) {
-        if (error.message.includes('already running')) {
-          spinner.warn('Voice App already running');
-        } else {
-          spinner.fail(`Failed to start Voice App: ${error.message}`);
-        }
-      }
-    }
-  }
-
   // Start Inference Server (Brain)
   if (!isPiMode) {
     const inferencePath = path.resolve(config.paths.geminiApiServer, '../inference-server');
@@ -344,7 +322,16 @@ async function startBoth(config, isPiMode) {
       try {
         // Point Brain to Hands (API Server on port 3333)
         const inferencePort = config.server.inferencePort || 4000;
-        await startInferenceServer(inferencePath, inferencePort, `http://localhost:${config.server.geminiApiPort}`, 'inference.pid');
+
+        // Ensure GEMINI_API_KEY is available
+        if (!process.env.GEMINI_API_KEY) {
+          // Try to load from env file if available
+          // But since we are here, we hope it's in process.env
+        }
+
+        await startInferenceServer(inferencePath, inferencePort, `http://localhost:${config.server.geminiApiPort}`, 'inference.pid', 'server.js', {
+          GEMINI_API_KEY: process.env.GEMINI_API_KEY
+        });
         spinner.succeed(`Inference Server (Brain) started on port ${inferencePort}`);
       } catch (error) {
         if (error.message.includes('already running')) {
@@ -364,7 +351,9 @@ async function startBoth(config, isPiMode) {
       spinner.start('Starting Mission Control Dashboard...');
       try {
         const missionControlPort = config.server.missionControlPort || 3030;
-        const voiceAppPort = config.server.voiceAppPort || 3434;
+        // Dockerized Voice App usually runs on port 3000 (standard httpPort in config)
+        // NOT 3434, which was the old local port
+        const voiceAppPort = config.server.httpPort || 3000;
         const inferencePort = config.server.inferencePort || 4000;
 
         await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid', 'server.js', {
@@ -406,7 +395,7 @@ async function startBoth(config, isPiMode) {
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
-    const voiceAppPort = config.server.voiceAppPort || 3434;
+    const voiceAppPort = config.server.httpPort || 3000;
     const inferencePort = config.server.inferencePort || 4000;
     console.log(chalk.gray(`  • Voice App:         http://localhost:${voiceAppPort} (Voice Controls)`));
     console.log(chalk.gray(`  • Inference Brain:   http://localhost:${inferencePort} (AI Reasoning)`));
