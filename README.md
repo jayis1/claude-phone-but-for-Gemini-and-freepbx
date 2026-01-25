@@ -4,12 +4,47 @@
 
 Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call you.
 
+## What's New in v2.0.5
+
+🎯 **Mission Control Dashboard** - Unified view of all services on port 8080  
+🎙️ **Voice Customization** - Choose from 10 ElevenLabs voices with speed control (0.5x-2.0x)  
+⚡ **Redesigned Dashboards** - Beautiful, optimized interfaces for all services  
+📊 **Real-time Monitoring** - Live system stats, logs, and active call tracking
+
 ## What is this?
 
 Gemini Phone gives your Gemini Code installation a phone number. You can:
 
 - **Inbound**: Call an extension and talk to Gemini - run commands, check status, ask questions
 - **Outbound**: Your server can call YOU with alerts, then have a conversation about what to do
+- **Monitor**: View all services in a unified dashboard with real-time stats
+- **Customize**: Configure voice and speed settings per device
+
+## Architecture
+
+Gemini Phone v2.0 uses a 3-tier architecture:
+
+```text
+┌─────────────────────────────────────────────┐
+│  Voice App (Port 3000)                      │
+│  🎙️ Ears & Mouth - SIP/RTP handling        │
+│  + Voice customization controls             │
+└─────────────────┬───────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│  Inference Brain (Port 4000)                │
+│  🧠 The Brain - AI reasoning & decisions    │
+│  + Model selection                          │
+└─────────────────┬───────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│  API Server (Port 3333)                     │
+│  ⚡ The Hands - Tool execution & actions    │
+│  + Interactive endpoints                    │
+└─────────────────────────────────────────────┘
+
+All monitored by Mission Control (Port 8080)
+```
 
 ## Prerequisites
 
@@ -33,7 +68,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.0.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.0.5/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -173,9 +208,66 @@ Example devices:
 - **Morpheus** (ext 9000) - General assistant
 - **Cephanie** (ext 9002) - Storage monitoring bot
 
+## Mission Control Dashboard
+
+Access the unified dashboard at `http://your-server-ip:8080`
+
+**Features:**
+
+- **2x2 Grid Layout**: View all services simultaneously
+  - Voice App (top-left) - Voice customization controls
+  - API Server (top-right) - Interactive endpoints
+  - Inference Brain (bottom-left) - Model selection
+  - System Monitor (bottom-right) - Live stats
+
+- **Real-time Monitoring**:
+  - CPU & Memory usage
+  - Active calls counter
+  - System uptime
+  - Live log stream (last 10 entries, auto-refresh every 5s)
+
+- **Quick Actions**:
+  - Refresh stats
+  - Clear logs
+
+## Voice Customization
+
+Configure voice and speed settings per device via the Voice App dashboard (`http://your-server-ip:3000`):
+
+**Available Voices** (10 ElevenLabs options):
+
+- Rachel, Antoni, Elli, Josh, Arnold
+- Adam, Sam, Bella, Charlie, Daniel
+
+**Speed Control**:
+
+- Range: 0.5x to 2.0x
+- Real-time adjustment
+- Per-device settings
+- Persistent across calls
+
+**How to Use**:
+
+1. Visit Voice App dashboard
+2. Select device from dropdown
+3. Choose voice and adjust speed slider
+4. Click "Save Settings"
+5. Settings apply to all future calls for that device
+
+## Dashboards
+
+All services provide interactive web dashboards:
+
+| Service | Port | URL | Features |
+| :--- | :--- | :--- | :--- |
+| **Mission Control** | 8080 | `http://localhost:8080` | Unified view, system stats, logs |
+| **Voice App** | 3000 | `http://localhost:3000` | Voice/speed config, API endpoints |
+| **Inference Brain** | 4000 | `http://localhost:4000` | Model selection, endpoints |
+| **API Server** | 3333 | `http://localhost:3333` | Interactive endpoints, testing |
+
 ## API Endpoints
 
-The voice-app exposes these endpoints on port 3000:
+### Voice App (Port 3000)
 
 | Method | Endpoint | Purpose |
 | :--- | :--- | :--- |
@@ -184,6 +276,20 @@ The voice-app exposes these endpoints on port 3000:
 | GET | `/api/calls` | List active calls |
 | POST | `/api/query` | Query a device programmatically |
 | GET | `/api/devices` | List configured devices |
+| POST | `/api/config/voice` | Update voice for device |
+| POST | `/api/config/speed` | Update speech speed |
+| GET | `/api/config` | Get device config |
+| GET | `/health` | Health check |
+
+### Mission Control (Port 8080)
+
+| Method | Endpoint | Purpose |
+| :--- | :--- | :--- |
+| GET | `/api/system-stats` | CPU, memory, uptime |
+| GET | `/api/active-calls` | Active calls count |
+| GET | `/api/logs` | System logs |
+| DELETE | `/api/logs` | Clear logs |
+| GET | `/health` | Health check |
 
 See [Outbound API Reference](voice-app/README-OUTBOUND.md) for details.
 
