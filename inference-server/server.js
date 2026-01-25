@@ -22,7 +22,8 @@ const MAX_LOGS = 100;
 
 function addLog(level, message, meta = {}) {
   const timestamp = new Date().toISOString();
-  logs.unshift({ timestamp, level, message, meta });
+  // Include SERVICE field
+  logs.unshift({ timestamp, level, message, service: 'INFERENCE-BRAIN', meta });
   if (logs.length > MAX_LOGS) logs.pop();
 
   const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : '';
@@ -109,12 +110,6 @@ app.post('/config', async (req, res) => {
 app.get('/stats', async (req, res) => {
   let apiStats = { sessions: 0, model: 'Unknown' };
   try {
-    // We can't easily get active model without storing it locally too, 
-    // or we fetch active sessions from API Server if it updates that endpoint.
-    // For now, let's just return what we know.
-    // Ideally API Server should have a /status endpoint.
-    // Let's assume API Server has a /config or similar we can query?
-    // User requested "Active Model" and "Sessions". Make a fetch.
     const sRes = await fetch(`${API_SERVER_URL}/sessions`);
     if (sRes.ok) {
       const sData = await sRes.json();
@@ -127,7 +122,7 @@ app.get('/stats', async (req, res) => {
     cpu: getCpuUsage(),
     gpu: await getGpuUsage(),
     sessions: apiStats.sessions,
-    model: apiStats.model || 'gemini-2.5-pro' // Default fallback
+    model: apiStats.model || 'gemini-2.5-pro'
   });
 });
 

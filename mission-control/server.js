@@ -345,9 +345,10 @@ app.get('/', (req, res) => {
               <div class="control-group">
                 <div class="stat-label">Active Model</div>
                 <select id="model-select" onchange="updateModel(this.value)">
-                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  <option value="gemini-2.5-flash">gemini-2.5-flash</option>
                   <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
                 </select>
               </div>
 
@@ -594,14 +595,31 @@ app.get('/', (req, res) => {
             try {
                const res = await fetch('/api/logs');
                const data = await res.json();
+               
+               // 1. Shared System Logs (All)
                const html = data.logs.slice(0, 50).map(l => 
-                 \`<div class="log-entry">
-                    <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-                    <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${l.service}]</span>
-                    <span>\${l.message}</span>
-                  </div>\`
+                 `< div class= "log-entry" >
+                    <span class="log-time">${new Date(l.timestamp).toLocaleTimeString()}</span>
+                    <span class="log-service" style="color: ${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[${(l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN')}]</span>
+                    <span>${l.message}</span>
+                  </div > `
                ).join('');
                document.getElementById('sys-logs').innerHTML = html;
+
+               // 2. Inference Brain Logs (Filtered)
+               const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
+               const brainHtml = brainLogs.slice(0, 20).map(l => 
+                 `< div class= "log-entry" >
+                    <span class="log-time">${new Date(l.timestamp).toLocaleTimeString()}</span>
+                    <span style="color: #ec4899;">${l.message}</span>
+                  </div > `
+               ).join('');
+               
+               const brainLogEl = document.getElementById('brain-log');
+               if(brainLogEl) {
+                 brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
+               }
+
             } catch(e) {}
           }
 
