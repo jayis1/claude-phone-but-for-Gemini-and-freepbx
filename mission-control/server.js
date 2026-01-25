@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.24
+            MISSION CONTROL v2.1.25
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -946,6 +946,78 @@ async function updateProvider() {
     }
   } catch(e) {}
 }
+
+async function switchProvider() {
+  const val = document.getElementById('provider-select').value;
+  const btn = document.querySelector('button[onclick="switchProvider()"]');
+  
+  if(btn) {
+      btn.innerText = 'Switching...';
+      btn.disabled = true;
+  }
+
+  try {
+    const res = await fetch('/api/config/set-provider', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ provider: val })
+    });
+    
+    const data = await res.json();
+    if (data.success) {
+      // Use string concatenation to avoid backticks inside outer template literal
+      const msg = data.message || 'Switched to ' + val.toUpperCase() + '.';
+      showModal('Success 🚀', msg, false);
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    showModal('Error ❌', 'Failed to switch provider: ' + e.message, false);
+    console.error(e);
+  } finally {
+    if (btn) {
+        btn.innerText = 'Apply';
+        btn.disabled = false;
+    }
+  }
+}
+
+async function silentUpdateCheck() {
+  const btn = document.getElementById('update-btn');
+  try {
+    const res = await fetch('/api/update/check');
+    const data = await res.json();
+    
+    if (data.updateAvailable) {
+       btn.style.display = 'flex';
+       btn.innerText = '🚀 Update v' + data.remoteVersion;
+       btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
+    } else {
+       btn.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('Update check failed:', e);
+  }
+}
+
+function showUpdateModal(current, remote) {
+  showModal(
+     'Update Available 🚀', 
+     'A new version(' + remote + ') is available! You are on ' + current + '.\\n\\nDo you want to update and restart now ? ', 
+     true, 
+     async () => {
+       const btn = document.getElementById('update-btn');
+       btn.innerText = 'Updating...';
+       await fetch('/api/update/apply', { method: 'POST' });
+       showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
+       setTimeout(() => location.reload(), 15000);
+     }
+  );
+}
+
+silentUpdateCheck();
+setInterval(silentUpdateCheck, 60000);
 
 // Provider Switcher defined above
 async function updateProvider() {
