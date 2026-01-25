@@ -210,7 +210,7 @@ Example devices:
 
 ## Mission Control Dashboard
 
-Access the unified dashboard at `http://your-server-ip:8080`
+Access the unified dashboard at `http://your-server-ip:3030`
 
 **Features:**
 
@@ -260,7 +260,7 @@ All services provide interactive web dashboards:
 
 | Service | Port | URL | Features |
 | :--- | :--- | :--- | :--- |
-| **Mission Control** | 8080 | `http://localhost:8080` | Unified view, system stats, logs |
+| **Mission Control** | 3030 | `http://localhost:3030` | Unified view, system stats, logs |
 | **Voice App** | 3000 | `http://localhost:3000` | Voice/speed config, API endpoints |
 | **Inference Brain** | 4000 | `http://localhost:4000` | Model selection, endpoints |
 | **API Server** | 3333 | `http://localhost:3333` | Interactive endpoints, testing |
@@ -281,7 +281,7 @@ All services provide interactive web dashboards:
 | GET | `/api/config` | Get device config |
 | GET | `/health` | Health check |
 
-### Mission Control (Port 8080)
+### Mission Control (Port 3030)
 
 | Method | Endpoint | Purpose |
 | :--- | :--- | :--- |
