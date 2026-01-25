@@ -12,7 +12,7 @@ Claude Phone gives your Gemini Code installation a phone number through 3CX PBX 
 ## Tech Stack
 
 | Component | Technology |
-|-----------|------------|
+| :--- | :--- |
 | Language | Node.js (ES modules for CLI, CommonJS for voice-app) |
 | SIP Server | drachtio-srf |
 | Media Server | FreeSWITCH (via drachtio-fsmrf) |
@@ -24,7 +24,7 @@ Claude Phone gives your Gemini Code installation a phone number through 3CX PBX 
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Phone Call                                                  │
 │      │                                                       │
@@ -52,7 +52,7 @@ Claude Phone gives your Gemini Code installation a phone number through 3CX PBX 
 
 ## Directory Structure
 
-```
+```text
 gemini-phone/
 ├── GEMINI.md                 # This file
 ├── CONSTITUTION.md           # DevFlow 2.0 development principles
@@ -185,7 +185,7 @@ npm run lint:fix      # Auto-fix issues
 ### DevFlow Commands
 
 | Command | Purpose |
-|---------|---------|
+| :--- | :--- |
 | `/feature spec [name]` | Create feature spec |
 | `/feature start [name]` | Build with TDD |
 | `/feature ship` | Review and merge |
@@ -198,7 +198,7 @@ npm run lint:fix      # Auto-fix issues
 ### Voice App (port 3000)
 
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| :--- | :--- | :--- |
 | POST | `/api/outbound-call` | Initiate outbound call |
 | GET | `/api/call/:callId` | Get call status |
 | GET | `/api/calls` | List active calls |
@@ -208,7 +208,7 @@ npm run lint:fix      # Auto-fix issues
 ### Gemini API Server (port 3333)
 
 | Method | Endpoint | Purpose |
-|--------|----------|---------|
+| :--- | :--- | :--- |
 | POST | `/ask` | Send prompt to Gemini |
 | POST | `/ask-structured` | Send prompt, return JSON |
 | POST | `/end-session` | Clean up session |
@@ -229,7 +229,7 @@ npm run lint:fix      # Auto-fix issues
 See `.env.example` for all variables. Key ones:
 
 | Variable | Purpose |
-|----------|---------|
+| :--- | :--- |
 | `EXTERNAL_IP` | Server LAN IP for RTP routing |
 | `GEMINI_API_URL` | URL to gemini-api-server |
 | `ELEVENLABS_API_KEY` | TTS API key |
