@@ -339,7 +339,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.2
+            MISSION CONTROL v2.2.3
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
@@ -1138,7 +1138,9 @@ app.get('/api/htop', async (req, res) => {
   try {
     // Try htop -n 1 (snapshot mode) for better visuals
     // Fallback to top -b if htop fails or is missing
-    let cmd = 'export TERM=xterm-256color && htop -n 1 | head -n 50';
+    // Use 'script' to fake a TTY to get htop's colorful bars
+    // Use head to limit output
+    let cmd = 'script -q -c "export TERM=xterm-256color; htop -n 1" /dev/null | head -n 50';
     try {
       const { execSync } = require('child_process');
       execSync('command -v htop');
@@ -1438,8 +1440,10 @@ app.post('/api/settings/save', (req, res) => {
 
   // Only update allowed keys
   const allowedKeys = [
-    'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ELEVENLABS_API_KEY',
-    'EXTERNAL_IP', 'HTTP_PORT', 'SIP_DOMAIN', 'SIP_REGISTRAR'
+    'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID',
+    'EXTERNAL_IP', 'HTTP_PORT', 'WS_PORT', 'SIP_DOMAIN', 'SIP_REGISTRAR',
+    'SIP_EXTENSION', 'SIP_AUTH_ID', 'SIP_PASSWORD', 'DRACHTIO_SIP_PORT',
+    'DEFAULT_CALLER_ID', 'MAX_CONVERSATION_TURNS', 'OUTBOUND_RING_TIMEOUT'
   ];
 
   const currentEnv = parseEnv();
@@ -1816,6 +1820,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.2]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.3]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

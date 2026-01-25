@@ -4,7 +4,9 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.2.2
+## What's New in v2.2.3
++ 🛠️ **Advanced Web Orchestration** - Every .env variable now manageable via UI.
++ 🌈 **True htop Visuals** - Resolved monochrome issue for real colorful system bars.
 
 + ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
 + 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
@@ -72,7 +74,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.2.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.2.3/install.sh | bash
 ```
 
 The installer performs the following steps:
