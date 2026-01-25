@@ -77,6 +77,32 @@ var drachtioConnected = false;
 var freeswitchConnected = false;
 var isReady = false;
 
+// Global Log Storage for "Shared System Log"
+var globalLogs = [];
+const MAX_LOGS = 100;
+
+// Override console methods
+const originalLog = console.log;
+const originalError = console.error;
+
+console.log = function (msg, ...args) {
+  const timestamp = new Date().toISOString();
+  // Store
+  globalLogs.unshift({ timestamp, level: 'INFO', service: 'VOICE-APP', message: msg });
+  if (globalLogs.length > MAX_LOGS) globalLogs.pop();
+  // Print
+  originalLog.apply(console, [msg, ...args]);
+};
+
+console.error = function (msg, ...args) {
+  const timestamp = new Date().toISOString();
+  // Store
+  globalLogs.unshift({ timestamp, level: 'ERROR', service: 'VOICE-APP', message: msg });
+  if (globalLogs.length > MAX_LOGS) globalLogs.pop();
+  // Print
+  originalError.apply(console, [msg, ...args]);
+};
+
 // Log startup
 console.log("\n" + "=".repeat(64));
 console.log("          Voice Interface Application Starting                 ");
@@ -94,6 +120,67 @@ console.log("  - Audio Dir:   " + config.audio_dir);
 console.log("  - Mix Type:    " + (process.env.AUDIO_FORK_MIXTYPE || "L") + " (capture direction)");
 console.log("\n[DEVICES] Loaded " + Object.keys(deviceRegistry.getAllDevices()).length + " device extensions");
 console.log("\nWaiting for connections...\n");
+
+// ==========================================
+// START HTTP SERVER IMMEDIATELY
+// ==========================================
+function initializeHttpServer() {
+  var fs = require("fs");
+  if (!fs.existsSync(config.audio_dir)) {
+    fs.mkdirSync(config.audio_dir, { recursive: true });
+  }
+
+  // HTTP server for TTS audio
+  httpServer = createHttpServer(config.audio_dir, config.http_port);
+  console.log("[" + new Date().toISOString() + "] HTTP Server started on port " + config.http_port);
+
+  // Add configuration routes for voice/speed settings
+  httpServer.addConfigRoutes(deviceRegistry);
+  console.log("[" + new Date().toISOString() + "] Voice configuration API enabled");
+
+  // WebSocket server for audio fork
+  audioForkServer = new AudioForkServer({ port: config.ws_port });
+  audioForkServer.start();
+  audioForkServer.on("listening", function () {
+    console.log("[" + new Date().toISOString() + "] WEBSOCKET Audio fork server started on port " + config.ws_port);
+  });
+  audioForkServer.on("session", function (session) {
+    console.log("[AUDIO] New session for call " + session.callUuid);
+  });
+
+  // TTS service
+  ttsService.setAudioDir(config.audio_dir);
+  console.log("[" + new Date().toISOString() + "] TTS Service configured");
+
+  // ========== QUERY API ROUTES ==========
+  setupQueryRoutes({
+    geminiBridge: geminiBridge
+  });
+
+  httpServer.app.use("/api", queryRouter);
+  console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
+
+  // Log Endpoint
+  httpServer.app.get('/api/logs', (req, res) => {
+    res.json({ success: true, logs: globalLogs || [] });
+  });
+
+  // NOTE: We do NOT call finalize() yet, because we need to add outbound routes later.
+  // We will call finalize() in checkReadyState() or enableOutboundCalling().
+  // However, without finalize(), 404s might be raw. That's fine for startup.
+
+  // Cleanup old files periodically
+  setInterval(function () {
+    cleanupOldFiles(config.audio_dir, 5 * 60 * 1000);
+  }, 60 * 1000);
+}
+
+// START IT NOW
+initializeHttpServer();
+
+// ==========================================
+// CONNECT TO PBX / SIP
+// ==========================================
 
 // Connect to drachtio
 srf.connect({
@@ -149,7 +236,6 @@ function connectToFreeswitch() {
 }
 
 // Connect with exponential backoff retry
-// Retry schedule: 1s, 2s, 3s, 5s, 5s, 5s, 10s, 10s, 10s, 10s (max 10 retries)
 connectWithRetry(connectToFreeswitch, {
   maxRetries: 10,
   retryDelays: [1000, 2000, 3000, 5000, 5000, 5000, 10000, 10000, 10000, 10000],
@@ -163,47 +249,17 @@ connectWithRetry(connectToFreeswitch, {
   })
   .catch(function (err) {
     console.error("[" + new Date().toISOString() + "] FREESWITCH Connection failed permanently: " + err.message);
-    console.error("[" + new Date().toISOString() + "] Please check:");
-    console.error("  1. FreeSWITCH container is running: docker ps | grep freeswitch");
-    console.error("  2. ESL port 8021 is accessible");
-    console.error("  3. EXTERNAL_IP is set correctly in .env");
-    process.exit(1);
+    // process.exit(1); // Don't exit, keep HTTP server alive for Dashboard
   });
 
-// Initialize servers
-function initializeServers() {
-  var fs = require("fs");
-  if (!fs.existsSync(config.audio_dir)) {
-    fs.mkdirSync(config.audio_dir, { recursive: true });
-  }
-
-  // HTTP server for TTS audio
-  httpServer = createHttpServer(config.audio_dir, config.http_port);
-  console.log("[" + new Date().toISOString() + "] HTTP Server started on port " + config.http_port);
-
-  // Add configuration routes for voice/speed settings
-  httpServer.addConfigRoutes(deviceRegistry);
-  console.log("[" + new Date().toISOString() + "] Voice configuration API enabled");
-
-  // WebSocket server for audio fork
-  audioForkServer = new AudioForkServer({ port: config.ws_port });
-  audioForkServer.start();
-  audioForkServer.on("listening", function () {
-    console.log("[" + new Date().toISOString() + "] WEBSOCKET Audio fork server started on port " + config.ws_port);
-  });
-  audioForkServer.on("session", function (session) {
-    console.log("[AUDIO] New session for call " + session.callUuid);
-  });
-
-  // TTS service
-  ttsService.setAudioDir(config.audio_dir);
-  console.log("[" + new Date().toISOString() + "] TTS Service configured");
+function enableOutboundCalling() {
+  console.log("[" + new Date().toISOString() + "] Enabling Outbound Calling...");
 
   // ========== OUTBOUND CALLING ROUTES ==========
   setupOutboundRoutes({
     srf: srf,
     mediaServer: mediaServer,
-    deviceRegistry: deviceRegistry,  // Required for device lookup
+    deviceRegistry: deviceRegistry,
     audioForkServer: audioForkServer,
     whisperClient: whisperClient,
     geminiBridge: geminiBridge,
@@ -214,53 +270,9 @@ function initializeServers() {
   httpServer.app.use("/api", outboundRouter);
   console.log("[" + new Date().toISOString() + "] OUTBOUND Calling API enabled");
 
-  // ========== QUERY API ROUTES ==========
-  setupQueryRoutes({
-    geminiBridge: geminiBridge
-  });
-
-  httpServer.app.use("/api", queryRouter);
-  console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
-
-  // Log Endpoint
-  httpServer.app.get('/api/logs', (req, res) => {
-    res.json({ success: true, logs: globalLogs || [] });
-  });
-
-  // Finalize HTTP server
+  // Now finalize HTTP (add 404/Error handlers)
   httpServer.finalize();
-
-  // Cleanup old files periodically
-  setInterval(function () {
-    cleanupOldFiles(config.audio_dir, 5 * 60 * 1000);
-  }, 60 * 1000);
 }
-
-// Global Log Storage for "Shared System Log"
-var globalLogs = [];
-const MAX_LOGS = 100;
-
-// Override console methods
-const originalLog = console.log;
-const originalError = console.error;
-
-console.log = function (msg, ...args) {
-  const timestamp = new Date().toISOString();
-  // Store
-  globalLogs.unshift({ timestamp, level: 'INFO', service: 'VOICE-APP', message: msg });
-  if (globalLogs.length > MAX_LOGS) globalLogs.pop();
-  // Print
-  originalLog.apply(console, [msg, ...args]);
-};
-
-console.error = function (msg, ...args) {
-  const timestamp = new Date().toISOString();
-  // Store
-  globalLogs.unshift({ timestamp, level: 'ERROR', service: 'VOICE-APP', message: msg });
-  if (globalLogs.length > MAX_LOGS) globalLogs.pop();
-  // Print
-  originalError.apply(console, [msg, ...args]);
-};
 
 // Check ready state
 function checkReadyState() {
@@ -269,7 +281,7 @@ function checkReadyState() {
     console.log("\n[" + new Date().toISOString() + "] READY Voice interface is fully connected!");
     console.log("=".repeat(64) + "\n");
 
-    initializeServers();
+    enableOutboundCalling();
 
     // Register SIP INVITE handler
     srf.invite(function (req, res) {

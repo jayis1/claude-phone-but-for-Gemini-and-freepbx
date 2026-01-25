@@ -18,9 +18,9 @@ const PORT = process.env.PORT || 3030;
 // Voice App: 3000 (Docker mapping)
 // Brain: 4000
 // API: 3333
-const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
-const INFERENCE_URL = process.env.INFERENCE_URL || process.env.INFERENCE_BRAIN_URL || 'http://localhost:4000';
-const API_SERVER_URL = process.env.API_SERVER_URL || 'http://localhost:3333';
+const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://127.0.0.1:3000';
+const INFERENCE_URL = process.env.INFERENCE_URL || process.env.INFERENCE_BRAIN_URL || 'http://127.0.0.1:4000';
+const API_SERVER_URL = process.env.API_SERVER_URL || 'http://127.0.0.1:3333';
 
 // Middleware
 app.use(express.json());
