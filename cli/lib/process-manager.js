@@ -110,10 +110,11 @@ export async function stopServer(pidPath = null) {
   const pid = getServerPid(pidPath);
 
   if (!pid) {
-    // Remove stale PID file if it exists
     if (fs.existsSync(pidPath)) {
       fs.unlinkSync(pidPath);
     }
+    // Fallback: Try to kill by name even if PID file is missing
+    await killProcessByName();
     return;
   }
 
@@ -147,6 +148,22 @@ export async function stopServer(pidPath = null) {
   if (fs.existsSync(pidPath)) {
     fs.unlinkSync(pidPath);
   }
+}
+
+/**
+ * Kill process by name (fallback if PID file missing)
+ * @returns {Promise<void>}
+ */
+async function killProcessByName() {
+  const { exec } = await import('child_process');
+
+  return new Promise((resolve) => {
+    // Try to find and kill the process
+    exec('pkill -f "node server.js"', (error, stdout, stderr) => {
+      // Ignore errors (process might not exist)
+      resolve();
+    });
+  });
 }
 
 /**
