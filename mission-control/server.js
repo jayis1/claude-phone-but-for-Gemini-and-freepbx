@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.34
+            MISSION CONTROL v2.1.36
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -685,7 +685,7 @@ app.get('/', (req, res) => {
             
             // Append command to output
             const cmdLine = document.createElement('div');
-            cmdLine.innerHTML = `< span style = "color:#10b981" > $</span > ${ cmd }`;
+            cmdLine.innerHTML = '<span style="color:#10b981">$</span> ' + cmd;
             output.appendChild(cmdLine);
             output.scrollTop = output.scrollHeight;
 
@@ -731,7 +731,7 @@ app.get('/', (req, res) => {
 
               if (checkData.updateAvailable) {
                 // Update found!
-                if(confirm(`Update available: v${ checkData.remoteVersion }\n(Current: v${ checkData.localVersion }) \n\nInstall now ? This will reset local changes.`)) {
+                if(confirm('Update available: v' + checkData.remoteVersion + '\n(Current: v' + checkData.localVersion + ')\n\nInstall now? This will reset local changes.')) {
                    btn.innerHTML = '<span>🔄</span> Installing...';
                    
                    // 2. Apply
@@ -764,7 +764,7 @@ app.get('/', (req, res) => {
                  const btn = document.getElementById('update-btn');
                  btn.style.display = 'flex';
                  btn.style.background = '#ec4899'; // Pink for alert
-                 btn.innerHTML = `< span >⬆️</span > Update to v${ d.remoteVersion }`;
+                 btn.innerHTML = '<span>⬆️</span> Update to v' + d.remoteVersion;
                  // Override onclick to skip the check step since we already gathered data
                  btn.onclick = async () => {
                     if(confirm('Install update now?')) {

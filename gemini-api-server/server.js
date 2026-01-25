@@ -109,9 +109,19 @@ function buildGeminiEnvironment() {
     GEMINI_ENTRYPOINT: 'cli',
   };
 
-  // CRITICAL: Remove GEMINI_API_KEY so Gemini CLI uses subscription auth
-  // If GEMINI_API_KEY is set (even to placeholder), CLI tries API auth instead
-  delete env.GEMINI_API_KEY;
+  // Load Root .env (if available) - for GEMINI_API_KEY
+  const rootEnvPath = path.join(__dirname, '../.env');
+  if (fs.existsSync(rootEnvPath)) {
+    try {
+      const rootContent = fs.readFileSync(rootEnvPath, 'utf8');
+      for (const line of rootContent.split('\n')) {
+        const match = line.match(/^GEMINI_API_KEY=(.*)$/);
+        if (match) {
+          env['GEMINI_API_KEY'] = match[1].replace(/["']/g, '').trim();
+        }
+      }
+    } catch (e) { }
+  }
 
   return env;
 }
@@ -196,7 +206,8 @@ function runGeminiOnce({ fullPrompt, callId, timestamp }) {
     const gemini = spawn('gemini', args, {
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: false,
-      env: geminiEnv
+      env: geminiEnv,
+      cwd: geminiEnv.HOME || process.env.HOME || '/'
     });
 
     let stdout = '';
