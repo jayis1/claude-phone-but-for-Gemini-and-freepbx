@@ -4,7 +4,7 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.1.27
+## What's New in v2.1.28
 
 💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
 grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
