@@ -31,6 +31,14 @@ for service in "${SERVICES[@]}"; do
   fi
 done
 
+# 3.5 Check for Global Gemini CLI
+if ! command -v gemini &> /dev/null; then
+  echo "[UPDATE] Gemini CLI missing. Installing..."
+  npm install -g @google/gemini-cli
+else
+  echo "[UPDATE] Gemini CLI found."
+fi
+
 # 4. Re-link CLI (optional but good practice)
 echo "[UPDATE] Re-linking CLI..."
 cd cli

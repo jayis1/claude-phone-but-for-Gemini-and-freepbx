@@ -323,7 +323,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.41
+            MISSION CONTROL v2.1.43
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
             <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -420,47 +420,6 @@ app.get('/', (req, res) => {
                   <div style="color: var(--success);">✓ Multi-Extension Support</div>
                 </div>
               </div>
-
-              <!-- Interactive Gemini Terminal -->
-              <div style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
-                <div class="stat-label" style="display:flex; justify-content:space-between; align-items:center;">
-                  <span>Gemini Terminal</span>
-                  <span style="font-size:0.7rem; color:var(--text-dim)">Connected to API Server</span>
-                </div>
-                <div id="terminal-output" style="
-                  flex: 1; 
-                  background: #000; 
-                  color: #38bdf8; 
-                  font-family: 'JetBrains Mono', monospace; 
-                  font-size: 0.8rem; 
-                  padding: 10px; 
-                  border-radius: 6px 6px 0 0; 
-                  border: 1px solid #3f3f46; 
-                  border-bottom: none;
-                  overflow-y: auto; 
-                  min-height: 150px;
-                  max-height: 300px;
-                  white-space: pre-wrap;
-                ">
-                  <div style="color: var(--text-dim)">Welcome to Gemini Phone Terminal. Type 'help' for options.</div>
-                </div>
-                <div style="display: flex;">
-                  <span style="background: #18181b; color: #10b981; border: 1px solid #3f3f46; border-right: none; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; border-radius: 0 0 0 6px;">$</span>
-                  <input type="text" id="terminal-input" placeholder="Ask Gemini..."
-                    onkeydown="if(event.key==='Enter') sendTerminalCommand()"
-                    style="
-                      flex: 1; 
-                      background: #18181b; 
-                      color: #fff; 
-                      border: 1px solid #3f3f46; 
-                      border-left: none; 
-                      padding: 8px; 
-                      font-family: 'JetBrains Mono', monospace; 
-                      border-radius: 0 0 6px 0; 
-                      outline: none;
-                    ">
-                </div>
-              </div>
             </div>
           </div>
 
@@ -470,12 +429,20 @@ app.get('/', (req, res) => {
               <span>🧠 INFERENCE BRAIN</span>
               <span class="status-badge" id="inference-status" style="color: var(--warning)">Checking...</span>
             </div>
-            <div class="panel-content">
-              <!-- Logs moved here from System Monitor -->
-              <div style="flex: 1; margin-top: 1rem; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="panel-content" style="display: flex; gap: 1rem; flex: 1; overflow: hidden;">
+               <!-- Shared System Logs (Left Half) -->
+               <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
                 <div class="stat-label">Shared System Logs</div>
-                <div id="sys-logs" class="log-container" style="background: rgba(0,0,0,0.3); border: none;">
+                <div id="sys-logs" class="log-container" style="background: rgba(0,0,0,0.3); border: none; flex: 1;">
                   <!-- Logs -->
+                </div>
+              </div>
+
+               <!-- Activity of Thoughts (Right Half) -->
+               <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="stat-label">Activity of Thoughts</div>
+                <div id="brain-log" class="log-container" style="background: rgba(0,0,0,0.3); border: none; flex: 1;">
+                  <div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>
                 </div>
               </div>
             </div>
@@ -516,8 +483,6 @@ app.get('/', (req, res) => {
               <!-- Gemini CLI Terminal Moved to System Monitor -->
 
               <div class="btn-grid">
-                <button class="btn" onclick="apiAction('ping')">📡 Ping</button>
-                <button class="btn" onclick="apiAction('list-files')">📂 Files</button>
                 <button class="btn" onclick="apiAction('weather')">☀️ Weather</button>
                 <button class="btn" onclick="apiAction('joke')">😄 Joke</button>
                 <button class="btn" onclick="apiAction('fortune')">🔮 Fortune</button>
@@ -599,361 +564,282 @@ app.get('/', (req, res) => {
         <script>
           // Clock
           setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+            const clockEl = document.getElementById('clock');
+            if (clockEl) {
+              clockEl.innerText = new Date().toLocaleTimeString();
+            }
           }, 1000);
 
           // Update Helpers
           function setStatus(id, online) {
             const el = document.getElementById(id);
-          if(online) {
-            el.innerText = 'ONLINE';
-          el.style.color = 'var(--success)';
+            if (!el) return;
+            if(online) {
+              el.innerText = 'ONLINE';
+              el.style.color = 'var(--success)';
             } else {
-            el.innerText = 'OFFLINE';
-          el.style.color = 'var(--error)';
+              el.innerText = 'OFFLINE';
+              el.style.color = 'var(--error)';
             }
           }
 
           // Voice App
           async function updateVoice() {
             try {
-              // Try health first
               const h = await fetch('/api/proxy/voice/health');
-          if(h.ok) {
-            setStatus('voice-status', true);
-          document.getElementById('dot-voice').className = 'service-dot online';
+              if(h.ok) {
+                setStatus('voice-status', true);
+                const dot = document.getElementById('dot-voice');
+                if(dot) dot.className = 'service-dot online';
               } else throw new Error('Unhealthy');
 
-          // Get Config for speed
-          const c = await fetch('/api/proxy/voice/api/config?device=default'); // Assuming default device exists
-          const conf = await c.json();
-          if(conf.success) {
-                 const speed = conf.config.speed || 1.0;
-          document.getElementById('voice-speed').value = speed;
-          document.getElementById('speed-val').innerText = speed + 'x';
+              const c = await fetch('/api/proxy/voice/api/config?device=default');
+              const conf = await c.json();
+              if(conf.success) {
+                const speed = conf.config.speed || 1.0;
+                const speedInp = document.getElementById('voice-speed');
+                const speedVal = document.getElementById('speed-val');
+                if(speedInp) speedInp.value = speed;
+                if(speedVal) speedVal.innerText = speed + 'x';
               }
             } catch(e) {
-            setStatus('voice-status', false);
-          document.getElementById('dot-voice').className = 'service-dot offline';
+              setStatus('voice-status', false);
+              const dot = document.getElementById('dot-voice');
+              if(dot) dot.className = 'service-dot offline';
             }
           }
 
           async function updateSpeed(val) {
-            document.getElementById('speed-val').innerText = val + 'x';
-          try {
-              // Get first device to update
+            const speedVal = document.getElementById('speed-val');
+            if(speedVal) speedVal.innerText = val + 'x';
+            try {
               const d = await fetch('/api/proxy/voice/api/devices');
-          const dd = await d.json();
+              const dd = await d.json();
               if(dd.devices && dd.devices.length > 0) {
-            await fetch('/api/proxy/voice/api/config/speed', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ device: dd.devices[0].extension, speed: parseFloat(val) })
-            });
+                await fetch('/api/proxy/voice/api/config/speed', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ device: dd.devices[0].extension, speed: parseFloat(val) })
+                });
               }
-            } catch(e) {console.error(e); }
+            } catch(e) { console.error('Speed update failed:', e); }
           }
 
           async function updateMusicSpeed(val) {
-            document.getElementById('music-speed-val').innerText = val + 'x';
-          try {
-            // Send to Inference Server to control YouTube DJ playback speed
-            await fetch('/api/proxy/inference/music-speed', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ speed: parseFloat(val) })
-            });
-            } catch(e) {console.error('Music speed update failed:', e); }
+            const el = document.getElementById('music-speed-val');
+            if(el) el.innerText = val + 'x';
+            try {
+              await fetch('/api/proxy/inference/music-speed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ speed: parseFloat(val) })
+              });
+            } catch(e) { console.error('Music speed update failed:', e); }
           }
 
           async function updateMusicVolume(val) {
-            document.getElementById('music-volume-val').innerText = val + '%';
-          try {
-            // Send to Inference Server (or Voice App if it handles mixing)
-            // Currently Inference Brain handles YT DJ via yt-dlp, so we send there
-            await fetch('/api/proxy/inference/music-volume', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ volume: parseInt(val) })
-            });
-            } catch(e) {console.error('Music volume update failed:', e); }
-          }
-
-          async function sendTerminalCommand() {
-            const input = document.getElementById('terminal-input');
-          const output = document.getElementById('terminal-output');
-          const cmd = input.value.trim();
-          if (!cmd) return;
-
-          input.value = '';
-
-          // Append command to output
-          const cmdLine = document.createElement('div');
-          cmdLine.innerHTML = '<span style="color:#10b981">$</span> ' + cmd;
-          output.appendChild(cmdLine);
-          output.scrollTop = output.scrollHeight;
-
-          try {
-              // Send to backend
-              const res = await fetch('/api/terminal/command', {
-            method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({command: cmd })
+            const el = document.getElementById('music-volume-val');
+            if(el) el.innerText = val + '%';
+            try {
+              await fetch('/api/proxy/inference/music-volume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ volume: parseInt(val) })
               });
-
-          const data = await res.json();
-
-          const respLine = document.createElement('div');
-          if (data.success) {
-            respLine.style.color = '#e2e8f0';
-          respLine.style.marginBottom = '10px';
-          respLine.innerText = data.response;
-              } else {
-            respLine.style.color = '#ef4444';
-          respLine.innerText = 'Error: ' + (data.error || 'Unknown error');
-              }
-          output.appendChild(respLine);
-            } catch (e) {
-              const errLine = document.createElement('div');
-          errLine.style.color = '#ef4444';
-          errLine.innerText = 'Connection failed: ' + e.message;
-          output.appendChild(errLine);
-            }
-          output.scrollTop = output.scrollHeight;
+            } catch(e) { console.error('Music volume update failed:', e); }
           }
-
 
           async function checkForUpdates() {
             const btn = document.getElementById('update-btn');
-          btn.innerHTML = '<span>⏳</span> Checking...';
-          btn.disabled = true;
+            if(!btn) return;
+            btn.innerHTML = '<span>⏳</span> Checking...';
+            btn.disabled = true;
 
-          try {
-              // 1. Check
+            try {
               const checkRes = await fetch('/api/update/check');
-          const checkData = await checkRes.json();
+              const checkData = await checkRes.json();
 
-          if (checkData.updateAvailable) {
-                // Update found!
-                if(confirm('Update available: v' + checkData.remoteVersion + '\n(Current: v' + checkData.localVersion + ')\n\nInstall now? This will reset local changes.')) {
-            btn.innerHTML = '<span>🔄</span> Installing...';
-
-          // 2. Apply
-          await fetch('/api/update/apply', {method: 'POST' });
-
-          alert('Update started! Mission Control will restart in a few moments. Please reload the page shortly.');
-                   setTimeout(() => location.reload(), 5000);
+              if (checkData.updateAvailable) {
+                if(confirm('Update available: v' + checkData.remoteVersion + '\n(Current: v' + checkData.localVersion + ')\n\nInstall now?')) {
+                  btn.innerHTML = '<span>🔄</span> Installing...';
+                  await fetch('/api/update/apply', {method: 'POST' });
+                  alert('Update started! System will restart. Please reload shortly.');
+                  setTimeout(() => location.reload(), 5000);
                 } else {
-            btn.innerHTML = '<span>🔄</span> Check Updates';
-          btn.disabled = false;
+                  btn.innerHTML = '<span>🔄</span> Check Updates';
+                  btn.disabled = false;
                 }
               } else {
-            alert('You are on the latest version (' + checkData.localVersion + ')');
-          btn.innerHTML = '<span>🔄</span> Check Updates';
-          btn.disabled = false;
+                alert('You are on the latest version (' + checkData.localVersion + ')');
+                btn.innerHTML = '<span>🔄</span> Check Updates';
+                btn.disabled = false;
               }
             } catch (e) {
-            alert('Update check failed: ' + e.message);
-          btn.innerHTML = '<span>⚠️</span> Error';
-          btn.disabled = false;
+              alert('Update check failed: ' + e.message);
+              btn.innerHTML = '<span>⚠️</span> Error';
+              btn.disabled = false;
             }
           }
 
-          // Initial check (hidden unless update available)
           async function autoCheckUpdate() {
-             try {
-               const res = await fetch('/api/update/check');
-          const d = await res.json();
-          if(d.updateAvailable) {
-                 const btn = document.getElementById('update-btn');
-          btn.style.display = 'flex';
-          btn.style.background = '#ec4899'; // Pink for alert
-          btn.innerHTML = '<span>⬆️</span> Update to v' + d.remoteVersion;
-                 // Override onclick to skip the check step since we already gathered data
-                 btn.onclick = async () => {
-                    if(confirm('Install update now?')) {
-            btn.innerHTML = '<span>🔄</span> Installing...';
-          await fetch('/api/update/apply', {method: 'POST' });
-          alert('Update installing. Reload shortly.');
-                       setTimeout(() => location.reload(), 5000);
-                    }
-                 };
-               }
-             } catch(e) { }
+            try {
+              const res = await fetch('/api/update/check');
+              const d = await res.json();
+              if(d.updateAvailable) {
+                const btn = document.getElementById('update-btn');
+                if(!btn) return;
+                btn.style.display = 'flex';
+                btn.style.background = '#ec4899';
+                btn.innerHTML = '<span>⬆️</span> Update to v' + d.remoteVersion;
+                btn.onclick = async () => {
+                  if(confirm('Install update now?')) {
+                    btn.innerHTML = '<span>🔄</span> Installing...';
+                    await fetch('/api/update/apply', {method: 'POST' });
+                    setTimeout(() => location.reload(), 5000);
+                  }
+                };
+              }
+            } catch(e) { }
           }
-          // Run auto-check on load
           window.addEventListener('load', autoCheckUpdate);
 
           // Inference Brain
           async function updateInference() {
             try {
               const res = await fetch('/api/proxy/inference/stats');
-          const data = await res.json();
-          if(data.success) {
-            setStatus('inference-status', true);
-          document.getElementById('dot-brain').className = 'service-dot online';
-          document.getElementById('ai-sessions').innerText = data.sessions;
-          document.getElementById('model-select').value = data.model;
+              const data = await res.json();
+              if(data.success) {
+                setStatus('inference-status', true);
+                const dot = document.getElementById('dot-brain');
+                if(dot) dot.className = 'service-dot online';
+                const sess = document.getElementById('ai-sessions');
+                if(sess) sess.innerText = data.sessions;
+                const model = document.getElementById('model-select');
+                if(model) model.value = data.model;
 
-          // Mock load for now if not in stats
-          const load = data.cpu || 0;
-          document.getElementById('ai-load').innerText = load + '%';
-          const loadBar = document.getElementById('bar-ai-load');
-          if(loadBar) loadBar.style.width = load + '%';
+                const load = data.cpu || 0;
+                const loadVal = document.getElementById('ai-load');
+                if(loadVal) loadVal.innerText = load + '%';
+                const loadBar = document.getElementById('bar-ai-load');
+                if(loadBar) loadBar.style.width = load + '%';
               }
             } catch(e) {
-            setStatus('inference-status', false);
-          document.getElementById('dot-brain').className = 'service-dot offline';
+              setStatus('inference-status', false);
+              const dot = document.getElementById('dot-brain');
+              if(dot) dot.className = 'service-dot offline';
             }
           }
 
           async function updateModel() {
-            const model = document.getElementById('model-select').value;
-          try {
-            await fetch('/api/proxy/inference/config', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model })
-            });
-          alert('Model updated to ' + model);
-            } catch(e) {alert('Failed to change model'); }
+            const select = document.getElementById('model-select');
+            if(!select) return;
+            const model = select.value;
+            try {
+              await fetch('/api/proxy/inference/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model })
+              });
+              alert('Model updated to ' + model);
+            } catch(e) { alert('Failed to change model'); }
           }
-          // ... (imports or other code if needed) ...
-          const provider = document.getElementById('provider-select').value;
-          // No confirm needed now, as we proceed to setup
-
-          try {
-            document.getElementById('provider-select').disabled = true;
-          const res = await fetch('/api/config/provider', {
-            method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({provider})
-    });
-
-          if(res.ok) {
-            // Redirect to Setup Page
-            window.location = '/setup';
-    } else {
-            alert('Failed to switch provider');
-          document.getElementById('provider-select').disabled = false;
-    }
-  } catch(e) {
-            alert('Error: ' + e.message);
-          document.getElementById('provider-select').disabled = false;
-  }
-}
-
-          const PROMPTS = {
-            'docker-check': 'Check status of all docker containers and return a summary.',
-          'git-status': 'Check git status and recent commits.',
-          'list-files': 'List files in the current directory.',
-          'weather': 'What is the weather like?',
-          'network': 'Check network interfaces and IP addresses.',
-          'disk': 'Check disk usage.',
-          'ports': 'Check active listening ports.',
-          'uptime': 'Check system uptime.'
-          };
 
           async function apiAction(action) {
             const out = document.getElementById('api-result');
-          out.innerText = 'Running...';
-
-          try {
-            let res;
-          if(PROMPTS[action]) {
-            // Send as prompt to Gemini
-            res = await fetch('/api/proxy/api/ask', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ prompt: PROMPTS[action] })
-            });
-          const d = await res.json();
-          out.innerText = d.response || d.error;
-              } else {
-            // Standard Endpoint
-            res = await fetch('/api/proxy/api/' + action);
-          const d = await res.json();
-          out.innerText = JSON.stringify(d, null, 2);
-              }
-          setStatus('api-status', true);
-          document.getElementById('dot-api').className = 'service-dot online';
+            if(!out) return;
+            out.innerText = 'Running...';
+            try {
+              const res = await fetch('/api/proxy/api/' + action);
+              const d = await res.json();
+              out.innerText = JSON.stringify(d, null, 2);
+              setStatus('api-status', true);
+              const dot = document.getElementById('dot-api');
+              if(dot) dot.className = 'service-dot online';
             } catch(e) {
-            out.innerText = 'Error: ' + e.message;
-          setStatus('api-status', false);
-          document.getElementById('dot-api').className = 'service-dot offline';
+              out.innerText = 'Error: ' + e.message;
+              setStatus('api-status', false);
+              const dot = document.getElementById('dot-api');
+              if(dot) dot.className = 'service-dot offline';
             }
           }
 
-          // Check API status periodically
           async function updateApiStatus() {
             try {
               const res = await fetch('/api/proxy/api/health');
-          if(res.ok) {
-            setStatus('api-status', true);
-          document.getElementById('dot-api').className = 'service-dot online';
+              if(res.ok) {
+                setStatus('api-status', true);
+                const dot = document.getElementById('dot-api');
+                if(dot) dot.className = 'service-dot online';
               } else throw new Error('Unhealthy');
             } catch(e) {
-            setStatus('api-status', false);
-          document.getElementById('dot-api').className = 'service-dot offline';
+              setStatus('api-status', false);
+              const dot = document.getElementById('dot-api');
+              if(dot) dot.className = 'service-dot offline';
             }
           }
 
           async function updateSystem() {
             try {
               const res = await fetch('/api/system-stats');
-          const data = await res.json();
-
-          // CPU
-          document.getElementById('val-cpu').innerText = data.cpu + '%';
-          document.getElementById('bar-cpu').style.width = data.cpu + '%';
-
-          // RAM
-          document.getElementById('val-mem').innerText = data.memory + '%';
-          document.getElementById('bar-mem').style.width = data.memory + '%';
-
-          // GPU
-          document.getElementById('val-gpu').innerText = data.gpu + '%';
-          document.getElementById('bar-gpu').style.width = data.gpu + '%';
-
-          // Temp
-          document.getElementById('val-temp').innerText = data.temp + '°C';
-          document.getElementById('bar-temp').style.width = Math.min(data.temp, 100) + '%';
-
-          document.getElementById('dot-system').className = 'service-dot online';
+              const data = await res.json();
+              const cpuVal = document.getElementById('val-cpu');
+              const cpuBar = document.getElementById('bar-cpu');
+              if(cpuVal) cpuVal.innerText = (data.cpu || 0) + '%';
+              if(cpuBar) cpuBar.style.width = (data.cpu || 0) + '%';
+              const memVal = document.getElementById('val-mem');
+              const memBar = document.getElementById('bar-mem');
+              if(memVal) memVal.innerText = (data.memory || 0) + '%';
+              if(memBar) memBar.style.width = (data.memory || 0) + '%';
+              const gpuVal = document.getElementById('val-gpu');
+              const gpuBar = document.getElementById('bar-gpu');
+              if(gpuVal) gpuVal.innerText = (data.gpu || 0) + '%';
+              if(gpuBar) gpuBar.style.width = (data.gpu || 0) + '%';
+              const tempVal = document.getElementById('val-temp');
+              const tempBar = document.getElementById('bar-temp');
+              if(tempVal) tempVal.innerText = (data.temp || 0) + '°C';
+              if(tempBar) tempBar.style.width = Math.min(data.temp || 0, 100) + '%';
+              const dot = document.getElementById('dot-system');
+              if(dot) dot.className = 'service-dot online';
             } catch(e) {
-            document.getElementById('dot-system').className = 'service-dot offline';
+              const dot = document.getElementById('dot-system');
+              if(dot) dot.className = 'service-dot offline';
             }
           }
 
           async function updateLogs() {
             try {
-               const res = await fetch('/api/logs');
-          const data = await res.json();
-                              // 1. Shared System Logs (All)
-                const html = data.logs.slice(0, 50).map(l =>
-          \`<div class="log-entry">
-            <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-            <span class="log-service" style="color: \${l.level === 'ERROR' ? '#ef4444' : '#8b5cf6'}">[\${(l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN')}]</span>
-            <span>\${l.message}</span>
-          </div>\`
-          ).join('');
-          document.getElementById('sys-logs').innerHTML = html;
+              const res = await fetch('/api/logs');
+              const data = await res.json();
+              if (!data || !data.logs) return;
 
-                // 2. Inference Brain Logs (Filtered)
-                const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
-                const brainHtml = brainLogs.slice(0, 20).map(l =>
-          \`<div class="log-entry">
-            <span class="log-time">\${new Date(l.timestamp).toLocaleTimeString()}</span>
-            <span style="color: #ec4899;">\${l.message}</span>
-          </div>\`
-          ).join('');
+              let html = "";
+              data.logs.slice(0, 50).forEach(l => {
+                const timeStr = new Date(l.timestamp).toLocaleTimeString();
+                const serviceStr = (l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN');
+                const levelColor = (l.level === 'ERROR') ? '#ef4444' : '#8b5cf6';
+                html += '<div class="log-entry">' +
+                        '<span class="log-time">' + timeStr + '</span> ' +
+                        '<span class="log-service" style="color: ' + levelColor + '">[' + serviceStr + ']</span> ' +
+                        '<span>' + l.message + '</span>' +
+                        '</div>';
+              });
+              const sysLogsEl = document.getElementById('sys-logs');
+              if(sysLogsEl) sysLogsEl.innerHTML = html;
 
-          const brainLogEl = document.getElementById('brain-log');
-          if (brainLogEl) {
-            brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
-                }
-
-             } catch (e) { }
+              let brainHtml = "";
+              const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
+              brainLogs.slice(0, 20).forEach(l => {
+                const bTimeStr = new Date(l.timestamp).toLocaleTimeString();
+                brainHtml += '<div class="log-entry">' +
+                             '<span class="log-time">' + bTimeStr + '</span> ' +
+                             '<span style="color: #ec4899;">' + l.message + '</span>' +
+                             '</div>';
+              });
+              const brainLogEl = document.getElementById('brain-log');
+              if (brainLogEl) {
+                brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
+              }
+            } catch (e) { console.error('Log update error:', e); }
           }
 
           // Gemini CLI Terminal
@@ -961,137 +847,141 @@ app.get('/', (req, res) => {
           let historyIndex = -1;
 
           async function executeGeminiCommand() {
-  const input = document.getElementById('gemini-cli-input');
-          const terminal = document.getElementById('gemini-terminal');
-          const command = input.value.trim();
+            const input = document.getElementById('gemini-cli-input');
+            const terminal = document.getElementById('gemini-terminal');
+            if(!input || !terminal) return;
+            const command = input.value.trim();
 
-          if (!command) return;
+            if (!command) return;
 
-          // Add to history
-          commandHistory.push(command);
-          historyIndex = commandHistory.length;
+            // Add to history
+            commandHistory.push(command);
+            historyIndex = commandHistory.length;
 
-          // Show command in terminal
-          const cmdDiv = document.createElement('div');
-          cmdDiv.style.color = 'var(--success)';
-          cmdDiv.style.marginTop = '0.5rem';
-          cmdDiv.textContent = \`$ gemini \${command}\`;
-          terminal.appendChild(cmdDiv);
+            // Show command in terminal
+            const cmdDiv = document.createElement('div');
+            cmdDiv.style.color = 'var(--success)';
+            cmdDiv.style.marginTop = '0.5rem';
+            cmdDiv.textContent = '$ gemini ' + command;
+            terminal.appendChild(cmdDiv);
 
-          // Show loading
-          const loadingDiv = document.createElement('div');
-          loadingDiv.style.color = 'var(--warning)';
-          loadingDiv.textContent = 'Executing...';
-          terminal.appendChild(loadingDiv);
-          terminal.scrollTop = terminal.scrollHeight;
+            // Show loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.color = 'var(--warning)';
+            loadingDiv.textContent = 'Executing...';
+            terminal.appendChild(loadingDiv);
+            terminal.scrollTop = terminal.scrollHeight;
 
-          try {
-    const res = await fetch('/api/gemini-cli', {
-            method: 'POST',
-          headers: {'Content-Type': 'application/json' },
-          body: JSON.stringify({command})
-    });
+            try {
+              const res = await fetch('/api/gemini-cli', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json' },
+                body: JSON.stringify({command})
+              });
 
-          const data = await res.json();
-          terminal.removeChild(loadingDiv);
+              const data = await res.json();
+              if(loadingDiv.parentNode) terminal.removeChild(loadingDiv);
 
-          // Show output
-          const outputDiv = document.createElement('div');
-          outputDiv.style.color = data.success ? 'var(--text)' : 'var(--error)';
-          outputDiv.style.whiteSpace = 'pre-wrap';
-          outputDiv.textContent = data.output;
-          terminal.appendChild(outputDiv);
+              // Show output
+              const outputDiv = document.createElement('div');
+              outputDiv.style.color = data.success ? 'var(--text)' : 'var(--error)';
+              outputDiv.style.whiteSpace = 'pre-wrap';
+              outputDiv.textContent = data.output;
+              terminal.appendChild(outputDiv);
 
-  } catch (error) {
-            terminal.removeChild(loadingDiv);
-          const errorDiv = document.createElement('div');
-          errorDiv.style.color = 'var(--error)';
-          errorDiv.textContent = \`Error: \${error.message}\`;
-          terminal.appendChild(errorDiv);
-  }
+            } catch (error) {
+              if(loadingDiv.parentNode) terminal.removeChild(loadingDiv);
+              const errorDiv = document.createElement('div');
+              errorDiv.style.color = 'var(--error)';
+              errorDiv.textContent = 'Error: ' + error.message;
+              terminal.appendChild(errorDiv);
+            }
 
-          terminal.scrollTop = terminal.scrollHeight;
-          input.value = '';
-}
+            terminal.scrollTop = terminal.scrollHeight;
+            input.value = '';
+          }
 
-// Command history navigation
-setTimeout(() => {
-  const input = document.getElementById('gemini-cli-input');
-          if (input) {
-            input.addEventListener('keydown', (e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (historyIndex > 0) {
-                  historyIndex--;
-                  e.target.value = commandHistory[historyIndex];
+          // Command history navigation
+          setTimeout(() => {
+            const input = document.getElementById('gemini-cli-input');
+            if (input) {
+              input.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  if (historyIndex > 0) {
+                    historyIndex--;
+                    e.target.value = commandHistory[historyIndex];
+                  }
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    e.target.value = commandHistory[historyIndex];
+                  } else {
+                    historyIndex = commandHistory.length;
+                    e.target.value = '';
+                  }
                 }
-              } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (historyIndex < commandHistory.length - 1) {
-                  historyIndex++;
-                  e.target.value = commandHistory[historyIndex];
-                } else {
-                  historyIndex = commandHistory.length;
-                  e.target.value = '';
-                }
-              }
-            });
-  }
-}, 100);
+              });
+            }
+          }, 100);
 
           // 3CX PBX connectivity check
-          // PBX connectivity check
           async function updatePBXStatus() {
-  try {
-    const res = await fetch('/api/proxy/voice/health');
-          if (res.ok) {
-            document.getElementById('dot-freepbx').className = 'service-dot online';
-    } else {
-      throw new Error('Voice App unhealthy');
-    }
-  } catch (e) {
-            document.getElementById('dot-freepbx').className = 'service-dot offline';
-  }
-}
+            try {
+              const res = await fetch('/api/proxy/voice/health');
+              const dot = document.getElementById('dot-freepbx');
+              if (res.ok) {
+                if(dot) dot.className = 'service-dot online';
+              } else {
+                throw new Error('Voice App unhealthy');
+              }
+            } catch (e) {
+              const dot = document.getElementById('dot-freepbx');
+              if(dot) dot.className = 'service-dot offline';
+            }
+          }
 
           // Docker container health check
           async function updateDockerStatus() {
-  try {
-    const res = await fetch('/api/docker-health');
-          const data = await res.json();
+            try {
+              const res = await fetch('/api/docker-health');
+              const data = await res.json();
 
-          if (data.success) {
-            document.getElementById('dot-drachtio').className = data.drachtio ? 'service-dot online' : 'service-dot offline';
-          document.getElementById('dot-freeswitch').className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
-          console.log('Docker health OK:', data);
-    }
-  } catch (e) {
-            console.error('Docker health failed:', e);
-          document.getElementById('dot-drachtio').className = 'service-dot offline';
-          document.getElementById('dot-freeswitch').className = 'service-dot offline';
-  }
-}
+              if (data.success) {
+                const dotDrachtio = document.getElementById('dot-drachtio');
+                const dotFreeswitch = document.getElementById('dot-freeswitch');
+                if(dotDrachtio) dotDrachtio.className = data.drachtio ? 'service-dot online' : 'service-dot offline';
+                if(dotFreeswitch) dotFreeswitch.className = data.freeswitch ? 'service-dot online' : 'service-dot offline';
+              }
+            } catch (e) {
+              const dotDrachtio = document.getElementById('dot-drachtio');
+              const dotFreeswitch = document.getElementById('dot-freeswitch');
+              if(dotDrachtio) dotDrachtio.className = 'service-dot offline';
+              if(dotFreeswitch) dotFreeswitch.className = 'service-dot offline';
+            }
+          }
 
           // Python Brain Check
           async function updatePython() {
-  try {
-    // Send a minimal execution request
-    const res = await fetch('/api/proxy/inference/run-python', {
-            method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({script: 'mock_llm.py', prompt: 'ping' })
-    });
-          // We expect a valid JSON response
-          const data = await res.json();
-          if(res.ok && data.status === 'success') {
-            document.getElementById('dot-python').className = 'service-dot online';
-    } else {
-       throw new Error('Python script failed');
-    }
-  } catch(e) {
-            document.getElementById('dot-python').className = 'service-dot offline';
-  }
-}
+            try {
+              const res = await fetch('/api/proxy/inference/run-python', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({script: 'mock_llm.py', prompt: 'ping' })
+              });
+              const data = await res.json();
+              const dot = document.getElementById('dot-python');
+              if(res.ok && data.status === 'success') {
+                if(dot) dot.className = 'service-dot online';
+              } else {
+                throw new Error('Python script failed');
+              }
+            } catch(e) {
+              const dot = document.getElementById('dot-python');
+              if(dot) dot.className = 'service-dot offline';
+            }
+          }
 
           setInterval(updatePBXStatus, 5000);
           setInterval(updateDockerStatus, 5000);
@@ -1103,94 +993,43 @@ setTimeout(() => {
           setInterval(updateSystem, 2000);
           setInterval(updateLogs, 2000);
 
-          // Provider Switcher
-          // Provider functions removed
+          // Update Checker (Silent Background)
           async function silentUpdateCheck() {
-  const btn = document.getElementById('update-btn');
-          try {
-    const res = await fetch('/api/update/check');
-          const data = await res.json();
+            const btn = document.getElementById('update-btn');
+            try {
+              const res = await fetch('/api/update/check');
+              const data = await res.json();
 
-          if (data.updateAvailable) {
-            btn.style.display = 'flex';
-          btn.innerText = '🚀 Update v' + data.remoteVersion;
-       btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
-    } else {
-            btn.style.display = 'none';
-    }
-  } catch (e) {
-            console.error('Update check failed:', e);
-  }
-}
+              if (data.updateAvailable) {
+                btn.style.display = 'flex';
+                btn.innerText = '🚀 Update v' + data.remoteVersion;
+                btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
+              } else {
+                btn.style.display = 'none';
+              }
+            } catch (e) {
+              console.error('Update check failed:', e);
+            }
+          }
 
           function showUpdateModal(current, remote) {
             showModal(
               'Update Available 🚀',
-              'A new version(' + remote + ') is available! You are on ' + current + '.\\n\\nDo you want to update and restart now ? ',
-              true,
+              'A new version (' + remote + ') is available! You are on ' + current + '.\n\nDo you want to update and restart now?',
+              true, 
               async () => {
                 const btn = document.getElementById('update-btn');
                 btn.innerText = 'Updating...';
-                await fetch('/api/update/apply', { method: 'POST' });
+                await fetch('/api/update/apply', {method: 'POST' });
                 showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
                 setTimeout(() => location.reload(), 15000);
               }
             );
-}
-
-          silentUpdateCheck();
-          setInterval(silentUpdateCheck, 60000);
-
-          // Provider Switcher defined above
-          async function updateProvider() {
-  try {
-    const res = await fetch('/api/config/provider');
-          const data = await res.json();
-          if (data.provider) {
-            document.getElementById('provider-select').value = data.provider;
-    }
-  } catch(e) { }
-}
-
-          // Update Checker (Silent Background)
-          async function silentUpdateCheck() {
-  const btn = document.getElementById('update-btn');
-          try {
-    const res = await fetch('/api/update/check');
-          const data = await res.json();
-
-          if (data.updateAvailable) {
-            // Update available: Show button
-            btn.style.display = 'flex';
-          btn.innerText = '🚀 Update v' + data.remoteVersion;
-       btn.onclick = () => showUpdateModal(data.localVersion, data.remoteVersion);
-    } else {
-            // Up to date: Hide button to prevent accidental clicks
-            btn.style.display = 'none';
-    }
-  } catch (e) {
-            console.error('Update check failed:', e);
-  }
-}
-
-          function showUpdateModal(current, remote) {
-            showModal(
-              'Update Available 🚀',
-          \`A new version (\${remote}) is available! You are on \${current}.\n\nDo you want to update and restart now?\`,
-          true, 
-     async () => {
-       const btn = document.getElementById('update-btn');
-          btn.innerText = 'Updating...';
-          await fetch('/api/update/apply', {method: 'POST' });
-          showModal('Updating...', 'Update started! The system is restarting. Please wait about 15 seconds and then reload the page.', false);
-       setTimeout(() => location.reload(), 15000);
-     }
-          );
-}
+          }
 
           // Initial check and periodic poll
           silentUpdateCheck();
-          setInterval(silentUpdateCheck, 60000); // Check every minute
+          setInterval(silentUpdateCheck, 60000);
 
           updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
         </script>
