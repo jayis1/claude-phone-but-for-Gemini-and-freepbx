@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="assets/logo.png" alt="Gemini Phone" width="200">
-</p>
-
 # Gemini Phone
+
+![Gemini Phone](assets/logo.png)
 
 Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call you.
 
@@ -35,7 +33,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.4/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.5/install.sh | bash
 ```
 
 The installer performs the following steps:
