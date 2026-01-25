@@ -5,6 +5,7 @@ Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call 
 ## Project Overview
 
 Claude Phone gives your Gemini Code installation a phone number through 3CX PBX integration:
+
 - **Inbound**: Call an extension and talk to Claude - run commands, check status, ask questions
 - **Outbound**: Your server can call YOU with alerts, then have a conversation about what to do
 
@@ -154,7 +155,7 @@ gemini-phone/
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v1.0.0/install.sh | bash
 
 # Setup and run
 gemini-phone setup    # Interactive configuration
