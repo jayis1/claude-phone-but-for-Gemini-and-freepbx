@@ -23,14 +23,15 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 
 ## Architecture
 
-Gemini Phone v2.1.12 uses a 3-tier architecture:
+Gemini Phone v2.1.14 uses a 3-tier architecture:
 
 ```text
 ┌─────────────────────────────────────────────┐
 │  Voice App (Port 3434)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
-│  + FreePBX / 3CX Integration                │
+│  + Native 3CX & FreePBX Support 🔀          │
 │  + YouTube DJ Hold Music 🎵                 │
+│  + Standalone Node.js Service               │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
@@ -71,7 +72,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.12/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.14/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -93,20 +94,28 @@ The interactive setup wizard helps you:
 2. **Configure PBX**: Connect to **3CX** or **FreePBX**.
 3. **API Keys**: Enter your ElevenLabs and OpenAI keys.
 
-## New in v2.1.12
-
-- **Smart Updates**: Update button only appears when an update is actually available. No more accidental clicks!
-- **UI Polish**: Custom Yes/No update dialogs (No more browser alerts).
-- **Fixed**: Mission Control now correctly connects to Voice App (Red Dot Fix).
-- **Provider Switching**: Hot-swap between 3CX and FreePBX.
-- **Setup UI**: Dedicated configuration page for easy PBX setup.
-- **YouTube DJ Brain**: The AI now plays dynamic hold music from YouTube (Lofi Beats). 🎧
-
 ### 3. Start
 
 ```bash
 gemini-phone start
 ```
+
+## New in v2.1.14 🚀
+
+- **Multi-Provider Switching**:
+  - Hot-swap between **3CX** and **FreePBX** directly from Mission Control.
+  - **Smart Profiles**: The system remembers your credentials for each provider, so switching is just one click.
+  - **Standalone Restart**: Automatically restarts the Voice App service (no Docker requirement) to apply changes immediately.
+
+- **Mission Control UI 2.0**:
+  - **Custom Modals**: Replaced ugly browser alerts with sleek, dark-mode confirmation dialogs.
+  - **Smart Update Button**: Always visible with intelligent behavior:
+    - ✅ **Up-to-Date?**: Click to force a re-install (useful for debugging).
+    - 🚀 **Update Available?**: Click to one-tap update your entire stack.
+
+- **Infrastructure**:
+  - **Red Dot Fix**: Solved port conflicts to ensure Mission Control always sees the Voice App.
+  - **YouTube DJ Brain**: The AI now plays Lofi Beats from YouTube while thinking or holding. 🎧
 
 ## Deployment Modes
 
