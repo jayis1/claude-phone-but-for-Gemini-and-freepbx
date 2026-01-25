@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.31
+            MISSION CONTROL v2.1.32
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -407,6 +407,47 @@ app.get('/', (req, res) => {
                   <div style="color: var(--success);">✓ TTS/STT Services</div>
                   <div style="color: var(--success);">✓ Device Management</div>
                   <div style="color: var(--success);">✓ Multi-Extension Support</div>
+                </div>
+              </div>
+
+              <!-- Interactive Gemini Terminal -->
+              <div style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column;">
+                <div class="stat-label" style="display:flex; justify-content:space-between; align-items:center;">
+                  <span>Gemini Terminal</span>
+                  <span style="font-size:0.7rem; color:var(--text-dim)">Connected to API Server</span>
+                </div>
+                <div id="terminal-output" style="
+                  flex: 1; 
+                  background: #000; 
+                  color: #38bdf8; 
+                  font-family: 'JetBrains Mono', monospace; 
+                  font-size: 0.8rem; 
+                  padding: 10px; 
+                  border-radius: 6px 6px 0 0; 
+                  border: 1px solid #3f3f46; 
+                  border-bottom: none;
+                  overflow-y: auto; 
+                  min-height: 150px;
+                  max-height: 300px;
+                  white-space: pre-wrap;
+                ">
+                  <div style="color: var(--text-dim)">Welcome to Gemini Phone Terminal. Type 'help' for options.</div>
+                </div>
+                <div style="display: flex;">
+                  <span style="background: #18181b; color: #10b981; border: 1px solid #3f3f46; border-right: none; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; border-radius: 0 0 0 6px;">$</span>
+                  <input type="text" id="terminal-input" placeholder="Ask Gemini..." 
+                    onkeydown="if(event.key==='Enter') sendTerminalCommand()"
+                    style="
+                      flex: 1; 
+                      background: #18181b; 
+                      color: #fff; 
+                      border: 1px solid #3f3f46; 
+                      border-left: none; 
+                      padding: 8px; 
+                      font-family: 'JetBrains Mono', monospace; 
+                      border-radius: 0 0 6px 0; 
+                      outline: none;
+                    ">
                 </div>
               </div>
             </div>
@@ -632,6 +673,49 @@ app.get('/', (req, res) => {
                 body: JSON.stringify({ volume: parseInt(val) })
               });
             } catch(e) { console.error('Music volume update failed:', e); }
+          }
+
+          async function sendTerminalCommand() {
+            const input = document.getElementById('terminal-input');
+            const output = document.getElementById('terminal-output');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+
+            input.value = '';
+            
+            // Append command to output
+            const cmdLine = document.createElement('div');
+            cmdLine.innerHTML = `< span style = "color:#10b981" > $</span > ${ cmd }`;
+            output.appendChild(cmdLine);
+            output.scrollTop = output.scrollHeight;
+
+            try {
+              // Send to backend
+              const res = await fetch('/api/terminal/command', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ command: cmd })
+              });
+              
+              const data = await res.json();
+              
+              const respLine = document.createElement('div');
+              if (data.success) {
+                respLine.style.color = '#e2e8f0';
+                respLine.style.marginBottom = '10px';
+                respLine.innerText = data.response;
+              } else {
+                respLine.style.color = '#ef4444';
+                respLine.innerText = 'Error: ' + (data.error || 'Unknown error');
+              }
+              output.appendChild(respLine);
+            } catch (e) {
+              const errLine = document.createElement('div');
+              errLine.style.color = '#ef4444';
+              errLine.innerText = 'Connection failed: ' + e.message;
+              output.appendChild(errLine);
+            }
+            output.scrollTop = output.scrollHeight;
           }
 
           // Inference Brain
@@ -1094,6 +1178,31 @@ app.use('/api/proxy/inference', async (req, res) => {
     res.json(data);
   } catch (e) {
     res.status(502).json({ error: 'Inference Brain Unreachable' });
+  }
+});
+
+// Terminal Proxy to Gemini API Server
+app.post('/api/terminal/command', async (req, res) => {
+  const { command } = req.body;
+  try {
+    // We send this as a prompt to the "ask" endpoint of the API Server
+    const response = await fetch(`${API_SERVER_URL}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: command })
+    });
+
+    if (!response.ok) throw new Error('API Server Error');
+
+    const data = await response.json();
+    if (data.success) {
+      res.json({ success: true, response: data.response });
+    } else {
+      res.json({ success: false, error: data.error });
+    }
+  } catch (error) {
+    console.error('Terminal proxy error:', error);
+    res.json({ success: false, error: 'Failed to reach Gemini API: ' + error.message });
   }
 });
 
