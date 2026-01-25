@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.1.20
+            MISSION CONTROL v2.1.21
           </div>
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
              <button id="update-btn" onclick="checkForUpdates()" style="display:none; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
@@ -369,6 +369,24 @@ app.get('/', (req, res) => {
                 <div class="stat-card">
                   <div class="stat-label">Active Calls</div>
                   <div class="stat-value" id="voice-calls">0</div>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="stat-label">Voice Speed</div>
+                <div class="slider-container">
+                  <span style="font-size: 0.8rem">0.5x</span>
+                  <input type="range" id="voice-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateSpeed(this.value)">
+                  <span id="speed-val" style="font-family: monospace; width: 40px">1.0x</span>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="stat-label">Music Speed (YouTube DJ)</div>
+                <div class="slider-container">
+                  <span style="font-size: 0.8rem">0.5x</span>
+                  <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
+                  <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
                 </div>
               </div>
 
@@ -1230,8 +1248,7 @@ fs.writeFileSync(PROFILES_FILE, JSON.stringify(profiles, null, 2));
 // Note: We do NOT restart here anymore, the frontend will redirect to /setup
 // Only update the env file so /setup page shows correct values
 
-res.json({ success: true, provider });
-});
+
 
 // Save Full Configuration (From Setup Page)
 app.post('/api/config/save', (req, res) => {
@@ -1498,24 +1515,8 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
-const https = require('https');
-// fs and path are already required at top
-
-try {
-  const options = {
-    key: fs.readFileSync(path.join(__dirname, 'certs/key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'certs/cert.pem'))
-  };
-
-  https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
-    console.log(`Mission Control started on port ${PORT} (HTTPS)`);
-    addLog('INFO', 'MISSION-CONTROL', `Server started on https://localhost:${PORT}`);
-  });
-} catch (error) {
-  console.error('Failed to start HTTPS server:', error.message);
-  // Fallback to HTTP for safety, though user requested HTTPS
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Mission Control started on port ${PORT} (HTTP - Certificate Error)`);
-    addLog('WARN', 'MISSION-CONTROL', 'Falling back to HTTP due to certificate error');
-  });
-}
+// HTTP Server (User requested no HTTPS)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Mission Control started on port ${PORT} (HTTP)`);
+  addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
+});
