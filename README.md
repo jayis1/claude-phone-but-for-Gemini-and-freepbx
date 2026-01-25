@@ -4,12 +4,13 @@
 
 Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call you.
 
-## What's New in v2.0.5
+## What's New in v2.1.2
 
-🎯 **Mission Control Dashboard** - Unified view of all services on port 3030  
-🎙️ **Voice Customization** - Choose from 10 ElevenLabs voices with speed control (0.5x-2.0x)  
-⚡ **Redesigned Dashboards** - Beautiful, optimized interfaces for all services  
-📊 **Real-time Monitoring** - Live system stats, logs, and active call tracking
+🎵 **Hold Music** - No more dead air! Music plays while AI "thinks" (customizable).
+🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
+📞 **FreePBX Support** - Full compatibility with Asterisk/FreePBX.
+💻 **Interactive Terminal** - Run Gemini CLI commands directly from Mission Control.
+🛡️ **Enhanced Mission Control** - HTTPS support, Unified Logging, and FreePBX status.
 
 ## What is this?
 
@@ -22,35 +23,35 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 
 ## Architecture
 
-Gemini Phone v2.0 uses a 3-tier architecture:
+Gemini Phone v2.1.2 uses a 3-tier architecture:
 
 ```text
 ┌─────────────────────────────────────────────┐
 │  Voice App (Port 3434)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
-│  + Voice customization controls             │
+│  + FreePBX / 3CX Integration                │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
 │  Inference Brain (Port 4000)                │
 │  🧠 The Brain - AI reasoning & decisions    │
-│  + Model selection                          │
+│  + Python Script Execution 🐍               │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
 │  API Server (Port 3333)                     │
 │  ⚡ The Hands - Tool execution & actions    │
-│  + Interactive endpoints                    │
+│  + Interactive CLI Terminal                 │
 └─────────────────────────────────────────────┘
 
-All monitored by Mission Control (Port 3030)
+All monitored by Mission Control (HTTPS Port 3030)
 ```
 
 ## Prerequisites
 
 | Requirement | Where to Get It | Notes |
 | :--- | :--- | :--- |
-| **3CX Cloud Account** | [3cx.com](https://www.3cx.com/) | Free tier works |
+| **SIP PBX Account** | 3CX / FreePBX / Asterisk | Any SIP-compliant server |
 | **ElevenLabs API Key** | [elevenlabs.io](https://elevenlabs.io/) | For text-to-speech |
 | **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/) | For Whisper speech-to-text |
 | **Gemini Code CLI** | [geminicli.com](https://geminicli.com/) | Requires Gemini subscription |
@@ -68,7 +69,7 @@ All monitored by Mission Control (Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.0.5/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.1.2/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -77,11 +78,11 @@ The installer performs the following steps:
 2. **Cloning**: Clones the repository to `~/.gemini-phone-cli`.
 3. **Dependencies**: Installs local CLI dependencies.
 4. **Command Setup**: Makes the `gemini-phone` command easy to use.
-   - **Linux**: Automatically creates a shortcut so you can run the program.
-     - **Non-root**: Shortcut in `~/.local/bin` (updates `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`).
-     - **Root**: Global shortcut in `/usr/local/bin`.
-     *What this means for you:* You don't need to configure anything. Just open a new terminal window after installing, and you can type `gemini-phone` to get started.
-   - **macOS**: Installs the command to `/usr/local/bin` (may require password for sudo).
+    - **Linux**: Automatically creates a shortcut so you can run the program.
+        - **Non-root**: Shortcut in `~/.local/bin` (updates `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`).
+        - **Root**: Global shortcut in `/usr/local/bin`.
+        *What this means for you:* You don't need to configure anything. Just open a new terminal window after installing, and you can type `gemini-phone` to get started.
+    - **macOS**: Installs the command to `/usr/local/bin` (may require password for sudo).
 
 ### 2. Setup
 
@@ -114,9 +115,9 @@ Best for: Mac or Linux server that's always on and has Gemini Code installed.
 │  Your Phone                                                  │
 │      │                                                       │
 │      ↓ Call extension 9000                                  │
-│  ┌─────────────┐                                            │
-│  │     3CX     │  ← Cloud PBX                               │
-│  └──────┬──────┘                                            │
+│  ┌───────────────────────┐                                  │
+│  │   3CX / FreePBX       │  ← Cloud/Local PBX               │
+│  └──────┬────────────────┘                                  │
 │         │                                                    │
 │         ↓                                                    │
 │  ┌─────────────────────────────────────────────┐           │
@@ -145,11 +146,12 @@ Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 │  Your Phone                                                  │
 │      │                                                       │
 │      ↓ Call extension 9000                                  │
-│  ┌─────────────┐                                            │
-│  │     3CX     │  ← Cloud PBX                               │
-│  └──────┬──────┘                                            │
+│  ┌───────────────────────┐                                  │
+│  │   3CX / FreePBX       │  ← Cloud/Local PBX               │
+│  └──────┬────────────────┘                                  │
 │         │                                                    │
 │         ↓                                                    │
+
 │  ┌─────────────┐         ┌─────────────────────┐           │
 │  │ Raspberry Pi │   ←→   │ Mac/Linux with      │           │
 │  │ (voice-app)  │  HTTP  │ Claude Code CLI     │           │
@@ -215,10 +217,13 @@ Access the unified dashboard at `http://your-server-ip:3030`
 **Features:**
 
 - **2x2 Grid Layout**: View all services simultaneously
-  - Voice App (top-left) - Voice customization controls
+  - Voice App (top-left) - Voice customization & Terminal
   - API Server (top-right) - Interactive endpoints
-  - Inference Brain (bottom-left) - Model selection
+  - Inference Brain (bottom-left) - Model selection & Activity Log
   - System Monitor (bottom-right) - Live stats
+
+- **Status Indicators**:
+  - Real-time dots for FreePBX, Drachtio, Brain, and Python status.
 
 - **Real-time Monitoring**:
   - CPU & Memory usage
@@ -375,6 +380,7 @@ npm run lint:fix
 - [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [Outbound API](voice-app/README-OUTBOUND.md) - Outbound calling API reference
 - [Deployment](voice-app/DEPLOYMENT.md) - Production deployment guide
+- [FreePBX Guide](docs/FREEPBX.md) - Setup for FreePBX / Asterisk
 - [Gemini Code Skill](docs/GEMINI-CODE-SKILL.md) - Build a "call me" skill for Gemini Code
 
 ## License
