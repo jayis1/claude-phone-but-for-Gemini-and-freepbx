@@ -22,7 +22,7 @@ const CONFIG_PATH = path.join(__dirname, '../config/devices.json');
 // Default device (Morpheus) - used when config file missing or no match found
 const MORPHEUS_DEFAULT = {
   name: 'Morpheus',
-  extension: '9000',
+  extension: '8000',
   authId: 'Au0XZPTpJY',
   password: 'DGHwMW6v25',
   voiceId: 'JAgnJveGGUh4qy4kh6dF',

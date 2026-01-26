@@ -14,7 +14,7 @@ const GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:3333';
  * @param {string} options.callId - Call UUID for maintaining conversation context
  * @param {string} options.devicePrompt - Device-specific personality prompt
  * @param {number} options.timeout - Timeout in seconds (default: 30, AC27)
- * @returns {Promise<string>} Claude's response
+ * @returns {Promise<string>} Gemini's response
  */
 async function query(prompt, options = {}) {
   const { callId, devicePrompt, timeout = 30 } = options; // AC27: Default 30s timeout
@@ -68,7 +68,7 @@ async function query(prompt, options = {}) {
 }
 
 /**
- * End a Claude session when a call ends
+ * End a Gemini session when a call ends
  * @param {string} callId - The call UUID to end the session for
  */
 async function endSession(callId) {

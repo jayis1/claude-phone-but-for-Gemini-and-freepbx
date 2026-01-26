@@ -143,7 +143,7 @@ function extractVoiceLine(response) {
  * @param {Object} options - Configuration options
  * @param {Object} options.audioForkServer - WebSocket audio fork server
  * @param {Object} options.whisperClient - Whisper transcription client
- * @param {Object} options.claudeBridge - Claude API bridge
+ * @param {Object} options.geminiBridge - Gemini API bridge
  * @param {Object} options.ttsService - TTS service
  * @param {number} options.wsPort - WebSocket port
  * @param {string} [options.initialContext] - Context for outbound calls (why we're calling)
@@ -155,7 +155,7 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
   const {
     audioForkServer,
     whisperClient,
-    claudeBridge,
+    geminiBridge,
     ttsService,
     wsPort,
     initialContext = null,
@@ -197,11 +197,11 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
       await endpoint.play(greetingUrl);
     }
 
-    // Prime Claude with context if this is an outbound call (NON-BLOCKING)
+    // Prime Gemini with context if this is an outbound call (NON-BLOCKING)
     // Fire-and-forget: we don't use the response, just establishing session context
     if (initialContext && callActive) {
-      logger.info('Priming Claude with outbound context (non-blocking)', { callUuid });
-      claudeBridge.query(
+      logger.info('Priming Gemini with outbound context (non-blocking)', { callUuid });
+      geminiBridge.query(
         `[SYSTEM CONTEXT - DO NOT REPEAT]: You just called the user to tell them: "${initialContext}". They have answered. Now listen to their response and help them.`,
         { callId: callUuid, devicePrompt: devicePrompt, isSystemPrime: true }
       ).catch(err => logger.warn('Prime query failed', { callUuid, error: err.message }));

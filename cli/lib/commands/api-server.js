@@ -26,7 +26,7 @@ export async function apiServerCommand(options = {}) {
   }
 
   console.log(chalk.gray(`Starting API server on port ${port}...`));
-  console.log(chalk.gray('This wraps Claude Code CLI for Pi connections.\n'));
+  console.log(chalk.gray('This wraps Gemini CLI for Pi connections.\n'));
 
   const projectRoot = getProjectRoot();
   const serverPath = path.join(projectRoot, 'gemini-api-server', 'server.js');

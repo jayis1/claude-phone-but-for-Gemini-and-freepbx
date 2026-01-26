@@ -5,6 +5,7 @@ A Gemini Code skill that enables voice calling from your AI assistant. Say "call
 ## Overview
 
 This skill wraps the Gemini Phone outbound API, allowing natural language commands like:
+
 - "Call me when the backup finishes"
 - "Have Cephanie call me about disk usage"
 - "Call me and let's discuss the results"
@@ -25,18 +26,20 @@ This skill wraps the Gemini Phone outbound API, allowing natural language comman
 ## Installation
 
 1. Create the skill directory:
+
 ```bash
 mkdir -p ~/.gemini/skills/Call/{bin,lib,workflows}
 ```
 
-2. Copy the files below into place
+1. Copy the files below into place
 
-3. Make the CLI executable:
+2. Make the CLI executable:
+
 ```bash
 chmod +x ~/.gemini/skills/Call/bin/call
 ```
 
-4. Update the `API_BASE_URL` in `lib/api.py` to point to your Gemini Phone server
+1. Update the `API_BASE_URL` in `lib/api.py` to point to your Gemini Phone server
 
 ## Configuration
 
@@ -123,22 +126,26 @@ call devices
 ## Examples
 
 **Call when task completes:**
+
 ```
 User: "Run this script and call me when it's done"
 → Executes script, then calls with status update
 ```
 
 **Call with conversation:**
+
 ```
 User: "Call me and let's discuss the test results"
 → Calls in conversation mode, you can ask follow-up questions
 ```
 
 **Device-specific call:**
+
 ```
 User: "Have Cephanie call me about disk usage"
 → Cephanie's voice delivers the message
 ```
+
 ```
 
 ---
@@ -524,6 +531,7 @@ Check contact directory, then validate as phone number:
 ### Step 3: Generate Message
 
 If no explicit message:
+
 - Summarize current task/conversation
 - Keep under 50 words
 - Format: "[Context]. [Result]. [Action if needed]."
@@ -546,6 +554,7 @@ call outbound <number> --message "<message>" [--mode conversation] [--device Cep
 | contact_not_found | "I don't have a number for [name]" |
 | service_unavailable | "The voice server isn't responding" |
 | call_failed | "The call couldn't be connected" |
+
 ```
 
 ---
@@ -555,22 +564,28 @@ call outbound <number> --message "<message>" [--mode conversation] [--device Cep
 Once installed, your AI can handle requests like:
 
 ```
+
 You: Run the backup and call me when done
 AI: [runs backup]
 AI: Calling you now with the results.
 [Your phone rings]
+
 ```
 
 ```
+
 You: If disk usage goes over 90%, have Cephanie call me
 AI: [monitors disk]
 [When threshold hit]
 AI: Cephanie is calling you about disk usage.
 [Phone rings with Cephanie's voice]
+
 ```
 
 ```
+
 You: Call me and let's discuss the deployment
 AI: Calling you in conversation mode.
 [Phone rings, you can have back-and-forth discussion]
+
 ```

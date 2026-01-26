@@ -5,6 +5,7 @@
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
 ## What's New in v2.2.3
+
 + 🛠️ **Advanced Web Orchestration** - Every .env variable now manageable via UI.
 + 🌈 **True htop Visuals** - Resolved monochrome issue for real colorful system bars.
 
@@ -254,7 +255,7 @@ Access the unified dashboard at `http://your-server-ip:3030`
 
 ## Voice Customization
 
-Configure voice and speed settings per device via the Voice App dashboard (`http://your-server-ip:3434`):
+Configure voice and speed settings per device via the Voice App dashboard (`http://your-server-ip:3000`):
 
 **Available Voices** (10 ElevenLabs options):
 
@@ -289,7 +290,7 @@ All services provide interactive web dashboards:
 
 ## API Endpoints
 
-### Voice App (Port 3434)
+### Voice App (Port 3000)
 
 | Method | Endpoint | Purpose |
 | :--- | :--- | :--- |

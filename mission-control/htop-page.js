@@ -1,4 +1,4 @@
-// htop Page HTML Generator
+// htop Page HTML Generator with ANSI-to-HTML Support
 module.exports = function generateHtopPage() {
   return `
     <!DOCTYPE html>
@@ -82,10 +82,34 @@ module.exports = function generateHtopPage() {
             padding: 1rem;
             border-radius: 8px;
             border: 1px solid var(--border);
-            overflow-y: auto;
+            overflow: auto;
             white-space: pre;
-            line-height: 1.4;
+            line-height: 1.2;
           }
+
+          /* ANSI Color Mapping */
+          .ansi-black { color: #000000; }
+          .ansi-red { color: #ef4444; }
+          .ansi-green { color: #22c55e; }
+          .ansi-yellow { color: #eab308; }
+          .ansi-blue { color: #3b82f6; }
+          .ansi-magenta { color: #a855f7; }
+          .ansi-cyan { color: #06b6d4; }
+          .ansi-white { color: #ffffff; }
+          .ansi-bright-black { color: #64748b; font-weight: bold; }
+          .ansi-bright-red { color: #f87171; font-weight: bold; }
+          .ansi-bright-green { color: #4ade80; font-weight: bold; }
+          .ansi-bright-yellow { color: #facc15; font-weight: bold; }
+          .ansi-bright-blue { color: #60a5fa; font-weight: bold; }
+          .ansi-bright-magenta { color: #c084fc; font-weight: bold; }
+          .ansi-bright-cyan { color: #22d3ee; font-weight: bold; }
+          .ansi-bright-white { color: #ffffff; font-weight: bold; }
+          
+          .ansi-bg-black { background-color: #000000; }
+          .ansi-bg-green { background-color: #22c55e; color: #000; }
+          .ansi-bg-cyan { background-color: #06b6d4; color: #000; }
+          .ansi-bg-blue { background-color: #3b82f6; color: #fff; }
+
           .status-bar {
             margin-top: 0.5rem;
             padding: 0.5rem 1rem;
@@ -115,13 +139,13 @@ module.exports = function generateHtopPage() {
         <div class="header">
           <div class="logo">
             <span>📊</span>
-            htop - System Monitor
+            htop - High Performance System Monitor
           </div>
           <div style="display: flex; align-items: center; gap: 1rem;">
             <a href="/" class="btn-return">
               <span>←</span> Return to Mission Control
             </a>
-            <a href="/settings" style="text-decoration:none; color:var(--text-dim); margin: 0 10px;" title="Settings">
+             <a href="/settings" style="text-decoration:none; color:var(--text-dim); margin: 0 10px;" title="Settings">
               <span style="font-size: 1.2rem; cursor: pointer; vertical-align: middle;">⚙️</span>
             </a>
             <div id="clock" style="font-family: 'JetBrains Mono', monospace; color: var(--text-dim); font-size: 0.9rem;">--:--:--</div>
@@ -129,24 +153,90 @@ module.exports = function generateHtopPage() {
         </div>
 
         <div class="terminal-container">
-          <div id="htop-output">Loading htop...</div>
+          <div id="htop-output">Initializing Visual Core...</div>
           <div class="status-bar">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="status-dot"></span>
-              <span>Live Update</span>
+              <span>Visual Telemetry Active</span>
             </div>
             <div id="update-time" style="color: var(--text-dim);">--:--:--</div>
           </div>
         </div>
 
         <script>
+          // Simple client-side ANSI to HTML converter
+          function ansiToHtml(text) {
+            if (!text) return "";
+            
+            // Strip non-color terminal sequences (cursor moves, mode switches, etc.)
+            text = text.replace(/\\x1b\\[[0-9;?]*[A-Za-z]/g, (match) => {
+              // Keep only the color sequences (the ones ending in 'm')
+              return match.endsWith('m') ? match : '';
+            });
+
+            const colors = {
+              30: 'ansi-black', 31: 'ansi-red', 32: 'ansi-green', 33: 'ansi-yellow',
+              34: 'ansi-blue', 35: 'ansi-magenta', 36: 'ansi-cyan', 37: 'ansi-white',
+              90: 'ansi-bright-black', 91: 'ansi-bright-red', 92: 'ansi-bright-green', 93: 'ansi-bright-yellow',
+              94: 'ansi-bright-blue', 95: 'ansi-bright-magenta', 96: 'ansi-bright-cyan', 97: 'ansi-bright-white'
+            };
+            const bgColors = {
+              40: 'ansi-bg-black', 41: 'ansi-bg-red', 42: 'ansi-bg-green', 43: 'ansi-bg-yellow',
+              44: 'ansi-bg-blue', 45: 'ansi-bg-magenta', 46: 'ansi-bg-cyan', 47: 'ansi-bg-white'
+            };
+
+            let html = "";
+            let currentClasses = new Set();
+            
+            // Match the escape sequence: \\x1b\\[ (digits separated by ;) m
+            const parts = text.split(/\\x1b\\[(([0-9]+;?)+)m/);
+            
+            for (let i = 0; i < parts.length; i++) {
+               // Due to splitting with a capture group, every 3rd element (indices 1, 4, 7...) is the captured code string
+               // Index 0, 3, 6... are the actual text parts
+               if (i % 3 === 0) {
+                 const part = parts[i];
+                 if (part) {
+                   if (currentClasses.size > 0) {
+                     html += '<span class="' + Array.from(currentClasses).join(' ') + '">' + part + '</span>';
+                   } else {
+                     html += part;
+                   }
+                 }
+               } else if (i % 3 === 1) {
+                 const codeStr = parts[i];
+                 const codes = codeStr.split(';');
+                 
+                 codes.forEach(code => {
+                   const c = parseInt(code);
+                   if (c === 0) {
+                     currentClasses.clear();
+                   } else if (colors[c]) {
+                     // Clear previous foreground colors
+                     Object.values(colors).forEach(cls => currentClasses.delete(cls));
+                     currentClasses.add(colors[c]);
+                   } else if (bgColors[c]) {
+                     // Clear previous background colors
+                     Object.values(bgColors).forEach(cls => currentClasses.delete(cls));
+                     currentClasses.add(bgColors[c]);
+                   } else if (c === 1) {
+                     currentClasses.add('bold');
+                   }
+                 });
+               }
+            }
+            
+            return html;
+          }
+
           async function updateHtop() {
             try {
               const res = await fetch('/api/htop');
               const data = await res.json();
               
               if (data.success) {
-                document.getElementById('htop-output').textContent = data.output;
+                const container = document.getElementById('htop-output');
+                container.innerHTML = ansiToHtml(data.output);
               } else {
                 document.getElementById('htop-output').textContent = 'Error: ' + (data.error || 'Failed to fetch htop');
               }
