@@ -339,9 +339,10 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.6
+            MISSION CONTROL v2.2.9
             <div style="display:flex; gap:10px; margin-left: 20px;">
-              <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 8px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
+              <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
+                <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
               </button>
               <a href="/htop" style="text-decoration: none;">
@@ -1039,16 +1040,24 @@ app.get('/', (req, res) => {
           // Auto-Check Updates on Load to Populate Button
           async function silentUpdateCheck() {
              const btnVer = document.getElementById('update-ver');
-             if(!btnVer) return; // Should not happen now as button is always visible
+             const dot = document.getElementById('update-dot');
+             if(!btnVer) return; 
              try {
                const res = await fetch('/api/update/check');
                const data = await res.json();
                if(data.success && data.remoteVersion) {
                  if(data.updateAvailable) {
                    btnVer.innerText = 'v' + data.remoteVersion;
-                   document.getElementById('update-btn').style.background = '#10b981'; // Green for update available
+                   if(dot) {
+                     dot.style.background = '#ef4444'; // Red for update available
+                     dot.style.boxShadow = '0 0 10px #ef4444';
+                   }
                  } else {
                    btnVer.innerText = 'v' + data.localVersion;
+                   if(dot) {
+                     dot.style.background = '#10b981'; // Green for up to date
+                     dot.style.boxShadow = '0 0 10px #10b981';
+                   }
                  }
                  btnVer.style.opacity = '1';
                } else {
@@ -1829,6 +1838,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.8]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.9]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
