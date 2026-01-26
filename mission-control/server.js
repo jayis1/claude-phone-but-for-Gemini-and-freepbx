@@ -1149,7 +1149,7 @@ app.get('/api/htop', async (req, res) => {
     // Fallback to top -b if htop fails or is missing
     // Use 'script' to fake a TTY to get htop's colorful bars
     // Use head to limit output
-    let cmd = 'script -q -c "export TERM=xterm-256color; export COLUMNS=250; export LINES=100; htop -n 1" /dev/null';
+    let cmd = 'script -q -c "export TERM=xterm-256color; export COLUMNS=300; export LINES=150; htop -n 1" /dev/null';
     try {
       const { execSync } = require('child_process');
       execSync('command -v htop');
@@ -1829,6 +1829,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.7]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.8]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
