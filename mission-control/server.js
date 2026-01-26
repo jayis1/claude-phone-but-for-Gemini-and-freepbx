@@ -343,7 +343,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.41
+            MISSION CONTROL v2.2.42
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
@@ -1282,7 +1282,9 @@ app.post('/api/gemini-cli', async (req, res) => {
   const execPromise = util.promisify(exec);
 
   try {
-    const { stdout, stderr } = await execPromise(`gemini ${command}`, {
+    // Force usage of gemini-1.5-flash to avoid "Quota exceeded" on Pro models
+    // The CLI defaults to the "best" model which often hits free tier limits
+    const { stdout, stderr } = await execPromise(`gemini ${command} --model gemini-1.5-flash`, {
       timeout: 30000,
       maxBuffer: 1024 * 1024 // 1MB
     });
@@ -1914,6 +1916,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.41]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.42]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
