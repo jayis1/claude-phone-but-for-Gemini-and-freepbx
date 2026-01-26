@@ -20,8 +20,8 @@ RUN mkdir -p data
 EXPOSE 3030
 
 # Entrypoint script
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Start server via entrypoint
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
