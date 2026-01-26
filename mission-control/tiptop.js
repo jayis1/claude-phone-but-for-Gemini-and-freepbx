@@ -6,7 +6,7 @@ function generateTopPage() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Mission Control - Command Center</title>
+        <title>TipTop - Mission Control</title>
         <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
         <style>
           /* Core Layout */
@@ -82,6 +82,14 @@ function generateTopPage() {
           .back-btn {
             background: #333; color: #fff; padding: 2px 8px; border: 1px solid #555; cursor: pointer; font-size: 12px;
           }
+          /* Control Buttons */
+          .control-btn {
+             background: #333; color: #fff; padding: 2px 8px; border: 1px solid #555; margin-left: 5px; cursor: pointer; font-size: 12px; font-weight: bold;
+          }
+          .control-btn:hover { background: #555; }
+          .control-btn.kill { color: #f00; border-color: #f00; }
+          .control-btn.kill:hover { background: #300; }
+
           .header-badge { color: #000; background: #0f0; padding: 2px 5px; font-weight: bold; }
           #clock { color: #0ff; font-weight: bold; font-size: 1.2rem; }
   
@@ -92,12 +100,23 @@ function generateTopPage() {
           .bar-fill { height: 100%; background: #0f0; display: block; }
           .bar-text { color: #fff; }
   
-          .table-container { flex: 1; overflow-y: hidden; position: relative; }
+          .table-container { flex: 1; overflow-y: scroll; position: relative; } /* Scrollable */
           table { width: 100%; border-collapse: collapse; font-size: 13px; }
           thead { position: sticky; top: 0; z-index: 10; background: #000; }
-          th { text-align: left; background: #004400; color: #fff; padding: 2px 5px; }
-          td { padding: 2px 5px; color: #ccc; }
+          th { text-align: left; background: #004400; color: #fff; padding: 2px 5px; cursor: pointer; user-select: none; }
+          th:hover { background: #006600; }
+          td { padding: 2px 5px; color: #ccc; cursor: pointer; }
+          
+          /* Sort Indicator */
+          th.sorted-asc::after { content: " ▲"; color: #0f0; }
+          th.sorted-desc::after { content: " ▼"; color: #0f0; }
+
+          /* Row Selection */
+          tr { border-bottom: 1px solid #111; }
           tr:hover td { background: #111; }
+          tr.selected td { background: #004400; color: #fff !important; }
+          tr.selected .pid { color: #fff !important; }
+          
           .pid { color: #f00; } .user { color: #ff0; } .cmd { color: #fff; font-weight: bold; }
   
           /* === BOTTOM SECTIONS CONTENT === */
@@ -142,8 +161,12 @@ function generateTopPage() {
         <!-- TOP: SYSTEM MONITOR -->
         <div id="top-panel">
           <div class="nav-bar">
-            <a href="/" class="back-btn">← ESC</a>
-            <div class="header-badge">Mission Control System Monitor</div>
+            <div>
+               <a href="/" class="back-btn">← ESC</a>
+               <button class="control-btn" onclick="toggleSort('cpu')">F6 SortBy</button>
+               <button class="control-btn kill" onclick="killSelected()">F9 KILL</button>
+            </div>
+            <div class="header-badge">TipTop Task Manager</div>
             <div id="clock">00:00:00</div>
           </div>
   
@@ -154,7 +177,7 @@ function generateTopPage() {
               <div class="bar-row"><span class="bar-label">SWP</span><div class="bar-track"><span class="bar-fill" id="swap-bar" style="width: 0%"></span></div><span class="bar-text" id="swap-text">0/0</span></div>
             </div>
             <div class="column" style="margin-left:auto; text-align: right; color: #aaa;">
-               <div>Tasks: <span style="color:#fff">24</span>, <span style="color:#0f0">1</span> run</div>
+               <div>Tasks: <span style="color:#fff" id="tasks-total">0</span>, <span style="color:#0f0" id="tasks-run">0</span> run</div>
                <div>Up: <span id="uptime" style="color:#fff">00:00:00</span></div>
                <div id="load-avg" style="color:#0ff">0.00 0.00 0.00</div>
             </div>
@@ -164,7 +187,17 @@ function generateTopPage() {
             <table>
               <thead>
                 <tr>
-                  <th style="width:50px">PID</th><th style="width:60px">USER</th><th style="width:40px">PRI</th><th style="width:40px">NI</th><th style="width:60px">VIRT</th><th style="width:60px">RES</th><th style="width:40px">S</th><th style="width:50px">CPU%</th><th style="width:50px">MEM%</th><th style="width:70px">TIME+</th><th>COMMAND</th>
+                  <th onclick="setSort('pid')">PID</th>
+                  <th onclick="setSort('user')">USER</th>
+                  <th onclick="setSort('pri')">PRI</th>
+                  <th onclick="setSort('ni')">NI</th>
+                  <th onclick="setSort('virt')">VIRT</th>
+                  <th onclick="setSort('res')">RES</th>
+                  <th onclick="setSort('s')">S</th>
+                  <th onclick="setSort('cpu')">CPU%</th>
+                  <th onclick="setSort('mem')">MEM%</th>
+                  <th onclick="setSort('time')">TIME+</th>
+                  <th onclick="setSort('cmd')">COMMAND</th>
                 </tr>
               </thead>
               <tbody id="process-list"></tbody>
@@ -229,6 +262,143 @@ function generateTopPage() {
           function formatBytes(bytes) { if (bytes===0) return '0K'; const k=1024, sizes=['K','M','G','T'], i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+sizes[i]; }
           function formatTime(s) { const h=Math.floor(s/3600).toString().padStart(2,'0'), m=Math.floor((s%3600)/60).toString().padStart(2,'0'), sec=Math.floor(s%60).toString().padStart(2,'0'); return \`\${h}:\${m}:\${sec}\`; }
   
+          /* TIPTOP LOGIC */
+          let currentProcesses = [];
+          
+          // State
+          let sortBy = 'cpu';
+          let sortDesc = true;
+          let selectedPid = null;
+
+          function setSort(col) {
+             if(sortBy === col) {
+                sortDesc = !sortDesc;
+             } else {
+                sortBy = col;
+                sortDesc = true; // Default desc for new col
+                if(col === 'pid' || col === 'user' || col === 'cmd') sortDesc = false; // Asc for text/id
+             }
+             updateTable();
+          }
+
+          function toggleSort(col) { setSort(col); }
+
+          function selectRow(pid) {
+             selectedPid = (selectedPid === pid) ? null : pid;
+             updateTableRendering(); // Just re-render dom, don't re-sort
+          }
+
+          async function killSelected() {
+             if(!selectedPid) return alert('Select a process first!');
+             if(!confirm('KILL process ' + selectedPid + '?')) return;
+             
+             try {
+                const res = await fetch('/api/process/kill', {
+                   method: 'POST',
+                   headers: {'Content-Type': 'application/json'},
+                   body: JSON.stringify({ pid: selectedPid })
+                });
+                const d = await res.json();
+                if(d.success) {
+                   // Optimistic remove
+                   currentProcesses = currentProcesses.filter(p => p.pid != selectedPid);
+                   selectedPid = null;
+                   updateTable();
+                } else {
+                   alert('Error: ' + d.error);
+                }
+             } catch(e) { alert('Request failed'); }
+          }
+
+          async function updateStats() {
+            try {
+              document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+              const res = await fetch('/api/system/stats');
+              const data = await res.json();
+              
+              // Update Bars
+              const cpu = data.cpu.currentLoad;
+              document.getElementById('cpu-bar').style.width = cpu + '%';
+              document.getElementById('cpu-text').innerText = cpu.toFixed(1) + '%';
+  
+              const memVals = data.mem;
+              const memPct = (memVals.active / memVals.total) * 100;
+              document.getElementById('mem-bar').style.width = memPct + '%';
+              document.getElementById('mem-text').innerText = formatBytes(memVals.active) + '/' + formatBytes(memVals.total);
+              
+              document.getElementById('uptime').innerText = formatTime(data.uptime || 0);
+              const loads = data.load || "0.00";
+              document.getElementById('load-avg').innerText = loads;
+              
+              if(data.tasks) {
+                 document.getElementById('tasks-total').innerText = data.tasks.total;
+                 document.getElementById('tasks-run').innerText = data.tasks.running;
+              }
+              
+              // Store processes
+              currentProcesses = data.processes || [];
+              updateTable();
+              
+            } catch(e) { console.error(e); }
+          }
+          
+          function updateTable() {
+             // Soriting
+             currentProcesses.sort((a, b) => {
+                let valA = a[sortBy];
+                let valB = b[sortBy];
+                
+                // Handle strings
+                if(typeof valA === 'string') valA = valA.toLowerCase();
+                if(typeof valB === 'string') valB = valB.toLowerCase();
+                
+                if (valA < valB) return sortDesc ? 1 : -1;
+                if (valA > valB) return sortDesc ? -1 : 1;
+                return 0;
+             });
+             
+             updateTableRendering();
+          }
+
+          function updateTableRendering() {
+              const tbody = document.getElementById('process-list');
+              tbody.innerHTML = '';
+              
+              // Update Headers (Arrow)
+              document.querySelectorAll('th').forEach(th => {
+                  th.className = '';
+                  if(th.innerText.toLowerCase().includes(sortBy) || 
+                    (sortBy === 'time' && th.innerText.includes('TIME')) ||
+                    (sortBy === 'virt' && th.innerText.includes('VIRT'))) {
+                     th.className = sortDesc ? 'sorted-desc' : 'sorted-asc';
+                  }
+              });
+
+              currentProcesses.forEach(p => {
+                const row = document.createElement('tr');
+                if(p.pid === selectedPid) row.className = 'selected';
+                row.onclick = () => selectRow(p.pid);
+                
+                row.innerHTML = \`
+                  <td class="pid">\${p.pid}</td>
+                  <td class="user">\${p.user}</td>
+                  <td>\${p.pri}</td>
+                  <td>\${p.ni}</td>
+                  <td>\${formatBytes(p.virt || 0)}</td>
+                  <td>\${formatBytes(p.res || 0)}</td>
+                  <td>\${p.s}</td>
+                  <td>\${p.cpu}%</td>
+                  <td>\${p.mem}%</td>
+                  <td>\${formatTime(p.time || 0)}</td>
+                  <td class="cmd">\${p.cmd}</td>
+                \`;
+                tbody.appendChild(row);
+              });
+          }
+
+          setInterval(updateStats, 2000);
+          updateStats();
+          
           /* NOTES LOGIC */
           let currentNotes = [];
   
@@ -318,10 +488,10 @@ function generateTopPage() {
           // Initial Load
           fetchNotes();
           fetchPlaylist();
-
+  
           /* PLAYLIST LOGIC */
           let currentPlaylist = [];
-
+  
           async function fetchPlaylist() {
             try {
               const res = await fetch('/api/playlist');
@@ -329,7 +499,7 @@ function generateTopPage() {
               renderPlaylist();
             } catch(e) { console.error('Failed to load playlist', e); }
           }
-
+  
           function renderPlaylist() {
             const list = document.getElementById('queue');
             document.getElementById('playlist-count').innerText = currentPlaylist.length + ' items';
@@ -354,7 +524,7 @@ function generateTopPage() {
                list.appendChild(div);
             });
           }
-
+  
           async function addSong() {
             const input = document.getElementById('song-input');
             const url = input.value.trim();
@@ -362,7 +532,7 @@ function generateTopPage() {
             
             // Simple title extraction or placeholder
             const title = "Track " + (currentPlaylist.length + 1);
-
+  
             try {
               await fetch('/api/playlist', {
                 method: 'POST',
@@ -373,7 +543,7 @@ function generateTopPage() {
               fetchPlaylist();
             } catch(e) { alert('Failed to add song'); }
           }
-
+  
           async function removeSong(id) {
             if(!confirm('Remove this track?')) return;
             try {
@@ -381,60 +551,6 @@ function generateTopPage() {
               fetchPlaylist();
             } catch(e) { alert('Failed to remove song'); }
           }
-  
-          /* SYSTEM MONITOR LOGIC */
-          async function updateStats() {
-            try {
-              document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-              const res = await fetch('/api/system/stats');
-              const data = await res.json();
-              
-              const cpu = data.cpu.currentLoad;
-              document.getElementById('cpu-bar').style.width = cpu + '%';
-              document.getElementById('cpu-text').innerText = cpu.toFixed(1) + '%';
-  
-              const memVals = data.mem;
-              const memPct = (memVals.active / memVals.total) * 100;
-              document.getElementById('mem-bar').style.width = memPct + '%';
-              document.getElementById('mem-text').innerText = formatBytes(memVals.active) + '/' + formatBytes(memVals.total);
-              document.getElementById('swap-bar').style.width = '0%';
-              document.getElementById('swap-text').innerText = '0/0';
-  
-              document.getElementById('uptime').innerText = formatTime(data.uptime || 0);
-              const loads = data.load || "0.00";
-              document.getElementById('load-avg').innerText = loads; // data.load might be array or number depending on OS
-              
-              if(data.tasks) {
-                 const tRun = document.querySelector('.stats-container .column div:first-child');
-                 if(tRun) tRun.innerHTML = \`Tasks: <span style="color:#fff">\${data.tasks.total}</span>, <span style="color:#0f0">\${data.tasks.running}</span> run\`;
-              }
-
-              const tbody = document.getElementById('process-list');
-              tbody.innerHTML = '';
-              
-              const processes = data.processes || [];
-              
-              processes.forEach(p => {
-                const row = document.createElement('tr');
-                row.innerHTML = \`
-                  <td class="pid">\${p.pid}</td>
-                  <td class="user">\${p.user}</td>
-                  <td>\${p.pri}</td>
-                  <td>\${p.ni}</td>
-                  <td>\${formatBytes(p.virt || 0)}</td>
-                  <td>\${formatBytes(p.res || 0)}</td>
-                  <td>\${p.s}</td>
-                  <td>\${p.cpu}%</td>
-                  <td>\${p.mem}%</td>
-                  <td>\${formatTime(p.time || 0)}</td>
-                  <td class="cmd">\${p.cmd}</td>
-                \`;
-                tbody.appendChild(row);
-              });
-            } catch(e) { console.error(e); }
-          }
-          setInterval(updateStats, 2000);
-          updateStats();
         </script>
       </body>
       </html>

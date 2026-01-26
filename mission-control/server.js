@@ -1145,10 +1145,11 @@ app.get('/', (req, res) => {
 });
 
 // ============================================
-// htop Page Route
+// TipTop Page Route (Custom Top)
 // ============================================
+const generateTipTopPage = require('./tiptop.js');
 app.get('/htop', (req, res) => {
-  res.send(generateHtopPage());
+  res.send(generateTipTopPage());
 });
 
 // htop Data API (Simulated htop using 'top' command for web safety)
