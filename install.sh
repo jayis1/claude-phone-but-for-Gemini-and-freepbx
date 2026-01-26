@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.26/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.27/install.sh | bash
 
 
 main() {
