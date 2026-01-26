@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.16/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.17/install.sh | bash
 
 
 main() {
@@ -106,6 +106,15 @@ main() {
         ;;
     esac
     echo "✓ Node.js installed: $(node -v)"
+    
+    # Update npm to latest (since it comes with Node)
+    echo "📦 Updating npm to latest..."
+    if [ -w "$(npm root -g)" ]; then
+      npm install -g npm@latest
+    else
+      $SUDO npm install -g npm@latest
+    fi
+    echo "✓ npm updated: $(npm -v)"
   }
 
   # Function to install npm (for systems where it's separate)
@@ -129,6 +138,15 @@ main() {
         ;;
     esac
     echo "✓ npm installed: $(npm -v)"
+    
+    # Update npm to latest
+    echo "📦 Updating npm to latest..."
+    if [ -w "$(npm root -g)" ]; then
+      npm install -g npm@latest
+    else
+      $SUDO npm install -g npm@latest
+    fi
+    echo "✓ npm updated: $(npm -v)"
   }
 
   # Function to install Docker
