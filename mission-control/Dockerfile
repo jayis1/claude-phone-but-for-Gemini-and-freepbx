@@ -6,6 +6,9 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 
+# Install Docker CLI for health checks
+RUN apt-get update && apt-get install -y docker.io && rm -rf /var/lib/apt/lists/*
+
 # Copy source
 COPY . .
 
