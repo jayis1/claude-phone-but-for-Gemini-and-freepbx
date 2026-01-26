@@ -12,12 +12,9 @@ import {
   configExists
 } from '../config.js';
 import {
-  validateElevenLabsKey,
-  validateOpenAIKey,
-  validateVoiceId,
-  validateExtension,
   validateIP,
-  validateHostname
+  validateHostname,
+  validateGeminiKey
 } from '../validators.js';
 import { getLocalIP, getProjectRoot } from '../utils.js';
 import { isRaspberryPi } from '../platform.js';
@@ -716,7 +713,8 @@ function createDefaultConfig() {
     version: '1.0.0',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
-      openai: { apiKey: '', validated: false }
+      openai: { apiKey: '', validated: false },
+      gemini: { apiKey: '', validated: false }
     },
     sip: {
       domain: '',
@@ -883,6 +881,53 @@ async function setupAPIKeys(config) {
     } else {
       openAISpinner.succeed('OpenAI API key validated');
       config.api.openai = { apiKey: openAIKey, validated: true };
+    }
+  }
+
+  // -----------------------------------------------------------
+  // 4. Gemini API Key
+  // -----------------------------------------------------------
+
+  // Auto-skip logic for Gemini
+  let skipGemini = false;
+  if (config._fromEnv && config.api.gemini.apiKey) {
+    const result = await validateGeminiKey(config.api.gemini.apiKey);
+    if (result.valid) {
+      console.log(chalk.green('✓ Found valid Gemini API key in .env'));
+      config.api.gemini.validated = true;
+      skipGemini = true;
+    } else {
+      console.log(chalk.yellow('⚠️  Gemini key in .env is invalid. Please enter manually.'));
+    }
+  }
+
+  if (!skipGemini) {
+    const geminiAnswers = await inquirer.prompt([
+      {
+        type: 'password',
+        name: 'apiKey',
+        message: 'Gemini API key:',
+        default: config.api.gemini.apiKey,
+        validate: (input) => {
+          if (!input || input.trim() === '') return 'API key is required';
+          return true;
+        }
+      }
+    ]);
+
+    const geminiKey = geminiAnswers.apiKey;
+    const geminiSpinner = ora('Validating Gemini API key...').start();
+
+    const geminiResult = await validateGeminiKey(geminiKey);
+    if (!geminiResult.valid) {
+      geminiSpinner.fail(`Invalid Gemini API key: ${geminiResult.error}`);
+      console.log(chalk.yellow('\n⚠️  You can continue setup, but the key may not work.'));
+      const { continueAnyway } = await inquirer.prompt([{ type: 'confirm', name: 'continueAnyway', message: 'Continue anyway?', default: false }]);
+      if (!continueAnyway) throw new Error('Setup cancelled due to invalid API key');
+      config.api.gemini = { apiKey: geminiKey, validated: false };
+    } else {
+      geminiSpinner.succeed('Gemini API key validated');
+      config.api.gemini = { apiKey: geminiKey, validated: true };
     }
   }
 
@@ -1362,6 +1407,9 @@ function mergeEnvWithConfig(config, env) {
   }
   if (env.OPENAI_API_KEY) {
     newConfig.api.openai.apiKey = env.OPENAI_API_KEY;
+  }
+  if (env.GEMINI_API_KEY) {
+    newConfig.api.gemini.apiKey = env.GEMINI_API_KEY;
   }
 
   // Outbound Settings

@@ -33,11 +33,19 @@ export async function apiServerCommand(options = {}) {
 
   const spinner = ora('Starting server...').start();
 
+  // Load GEMINI_API_KEY if exists in config
+  let geminiKey = process.env.GEMINI_API_KEY;
+  if (!geminiKey && configExists()) {
+    const config = await loadConfig();
+    geminiKey = config.api?.gemini?.apiKey;
+  }
+
   try {
     const child = spawn('node', [serverPath], {
       env: {
         ...process.env,
-        PORT: port.toString()
+        PORT: port.toString(),
+        GEMINI_API_KEY: geminiKey
       },
       stdio: 'inherit'
     });

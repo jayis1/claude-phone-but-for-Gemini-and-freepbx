@@ -217,3 +217,50 @@ export async function validateVoiceId(apiKey, voiceId) {
     };
   }
 }
+/**
+ * Validate Gemini API key by making a simple request
+ * @param {string} apiKey - Gemini API key
+ * @returns {Promise<{valid: boolean, error?: string}>} Validation result
+ */
+export async function validateGeminiKey(apiKey) {
+  if (!apiKey || apiKey.trim() === '') {
+    return {
+      valid: false,
+      error: 'API key cannot be empty'
+    };
+  }
+
+  try {
+    // Simple check to see if we can get models list
+    const response = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+      timeout: 10000
+    });
+
+    if (response.status === 200) {
+      return { valid: true };
+    }
+
+    return {
+      valid: false,
+      error: `Unexpected status: ${response.status}`
+    };
+  } catch (error) {
+    if (error.response) {
+      if (error.response.status === 400 || error.response.status === 403 || error.response.status === 401) {
+        return {
+          valid: false,
+          error: 'Invalid API key (Check permissions or key status)'
+        };
+      }
+      return {
+        valid: false,
+        error: `API error: ${error.response.status} ${error.response.statusText}`
+      };
+    }
+
+    return {
+      valid: false,
+      error: `Network error: ${error.message}`
+    };
+  }
+}
