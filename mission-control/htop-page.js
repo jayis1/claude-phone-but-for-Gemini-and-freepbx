@@ -162,18 +162,7 @@ function generateTopPage() {
           
           <!-- LEFT: IDEAS (RED BOX) -->
           <div id="bottom-left">
-            <div class="section-title">BRAIN IDEAS</div>
-            <div class="idea-card">
-              <div class="idea-title">Project: Neural Voice</div>
-              <div>Analyze user tone to adjust response latencies dynamically. Expected improvement: 200ms.</div>
-            </div>
-            <div class="idea-card">
-              <div class="idea-title">Task: Memory Optimization</div>
-              <div>Compress old conversation contexts into vector summaries to save RAM.</div>
-            </div>
-            <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">
-              Waiting for brain input...
-            </div>
+            <!-- Reserved for future use -->
           </div>
   
           <!-- RIGHT: PLAYLIST & INPUT (GREEN & GRAY BOXES) -->
