@@ -1706,7 +1706,7 @@ app.get('/api/update/check', async (req, res) => {
 
     // 2. Get Remote Version
     const fetch = (await import('node-fetch')).default || global.fetch;
-    const remoteRes = await fetch('https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/mission-control/package.json');
+    const remoteRes = await fetch('https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/main/mission-control/package.json');
     if (!remoteRes.ok) throw new Error('Failed to check GitHub');
 
     const remotePkg = await remoteRes.json();

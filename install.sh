@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/v2.2.3/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/main/install.sh | bash
 
 
 main() {
@@ -32,7 +32,7 @@ main() {
 
   INSTALL_DIR="$HOME/.gemini-phone-cli"
 
-  REPO_URL="https://github.com/jayis1/networkschucks-phone-but-for-gemini.git"
+  REPO_URL="https://github.com/jayis1/claude-phone-but-for-Gemini-and-freepbx.git"
 
   echo "🎯 Gemini Phone CLI Installer"
   echo ""

@@ -121,7 +121,7 @@ call devices
 | Device | Extension | Voice | Description |
 |--------|-----------|-------|-------------|
 | **Morpheus** | 8000 | Male | Default assistant |
-| **Cephanie** | 9002 | Female | Storage server personality |
+| **Cephanie** | 8002 | Female | Storage server personality |
 
 ## Examples
 
@@ -168,7 +168,7 @@ from typing import Optional, Dict, Any
 # ============================================================
 
 API_BASE_URL = "http://YOUR_SERVER:3000"
-DEFAULT_CALLER_ID = "9000"
+DEFAULT_CALLER_ID = "8000"
 TIMEOUT_SECONDS = 30
 
 # Contact Directory - Map names/aliases to phone numbers
@@ -184,12 +184,12 @@ CONTACTS = {
 DEVICES = {
     "morpheus": {
         "name": "Morpheus",
-        "extension": "9000",
+        "extension": "8000",
         "description": "Principal AI assistant"
     },
     "cephanie": {
         "name": "Cephanie",
-        "extension": "9002",
+        "extension": "8002",
         "description": "Storage server (sassy personality)"
     },
 }
