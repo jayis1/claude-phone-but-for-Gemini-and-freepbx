@@ -80,10 +80,17 @@ curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-a
 
 The installer performs the following steps:
 
-1. **System Checks**: Verifies Node.js 18+, Docker, and git are installed.
-2. **Cloning**: Clones the repository to `~/.gemini-phone-cli`.
-3. **Dependencies**: Installs local CLI dependencies.
-4. **Command Setup**: Makes the `gemini-phone` command easy to use.
+```text
+🔍 Checking prerequisites...
+
+Platform: linux (x86_64)
+
+  ✓ Node.js v20.20.0 (requires >=18.0.0)
+  ✓ Docker v29.2.0
+  ✓ Docker Compose v5.0.2 (plugin)
+  ✓ Disk space 34.8GB free (requires >=2GB)
+  ✓ Network: ✓ npm ✓ docker ✓ nodesource
+```
 
 ### 2. Setup
 
