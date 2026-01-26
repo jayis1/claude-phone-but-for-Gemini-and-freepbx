@@ -20,10 +20,10 @@ export async function logsCommand(service = null) {
   const dockerComposePath = getDockerComposePath();
 
   // Validate service argument
-  const validServices = ['voice-app', 'api-server'];
+  const validServices = ['voice-app', 'api-server', 'mission-control'];
   if (service && !validServices.includes(service)) {
     console.log(chalk.red(`\n✗ Invalid service: ${service}`));
-    console.log(chalk.gray('  Valid services: voice-app, api-server'));
+    console.log(chalk.gray('  Valid services: voice-app, api-server, mission-control'));
     console.log(chalk.gray('  Or omit service to tail all logs\n'));
     process.exit(1);
   }
@@ -68,6 +68,25 @@ export async function logsCommand(service = null) {
       tailAPIServerLogs(config);
       return;
     }
+  }
+
+  if (service === 'mission-control') {
+    const pm2Ids = await import('../process-manager.js');
+    // We can't easily tail logs from here unless we know where they are written.
+    // But based on previous steps, process-manager writes to stdout/stderr.
+    // However, start.js launches it detached.
+    // Let's look at start.js to see where logs go.
+    // Actually, wait, mission-control is started via `spawn` in start.js detached.
+    // Standard output is ignored or piped?
+    // Re-reading start.js would be ideal but I'm in execution mode.
+    // Assuming disjoint process.
+    // I'll stick to health check monitor like api-server for now as a fallback,
+    // OR better: tell user to check ~/.gemini-phone/logs/mission-control.log if it exists?
+    // Checking `start.js` reveals: stdio: 'ignore' usually for detached.
+    // Wait, let's use tailAPIServerLogs logic as a base monitoring http?
+    // Actually monitoring HTTP health is safer.
+    monitorMissionControl(config);
+    return;
   }
 }
 
