@@ -12,6 +12,10 @@ import {
   configExists
 } from '../config.js';
 import {
+  validateElevenLabsKey,
+  validateOpenAIKey,
+  validateVoiceId,
+  validateExtension,
   validateIP,
   validateHostname,
   validateGeminiKey
