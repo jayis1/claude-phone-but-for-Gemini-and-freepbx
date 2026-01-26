@@ -8,7 +8,7 @@ RUN npm install
 
 
 # Install Gemini CLI for terminal bridge
-RUN npm install -g @google/gemini-cli
+RUN npm install -g @google/gemini-cli@latest
 
 # Copy source
 COPY . .
