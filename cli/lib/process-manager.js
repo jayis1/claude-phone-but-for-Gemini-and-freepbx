@@ -121,11 +121,16 @@ export async function startInferenceServer(serverPath, port = 4000, executionSer
   }
 
   return new Promise((resolve, reject) => {
-    // Spawn detached process
+    // Capture logs to ~/.gemini-phone/service-name.log
+    const logFilename = pidFilename.replace('.pid', '.log');
+    const logPath = path.join(getConfigDir(), logFilename);
+    const logStream = fs.openSync(logPath, 'a');
+
+    // Spawn detached process with logging
     const child = spawn('node', [scriptName], {
       cwd: serverPath,
       detached: true,
-      stdio: 'ignore', // 'ignore' in production, 'inherit' for debug
+      stdio: ['ignore', logStream, logStream], // Redirect stdout/stderr to log file
       env: {
         ...process.env,
         PORT: port,

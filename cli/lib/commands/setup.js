@@ -262,6 +262,30 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
     }
   }
 
+  // Install dependencies for Mission Control (if it exists)
+  if (installationType === 'both' || installationType === 'api-server') {
+    const apiServerPath = config.paths?.geminiApiServer || path.join(getProjectRoot(), 'gemini-api-server');
+    const missionControlPath = path.resolve(apiServerPath, '../mission-control');
+
+    if (fs.existsSync(missionControlPath)) {
+      const nodeModulesPath = path.join(missionControlPath, 'node_modules');
+      if (!fs.existsSync(nodeModulesPath)) {
+        const installSpinner = ora('Installing Mission Control dependencies...').start();
+        try {
+          execSync('npm install', {
+            cwd: missionControlPath,
+            stdio: 'pipe'
+          });
+          installSpinner.succeed('Mission Control dependencies installed');
+        } catch (error) {
+          installSpinner.fail(`Failed to install Mission Control dependencies: ${error.message}`);
+          console.log(chalk.yellow('\nYou can install manually with:'));
+          console.log(chalk.cyan(`  cd ${missionControlPath} && npm install\n`));
+        }
+      }
+    }
+  }
+
   // Type-specific success messages
   console.log(chalk.bold.green('\n✓ Setup complete!\n'));
 
