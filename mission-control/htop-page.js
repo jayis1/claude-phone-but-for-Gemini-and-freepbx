@@ -175,11 +175,11 @@ module.exports = function generateHtopPage() {
             if (!text) return "";
             
             // 1. Strip character set sequences like \x1b(B or \x1b(0
-            text = text.replace(/\x1b\([B0]/g, '');
+            text = text.replace(/\\u001b\\([B0]/g, '');
 
             // 2. Strip non-color terminal sequences
             // We strip anything that isn't a color (m) sequence
-            text = text.replace(/\x1b\[[0-9;?]*[A-ln-z]/g, '');
+            text = text.replace(/\\u001b\\[[0-9;?]*[A-ln-z]/g, '');
 
             const colors = {
               30: 'ansi-black', 31: 'ansi-red', 32: 'ansi-green', 33: 'ansi-yellow',
@@ -196,7 +196,7 @@ module.exports = function generateHtopPage() {
             let currentClasses = new Set();
             
             // 3. Split by color escape sequences: \x1b[ (codes) m
-            const parts = text.split(/\x1b\[([0-9;]*)m/);
+            const parts = text.split(/\\u001b\\[([0-9;]*)m/);
             
             for (let i = 0; i < parts.length; i++) {
                if (i % 2 === 0) {
