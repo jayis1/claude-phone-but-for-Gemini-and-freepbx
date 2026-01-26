@@ -92,7 +92,12 @@ async function startApiServer(config) {
     if (await isServerRunning()) {
       spinner.warn('Gemini API server already running');
     } else {
-      await startServer(config.paths.geminiApiServer, config.server.geminiApiPort);
+      // Ensure GEMINI_API_KEY is available
+      const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+
+      await startServer(config.paths.geminiApiServer, config.server.geminiApiPort, null, {
+        GEMINI_API_KEY: geminiKey
+      });
       spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
     }
   } catch (error) {
@@ -378,7 +383,12 @@ async function startBoth(config, isPiMode) {
       if (await isServerRunning()) {
         spinner.warn('Gemini API server already running');
       } else {
-        await startServer(config.paths.geminiApiServer, config.server.geminiApiPort);
+        // Ensure GEMINI_API_KEY is available
+        const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+
+        await startServer(config.paths.geminiApiServer, config.server.geminiApiPort, null, {
+          GEMINI_API_KEY: geminiKey
+        });
         spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
       }
     } catch (error) {

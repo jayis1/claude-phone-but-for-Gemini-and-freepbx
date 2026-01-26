@@ -58,9 +58,10 @@ export async function isServerRunning(pidPath = null) {
  * @param {string} serverPath - Path to gemini-api-server directory
  * @param {number} port - Port to listen on
  * @param {string} [pidPath] - Optional PID file path (for testing)
+ * @param {object} [extraEnv] - Optional extra environment variables
  * @returns {Promise<number>} Process PID
  */
-export async function startServer(serverPath, port, pidPath = null) {
+export async function startServer(serverPath, port, pidPath = null, extraEnv = {}) {
   pidPath = pidPath || getPidPath();
 
   // Check if already running
@@ -77,7 +78,8 @@ export async function startServer(serverPath, port, pidPath = null) {
       stdio: 'ignore',
       env: {
         ...process.env,
-        PORT: port
+        PORT: port,
+        ...extraEnv
       }
     });
 
