@@ -9,6 +9,9 @@ RUN npm install
 # Install Docker CLI for health checks
 RUN apt-get update && apt-get install -y docker.io && rm -rf /var/lib/apt/lists/*
 
+# Install Gemini CLI for terminal bridge
+RUN npm install -g @google/gemini-cli
+
 # Copy source
 COPY . .
 
