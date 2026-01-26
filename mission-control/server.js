@@ -343,7 +343,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.38
+            MISSION CONTROL v2.2.39
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
@@ -1336,35 +1336,34 @@ app.get('/api/system-stats', async (req, res) => {
   }
 });
 
-// Docker health check endpoint
+// Docker/Service health check endpoint (TCP Port Check)
 app.get('/api/docker-health', async (req, res) => {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
+  const net = require('net');
+
+  const checkPort = (port) => new Promise(resolve => {
+    const socket = new net.Socket();
+    socket.setTimeout(500); // Fast check
+    socket.on('connect', () => { socket.destroy(); resolve(true); });
+    socket.on('timeout', () => { socket.destroy(); resolve(false); });
+    socket.on('error', () => { socket.destroy(); resolve(false); });
+    socket.connect(port, '127.0.0.1');
+  });
 
   try {
-    const { stdout } = await execPromise('docker ps --format "{{.Names }},{{.Status }}" --filter "name=drachtio" --filter "name=freeswitch" --filter "name=voice-app"');
-    const containers = {};
-
-    stdout.trim().split('\n').forEach(line => {
-      if (line) {
-        // Simple check for 'Up' -> running
-        const [name, status] = line.split(',');
-        const isUp = status && status.startsWith('Up');
-        if (name.includes('drachtio')) containers.drachtio = isUp;
-        if (name.includes('freeswitch')) containers.freeswitch = isUp;
-        if (name.includes('voice-app')) containers.voiceApp = isUp;
-      }
-    });
+    const [drachtio, freeswitch, voiceApp] = await Promise.all([
+      checkPort(9022), // Drachtio Console/TCP
+      checkPort(8021), // FreeSWITCH ESL
+      checkPort(3000)  // Voice App HTTP
+    ]);
 
     res.json({
       success: true,
-      drachtio: containers.drachtio || false,
-      freeswitch: containers.freeswitch || false,
-      voiceApp: containers.voiceApp || false
+      drachtio,
+      freeswitch,
+      voiceApp
     });
   } catch (error) {
-    res.json({ success: false, error: error.message });
+    res.json({ success: false, error: 'Health check failed: ' + error.message });
   }
 });
 
@@ -1904,6 +1903,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.38]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.39]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
