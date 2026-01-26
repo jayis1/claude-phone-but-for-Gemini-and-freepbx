@@ -1,6 +1,7 @@
 import { spawn, execSync } from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
+import path from 'path';
 import {
   getDockerComposePath,
   getEnvPath,
@@ -150,7 +151,22 @@ export function generateDockerCompose(config) {
       - ${config.paths.voiceApp}/config:/app/config
     depends_on:
       - drachtio
-      - freeswitch`);
+      - freeswitch
+
+  mission-control:
+    build: ${path.resolve(config.paths.geminiApiServer, '../mission-control')}
+    container_name: mission-control
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ${getEnvPath()}
+    volumes:
+      - ${getConfigDir()}/mission-control/data:/app/data
+    environment:
+      - PORT=3030
+      - VOICE_APP_URL=http://localhost:${config.server.httpPort || 3000}
+      - API_SERVER_URL=http://localhost:${config.server.geminiApiPort}
+      - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}`);
   }
 
   // Gemini API server is now RUN LOCALLY, not in Docker

@@ -71,21 +71,12 @@ export async function logsCommand(service = null) {
   }
 
   if (service === 'mission-control') {
-    const pm2Ids = await import('../process-manager.js');
-    // We can't easily tail logs from here unless we know where they are written.
-    // But based on previous steps, process-manager writes to stdout/stderr.
-    // However, start.js launches it detached.
-    // Let's look at start.js to see where logs go.
-    // Actually, wait, mission-control is started via `spawn` in start.js detached.
-    // Standard output is ignored or piped?
-    // Re-reading start.js would be ideal but I'm in execution mode.
-    // Assuming disjoint process.
-    // I'll stick to health check monitor like api-server for now as a fallback,
-    // OR better: tell user to check ~/.gemini-phone/logs/mission-control.log if it exists?
-    // Checking `start.js` reveals: stdio: 'ignore' usually for detached.
-    // Wait, let's use tailAPIServerLogs logic as a base monitoring http?
-    // Actually monitoring HTTP health is safer.
-    monitorMissionControl(config);
+    // Mission Control is now in Docker
+    if (!fs.existsSync(dockerComposePath)) {
+      console.log(chalk.yellow('⚠ Docker containers not configured'));
+      process.exit(1);
+    }
+    tailDockerServiceLogs(dockerComposePath, 'mission-control');
     return;
   }
 }
@@ -127,46 +118,37 @@ function tailDockerLogs(dockerComposePath) {
  */
 function tailAPIServerLogs(config) {
   console.log(chalk.gray('Watching Gemini API server output...\n'));
+}
 
-  // Since the server runs detached, we can't easily tail its logs
-  // Instead, we'll monitor its health endpoint
-  console.log(chalk.yellow('Note: API server logs are not available (runs detached)'));
-  console.log(chalk.gray('Monitoring health endpoint instead...\n'));
+/**
+ * Tail logs for a specific Docker service
+ * @param {string} dockerComposePath - Path to docker-compose.yml
+ * @param {string} serviceName - Name of the service
+ */
+function tailDockerServiceLogs(dockerComposePath, serviceName) {
+  const child = spawn('docker', [
+    'compose',
+    '-f',
+    dockerComposePath,
+    'logs',
+    '-f',
+    '--tail=50',
+    serviceName
+  ], {
+    stdio: 'inherit'
+  });
 
-  let consecutiveFailures = 0;
-
-  const checkHealth = async () => {
-    try {
-      const response = await axios.get(`http://localhost:${config.server.geminiApiPort}/health`, {
-        timeout: 3000
-      });
-
-      if (response.status === 200) {
-        console.log(chalk.green(`[${new Date().toISOString()}] ✓ API server healthy`));
-        consecutiveFailures = 0;
-      } else {
-        console.log(chalk.yellow(`[${new Date().toISOString()}] ⚠ Unexpected status: ${response.status}`));
-      }
-    } catch (error) {
-      consecutiveFailures++;
-      console.log(chalk.red(`[${new Date().toISOString()}] ✗ Health check failed: ${error.message}`));
-
-      if (consecutiveFailures >= 3) {
-        console.log(chalk.red('\n✗ API server appears to be down. Stopping health checks.\n'));
-        process.exit(1);
-      }
-    }
-  };
-
-  // Check immediately, then every 5 seconds
-  checkHealth();
-  const interval = setInterval(checkHealth, 5000);
-
-  // Handle Ctrl+C
   process.on('SIGINT', () => {
-    clearInterval(interval);
-    console.log(chalk.gray('\n\nStopped monitoring API server.\n'));
+    child.kill('SIGTERM');
+    console.log(chalk.gray('\n\nStopped tailing logs.\n'));
     process.exit(0);
+  });
+
+  child.on('close', (code) => {
+    if (code !== 0 && code !== null) {
+      console.log(chalk.red(`\n✗ Docker logs failed with exit code ${code}\n`));
+      process.exit(code);
+    }
   });
 }
 

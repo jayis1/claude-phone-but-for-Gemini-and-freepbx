@@ -111,11 +111,5 @@ async function stopBoth() {
   }
 
   // Stop Mission Control
-  const mcSpinner = ora('Stopping Mission Control...').start();
-  try {
-    await stopInferenceServer('mission-control.pid');
-    mcSpinner.succeed('Mission Control stopped');
-  } catch (error) {
-    mcSpinner.info('Mission Control not running or already stopped');
-  }
+  // Mission Control is now in Docker, stopped by stopContainers()
 }

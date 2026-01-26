@@ -346,35 +346,9 @@ async function startBoth(config, isPiMode) {
     }
   }
 
-  // Start Mission Control Dashboard
+  // Mission Control is now managed by Docker (added to startContainers flow)
   if (!isPiMode) {
-    const missionControlPath = path.resolve(config.paths.geminiApiServer, '../mission-control');
-    if (fs.existsSync(missionControlPath)) {
-      spinner.start('Starting Mission Control Dashboard...');
-      try {
-        const missionControlPort = config.server.missionControlPort || 3030;
-        // Voice App container listens on configured port (default 3000)
-        const voiceAppPort = config.server.httpPort || 3000;
-        const inferencePort = config.server.inferencePort || 4000;
-
-        // Ensure GEMINI_API_KEY is available for terminal
-        const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
-
-        await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid', 'server.js', {
-          VOICE_APP_URL: `http://localhost:${voiceAppPort}`,
-          INFERENCE_URL: `http://localhost:${inferencePort}`,
-          API_SERVER_URL: `http://localhost:${config.server.geminiApiPort}`,
-          GEMINI_API_KEY: geminiKey
-        });
-        spinner.succeed(`Mission Control Dashboard started on port ${missionControlPort}`);
-      } catch (error) {
-        if (error.message.includes('already running')) {
-          spinner.warn('Mission Control already running');
-        } else {
-          spinner.fail(`Failed to start Mission Control: ${error.message}`);
-        }
-      }
-    }
+    /* Mission Control moved to Docker */
   }
 
   // Start gemini-api-server last
