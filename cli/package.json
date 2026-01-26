@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone-cli",
-  "version": "2.2.19",
+  "version": "2.2.20",
   "description": "Unified CLI installer for Gemini Phone voice interface",
   "type": "module",
   "bin": {

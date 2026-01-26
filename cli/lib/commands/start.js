@@ -408,8 +408,8 @@ async function startBoth(config, isPiMode) {
     const voiceAppPort = config.server.httpPort || 3000;
     const inferencePort = config.server.inferencePort || 4000;
     // Get LAN IP
-    const { getLanIp } = await import('../utils.js');
-    const lanIp = getLanIp() || '127.0.0.1';
+    const { getLocalIP } = await import('../utils.js');
+    const lanIp = getLocalIP() || '127.0.0.1';
 
     console.log(chalk.gray(`  • Voice App:         http://${lanIp}:${voiceAppPort} (Voice Controls)`));
     console.log(chalk.gray(`  • Inference Brain:   http://${lanIp}:${inferencePort} (AI Reasoning)`));
