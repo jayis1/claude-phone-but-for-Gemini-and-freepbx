@@ -205,23 +205,19 @@ function generateTopPage() {
           <div id="bottom-right">
             <!-- GREEN BOX: Playlist -->
             <div id="playlist-area">
-              <div class="section-title">BRAIN PLAYLIST</div>
+              <div class="section-title">
+                <span>BRAIN PLAYLIST</span>
+                <span style="font-size:0.8rem" id="playlist-count">0 items</span>
+              </div>
               <div id="queue">
-                 <div class="playlist-item">
-                    <div class="song-thumb" style="background:#cc0000"></div>
-                    <div class="song-info"><div class="song-title">Lofi Hip Hop Radio</div><div class="song-meta">ChilledCow • Live</div></div>
-                 </div>
-                 <div class="playlist-item">
-                    <div class="song-thumb" style="background:#0044cc"></div>
-                    <div class="song-info"><div class="song-title">Synthwave Mix 2024</div><div class="song-meta">ThePrimeThanatos • 1:04:20</div></div>
-                 </div>
+                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading...</div>
               </div>
             </div>
             
             <!-- GRAY BOX: Input -->
             <div id="input-area">
-              <input type="text" placeholder="Add song URL..." id="song-input">
-              <button class="add-btn">ADD</button>
+              <input type="text" placeholder="Add song URL..." id="song-input" onkeypress="if(event.key==='Enter') addSong()">
+              <button class="add-btn" onclick="addSong()">ADD</button>
             </div>
           </div>
   
@@ -321,6 +317,70 @@ function generateTopPage() {
   
           // Initial Load
           fetchNotes();
+          fetchPlaylist();
+
+          /* PLAYLIST LOGIC */
+          let currentPlaylist = [];
+
+          async function fetchPlaylist() {
+            try {
+              const res = await fetch('/api/playlist');
+              currentPlaylist = await res.json();
+              renderPlaylist();
+            } catch(e) { console.error('Failed to load playlist', e); }
+          }
+
+          function renderPlaylist() {
+            const list = document.getElementById('queue');
+            document.getElementById('playlist-count').innerText = currentPlaylist.length + ' items';
+            
+            list.innerHTML = '';
+            if(currentPlaylist.length === 0) {
+              list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Queue empty. Add URLs below.</div>';
+              return;
+            }
+            
+            currentPlaylist.forEach(item => {
+               const div = document.createElement('div');
+               div.className = 'playlist-item';
+               div.innerHTML = \`
+                  <div class="song-thumb" style="background:\${item.color}"></div>
+                  <div class="song-info" style="flex:1; overflow:hidden;">
+                    <div class="song-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${item.title}</div>
+                    <div class="song-meta"><a href="\${item.url}" target="_blank" style="color:#888; text-decoration:underline;">\${item.url}</a></div>
+                  </div>
+                  <button class="btn-sm" style="background:#300; border:1px solid #500; color:#f00;" onclick="removeSong('\${item.id}')">X</button>
+               \`;
+               list.appendChild(div);
+            });
+          }
+
+          async function addSong() {
+            const input = document.getElementById('song-input');
+            const url = input.value.trim();
+            if(!url) return;
+            
+            // Simple title extraction or placeholder
+            const title = "Track " + (currentPlaylist.length + 1);
+
+            try {
+              await fetch('/api/playlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, title })
+              });
+              input.value = '';
+              fetchPlaylist();
+            } catch(e) { alert('Failed to add song'); }
+          }
+
+          async function removeSong(id) {
+            if(!confirm('Remove this track?')) return;
+            try {
+              await fetch('/api/playlist/' + id, { method: 'DELETE' });
+              fetchPlaylist();
+            } catch(e) { alert('Failed to remove song'); }
+          }
   
           /* SYSTEM MONITOR LOGIC */
           async function updateStats() {
@@ -341,19 +401,19 @@ function generateTopPage() {
               document.getElementById('swap-text').innerText = '0/0';
   
               document.getElementById('uptime').innerText = formatTime(data.uptime || 0);
-              const loads = data.currentLoad?.cpus?.map(c => c.load.toFixed(2)).slice(0,3).join(' ') || "0.00 0.00 0.00"; 
-              document.getElementById('load-avg').innerText = loads;
-  
+              const loads = data.load || "0.00";
+              document.getElementById('load-avg').innerText = loads; // data.load might be array or number depending on OS
+              
+              if(data.tasks) {
+                 const tRun = document.querySelector('.stats-container .column div:first-child');
+                 if(tRun) tRun.innerHTML = \`Tasks: <span style="color:#fff">\${data.tasks.total}</span>, <span style="color:#0f0">\${data.tasks.running}</span> run\`;
+              }
+
               const tbody = document.getElementById('process-list');
               tbody.innerHTML = '';
-              const processes = [
-                { pid: 1234, user: 'root', pri: 20, ni: 0, virt: 156000000, res: 50433000, s: 'S', cpu: (Math.random() * 2).toFixed(1), mem: 1.2, time: 1402, cmd: 'node server.js' },
-                { pid: 1245, user: 'gemini', pri: 20, ni: 0, virt: 98000000, res: 22000000, s: 'S', cpu: 0.1, mem: 0.5, time: 450, cmd: 'mission-control' },
-                { pid: 4001, user: 'docker', pri: 20, ni: 0, virt: 450000000, res: 128000000, s: 'S', cpu: 1.2, mem: 4.5, time: 33201, cmd: 'freeswitch' },
-              ];
-              for(let i=0; i<15; i++) {
-                 processes.push({ pid: 5000+i, user: 'root', pri: 20, ni: 0, virt: 10000, res: 2000, s: 'S', cpu: 0.0, mem: 0.0, time: 0, cmd: 'kworker/u'+i });
-              }
+              
+              const processes = data.processes || [];
+              
               processes.forEach(p => {
                 const row = document.createElement('tr');
                 row.innerHTML = \`
@@ -361,12 +421,12 @@ function generateTopPage() {
                   <td class="user">\${p.user}</td>
                   <td>\${p.pri}</td>
                   <td>\${p.ni}</td>
-                  <td>\${formatBytes(p.virt)}</td>
-                  <td>\${formatBytes(p.res)}</td>
+                  <td>\${formatBytes(p.virt || 0)}</td>
+                  <td>\${formatBytes(p.res || 0)}</td>
                   <td>\${p.s}</td>
-                  <td>\${p.cpu}</td>
-                  <td>\${p.mem}</td>
-                  <td>\${formatTime(p.time)}</td>
+                  <td>\${p.cpu}%</td>
+                  <td>\${p.mem}%</td>
+                  <td>\${formatTime(p.time || 0)}</td>
                   <td class="cmd">\${p.cmd}</td>
                 \`;
                 tbody.appendChild(row);

@@ -343,7 +343,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.44
+            MISSION CONTROL v2.2.45
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
@@ -1314,6 +1314,9 @@ app.post('/api/gemini-cli', async (req, res) => {
 });
 // ============================================
 
+// ============================================
+// SYSTEM STATS API (With Real Processes)
+// ============================================
 app.get('/api/system-stats', async (req, res) => {
   try {
     const cpu = await si.currentLoad();
@@ -1321,16 +1324,31 @@ app.get('/api/system-stats', async (req, res) => {
     const graphics = await si.graphics();
     const temp = await si.cpuTemperature();
 
-    // Attempt to find GPU load - Iterate to find the weird NVIDIA/dedicated ones
+    // Fetch Top 15 Processes
+    const processes = await si.processes();
+    const topProcs = processes.list
+      .sort((a, b) => b.cpu - a.cpu)
+      .slice(0, 15)
+      .map(p => ({
+        pid: p.pid,
+        user: p.user,
+        pri: p.priority,
+        ni: p.nice,
+        virt: p.memVsz, // Virtual Memory size
+        res: p.memRss, // Resident Set size
+        s: p.state,
+        cpu: p.cpu.toFixed(1),
+        mem: p.mem.toFixed(1),
+        time: p.started ? (Date.now() - new Date(p.started).getTime()) / 1000 : 0, // Approx uptime
+        cmd: p.name + (p.params ? ' ' + p.params : '')
+      }));
+
+    // Attempt to find GPU load
     let gpuLoad = 0;
     if (graphics.controllers && graphics.controllers.length > 0) {
-      // Try to find one with utilizationGpu
       const activeGpu = graphics.controllers.find(c => c.utilizationGpu > 0) || graphics.controllers[0];
       gpuLoad = activeGpu.utilizationGpu || 0;
-
-      // Fallback: if 0, check if we have memory used on it
       if (gpuLoad === 0 && activeGpu.memoryTotal > 0) {
-        // This is a rough proxy if load isn't available
         const vramPercent = (activeGpu.memoryUsed / activeGpu.memoryTotal) * 100;
         if (vramPercent > 0) gpuLoad = vramPercent;
       }
@@ -1340,7 +1358,11 @@ app.get('/api/system-stats', async (req, res) => {
       cpu: cpu.currentLoad.toFixed(1),
       memory: ((mem.active / mem.total) * 100).toFixed(1),
       gpu: typeof gpuLoad === 'number' ? gpuLoad.toFixed(1) : 0,
-      temp: temp.main || 0
+      temp: temp.main || 0,
+      uptime: si.time().uptime,
+      load: cpu.avgLoad,
+      processes: topProcs,
+      tasks: { total: processes.all, running: processes.running }
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch system stats' });
@@ -1870,13 +1892,6 @@ app.post('/api/notes', (req, res) => {
   res.json({ success: true, notes });
 });
 
-app.delete('/api/notes/:id', (req, res) => {
-  let notes = getNotes();
-  notes = notes.filter(n => n.id !== req.params.id);
-  saveNotes(notes);
-  res.json({ success: true, notes });
-});
-
 // Logs API - Aggregated (Existing)
 app.post('/api/logs', (req, res) => {
   const { level, service, message, data } = req.body;
@@ -1884,6 +1899,56 @@ app.post('/api/logs', (req, res) => {
 
   addLog(level || 'INFO', service || 'UNKNOWN', message, data);
   res.send({ success: true });
+});
+
+/* === PLAYLIST SYSTEM === */
+const PLAYLIST_FILE = path.join(NOTES_DIR, 'playlist.json');
+
+// Ensure playlist file
+if (!fs.existsSync(PLAYLIST_FILE)) {
+  fs.writeFileSync(PLAYLIST_FILE, JSON.stringify([]));
+}
+
+// Helpers
+function getPlaylist() {
+  try {
+    return JSON.parse(fs.readFileSync(PLAYLIST_FILE, 'utf8'));
+  } catch (e) { return []; }
+}
+function savePlaylist(list) {
+  fs.writeFileSync(PLAYLIST_FILE, JSON.stringify(list, null, 2));
+}
+
+// Routes
+app.get('/api/playlist', (req, res) => {
+  res.json(getPlaylist());
+});
+
+app.post('/api/playlist', (req, res) => {
+  const item = req.body; // { id, title, url, color, duration }
+  const list = getPlaylist();
+
+  if (!item.url) return res.status(400).json({ error: 'URL required' });
+
+  // Create new item
+  item.id = Date.now().toString();
+  item.title = item.title || 'Unknown Track';
+  // Assign random color if missing
+  if (!item.color) {
+    const colors = ['#cc0000', '#0044cc', '#00cc00', '#cc00cc', '#cccc00'];
+    item.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  list.push(item);
+  savePlaylist(list);
+  res.json({ success: true, playlist: list });
+});
+
+app.delete('/api/playlist/:id', (req, res) => {
+  let list = getPlaylist();
+  list = list.filter(n => n.id !== req.params.id);
+  savePlaylist(list);
+  res.json({ success: true, playlist: list });
 });
 
 app.get('/api/logs', async (req, res) => {
@@ -1925,6 +1990,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.44]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.45]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
