@@ -15,5 +15,9 @@ RUN mkdir -p data
 # Expose port
 EXPOSE 3030
 
-# Start server
-CMD ["node", "server.js"]
+# Entrypoint script
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Start server via entrypoint
+ENTRYPOINT ["./entrypoint.sh"]
