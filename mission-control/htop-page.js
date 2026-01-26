@@ -174,10 +174,10 @@ module.exports = function generateHtopPage() {
           function ansiToHtml(text) {
             if (!text) return "";
             
-            // 1. Strip character set sequences like \x1b(B
-            text = text.replace(/\x1b\(B/g, '');
-            
-            // 2. Strip non-color terminal sequences (positioning, etc.)
+            // 1. Strip character set sequences like \x1b(B or \x1b(0
+            text = text.replace(/\x1b\([B0]/g, '');
+
+            // 2. Strip non-color terminal sequences
             // We strip anything that isn't a color (m) sequence
             text = text.replace(/\x1b\[[0-9;?]*[A-ln-z]/g, '');
 
