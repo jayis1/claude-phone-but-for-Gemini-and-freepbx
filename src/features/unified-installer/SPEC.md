@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform Gemini Phone from a multi-component, manual-setup project into a single-command installable CLI tool. Users install via `curl | bash`, run an interactive setup wizard to configure API keys and 3CX credentials, then start everything with `gemini-phone start`. Compatible with Mac and Linux.
+Transform Gemini Phone from a multi-component, manual-setup project into a single-command installable CLI tool. Users install via `curl | bash`, run an interactive setup wizard to configure API keys and FreePBX credentials, then start everything with `gemini-phone start`. Compatible with Mac and Linux.
 
 ## Problem Statement
 
@@ -17,13 +17,13 @@ This complexity creates a high barrier to entry for homelabbers and developers w
 
 ## Target Users
 
-**Primary:** Developers and homelabbers comfortable with CLI tools and Docker, but wanting a streamlined setup experience. Technical enough to configure 3CX, but shouldn't need to understand Gemini Phone's internals.
+**Primary:** Developers and homelabbers comfortable with CLI tools and Docker, but wanting a streamlined setup experience. Technical enough to configure FreePBX, but shouldn't need to understand Gemini Phone's internals.
 
 ## User Stories
 
 1. **As a developer**, I want to install Gemini Phone with a single command, so I can get started quickly without cloning repos or managing dependencies.
 
-2. **As a homelabber**, I want an interactive setup wizard that guides me through entering my API keys and 3CX config, so I don't have to hunt through documentation.
+2. **As a homelabber**, I want an interactive setup wizard that guides me through entering my API keys and FreePBX config, so I don't have to hunt through documentation.
 
 3. **As a user**, I want to validate my configuration before going live, so I know everything is connected properly.
 
@@ -42,7 +42,7 @@ This complexity creates a high barrier to entry for homelabbers and developers w
 - [x] **AC-1**: Running `curl -fsSL https://install.gemini-phone.com | bash` (or similar) downloads and installs the `gemini-phone` CLI globally
 - [x] **AC-2**: Install script detects OS (Mac/Linux) and installs appropriate binaries
 - [x] **AC-3**: Install script verifies Docker is installed and running, exits with helpful message if not
-- [x] **AC-4**: Install script verifies Claude Code CLI is installed, provides install instructions if missing
+- [x] **AC-4**: Install script verifies Gemini Code CLI is installed, provides install instructions if missing
 - [x] **AC-5**: After install, `gemini-phone` command is available in PATH
 
 ### Setup Wizard
@@ -50,7 +50,7 @@ This complexity creates a high barrier to entry for homelabbers and developers w
 - [x] **AC-6**: `gemini-phone setup` launches interactive wizard
 - [x] **AC-7**: Wizard prompts for ElevenLabs API key with validation (test API call)
 - [x] **AC-8**: Wizard prompts for OpenAI API key with validation (test API call)
-- [x] **AC-9**: Wizard prompts for 3CX configuration: SIP domain, registrar IP, extension, auth ID, password
+- [x] **AC-9**: Wizard prompts for FreePBX configuration: SIP domain, registrar IP, extension, auth ID, password
 - [x] **AC-10**: Wizard prompts for first device setup: name, voice ID, system prompt
 - [x] **AC-11**: Wizard saves configuration securely (appropriate file permissions)
 - [x] **AC-12**: Wizard can be re-run to update configuration
@@ -101,8 +101,8 @@ This complexity creates a high barrier to entry for homelabbers and developers w
 
 - Web-based admin UI
 - Windows support
-- Automatic 3CX PBX configuration
-- Multiple simultaneous Claude sessions per device
+- Automatic FreePBX PBX configuration
+- Multiple simultaneous Gemini sessions per device
 - Call recording in this feature (future enhancement)
 
 ## Decisions (Resolved)
@@ -124,4 +124,4 @@ This complexity creates a high barrier to entry for homelabbers and developers w
 - Node.js runtime
 - ElevenLabs account (user provides key)
 - OpenAI account (user provides key)
-- 3CX PBX (user configures separately)
+- FreePBX PBX (user configures separately)

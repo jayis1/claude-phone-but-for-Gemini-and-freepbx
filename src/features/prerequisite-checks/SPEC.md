@@ -35,7 +35,7 @@ Detect and provide platform-specific instructions/commands for:
 ## Acceptance Criteria
 
 ### AC1: Pre-flight Check Runs First
-- [ ] `claude-phone setup` runs prerequisite checks BEFORE any prompts
+- [ ] `gemini-phone setup` runs prerequisite checks BEFORE any prompts
 - [ ] All checks complete before user sees first question
 - [ ] Progress shown: "Checking prerequisites..."
 

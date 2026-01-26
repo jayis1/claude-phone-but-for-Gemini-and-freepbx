@@ -4,17 +4,17 @@
               } catch(e) {}
            }
  
-+          // 3CX PBX connectivity check
-+          async function update3CXStatus() {
++          // PBX connectivity check
++          async function updatePbxStatus() {
 +            try {
 +              const res = await fetch('/api/proxy/voice/health');
 +              if(res.ok) {
-+                document.getElementById('dot-3cx').className = 'service-dot online';
++                document.getElementById('dot-pbx').className = 'service-dot online';
 +              } else {
 +                throw new Error('Voice App unhealthy');
 +              }
 +            } catch(e) {
-+              document.getElementById('dot-3cx').className = 'service-dot offline';
++              document.getElementById('dot-pbx').className = 'service-dot offline';
 +            }
 +          }
 +

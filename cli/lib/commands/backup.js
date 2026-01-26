@@ -24,7 +24,7 @@ export async function backupCommand() {
   // Check if config exists
   if (!fs.existsSync(configPath)) {
     console.log(chalk.yellow('⚠️  No configuration found to backup.'));
-    console.log(chalk.gray('Run "claude-phone setup" to create configuration.\n'));
+    console.log(chalk.gray('Run "gemini-phone setup" to create configuration.\n'));
     return;
   }
 

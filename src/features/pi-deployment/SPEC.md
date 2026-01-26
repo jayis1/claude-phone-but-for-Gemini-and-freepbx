@@ -17,7 +17,7 @@ Deploy Gemini Phone's voice-app (drachtio + FreeSWITCH) on a Raspberry Pi while 
 
 ### Secondary
 
-- As a **user with existing 3CX SBC on Pi**, I want to add Gemini Phone containers alongside my SBC so I don't need additional hardware
+- As a **user with existing FreePBX SBC on Pi**, I want to add Gemini Phone containers alongside my SBC so I don't need additional hardware
 - As a **user with a fresh Pi**, I want a guided setup that installs everything I need from scratch
 
 ## Acceptance Criteria
@@ -28,12 +28,12 @@ Must be specific, testable conditions. Each becomes a test case.
 
 - [ ] **AC1:** `<gemini-phone> setup` detects Raspberry Pi OS (arm64) and enters Pi-specific setup flow
 - [ ] **AC2:** Setup wizard asks for Mac's IP address where gemini-api-server will run
-- [ ] **AC3:** Setup wizard detects if 3CX SBC is already installed (port 5060 in use) and adapts accordingly
-- [ ] **AC4:** If 3CX SBC detected: Configure drachtio on port 5070 automatically
-- [ ] **AC5:** If no 3CX SBC: Configure drachtio on standard port 5060
+- [ ] **AC3:** Setup wizard detects if FreePBX SBC is already installed (port 5060 in use) and adapts accordingly
+- [ ] **AC4:** If FreePBX SBC detected: Configure drachtio on port 5070 automatically
+- [ ] **AC5:** If no FreePBX SBC: Configure drachtio on standard port 5060
 - [ ] **AC6:** Generated `.env` file includes `GEMINI_API_URL=http://[mac-ip]:3333`
 - [ ] **AC7:** Docker compose starts successfully on Pi with ARM64 images
-- [ ] **AC8:** voice-app registers with 3CX PBX from the Pi's actual LAN IP
+- [ ] **AC8:** voice-app registers with FreePBX PBX from the Pi's actual LAN IP
 - [ ] **AC9:** Inbound calls to configured extension reach voice-app on Pi
 - [ ] **AC10:** voice-app successfully queries gemini-api-server on Mac over LAN
 - [ ] **AC11:** Full conversation loop works: call → speech → transcription → Gemini → TTS → response
@@ -61,7 +61,7 @@ Must be specific, testable conditions. Each becomes a test case.
 
 ### Error States
 
-- [ ] **AC24:** If 3CX SBC port detection fails, prompt user to manually confirm port availability
+- [ ] **AC24:** If FreePBX SBC port detection fails, prompt user to manually confirm port availability
 - [ ] **AC25:** If drachtio fails to start (port conflict), provide specific remediation steps
 - [ ] **AC26:** If Mac is unreachable during a call, voice-app plays error message and doesn't crash
 - [ ] **AC27:** Timeout on gemini-api-server connection shows helpful message (check Mac firewall, IP, etc.)
@@ -71,8 +71,8 @@ Must be specific, testable conditions. Each becomes a test case.
 ### Technical
 
 - **Single Pi architecture only** - Two-Pi option deferred to future enhancement
-- **Drachtio port:** 5070 when 3CX SBC present, 5060 otherwise  
-- **FreeSWITCH port:** 5080 (no conflict with 3CX SBC)
+- **Drachtio port:** 5070 when FreePBX SBC present, 5060 otherwise  
+- **FreeSWITCH port:** 5080 (no conflict with FreePBX SBC)
 - **RTP ports:** 16384-16484/udp (must be open on Pi firewall)
 - **Docker images:** Must use ARM64-compatible drachtio/freeswitch images
 - **Pi model:** Raspberry Pi 4 or 5 only (arm64) - Pi 3 not supported
@@ -95,7 +95,7 @@ Must be specific, testable conditions. Each becomes a test case.
 Explicitly state what this feature does NOT do to prevent scope creep.
 
 - **Two-Pi architecture** - Future enhancement, not v1
-- **3CX SBC installation** - User installs 3CX SBC separately; we just detect it
+- **FreePBX SBC installation** - User installs FreePBX SBC separately; we just detect it
 - **Docker installation** - User installs Docker separately; we check and provide link but don't auto-install
 - **Raspberry Pi 3 support** - arm64 only (Pi 4/5); armhf not supported
 - **Remote/WAN deployment** - Only LAN connectivity supported; no cloud relay
@@ -106,7 +106,7 @@ Explicitly state what this feature does NOT do to prevent scope creep.
 
 All resolved.
 
-- [x] ~~Can 3CX SBC coexist with Docker containers on same Pi?~~ **YES** - Research confirmed script-based install, port 5060 conflict solved by using 5070
+- [x] ~~Can FreePBX SBC coexist with Docker containers on same Pi?~~ **YES** - Research confirmed script-based install, port 5060 conflict solved by using 5070
 - [x] ~~Should `gemini-phone setup` on Pi also offer to install Docker if not present?~~ **NO** - Flag as prerequisite, provide install link, but don't auto-install (avoid stale installation scripts)
 - [x] ~~Should we support Raspberry Pi 3 (armhf) or only Pi 4/5 (arm64)?~~ **Pi 4/5 only** - arm64 architecture only
 - [x] ~~Should Mac-side have a matching `gemini-phone api-server` command instead of manual `node server.js`?~~ **YES** - Add `gemini-phone api-server` command for Mac

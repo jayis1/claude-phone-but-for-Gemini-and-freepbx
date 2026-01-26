@@ -11,7 +11,7 @@
 
 ### Architecture Decision
 
-Modify the existing setup.js to consolidate the SIP configuration step. Instead of two questions (domain + registrar IP), we ask for 3CX FQDN only and derive registrar from it. Add a new SBC Auth Key field for documentation purposes.
+Modify the existing setup.js to consolidate the SIP configuration step. Instead of two questions (domain + registrar IP), we ask for FreePBX FQDN only and derive registrar from it. Add a new SBC Auth Key field for documentation purposes.
 
 ### Key Technical Choices
 
@@ -48,7 +48,7 @@ Modify the existing setup.js to consolidate the SIP configuration step. Instead 
 // ~/.gemini-phone/config.json
 {
   "sip": {
-    "domain": "mycompany.3cx.us",      // 3CX FQDN (existing)
+    "domain": "mycompany.3cx.us",      // FreePBX FQDN (existing)
     "registrar": "mycompany.3cx.us",   // Set to same as domain (changed)
     "sbcAuthKey": "abc123...",         // NEW - SBC Auth Key for reference
     "transport": "udp"                  // (existing)
@@ -72,7 +72,7 @@ Existing configs continue to work. On next `setup`, registrar is set to domain a
 // ADD: setupSBC() single question flow
 
 async function setupSBC(config) {
-  // Step 1: 3CX FQDN
+  // Step 1: FreePBX FQDN
   // Step 2: SBC Auth Key (informational)
   // Auto-set: registrar = domain
   return config;
@@ -108,7 +108,7 @@ This is a CLI tool without a formal test suite. Verification is manual:
 
 ### What NOT to Test
 
-- 3CX SBC provisioning (manual, out of scope)
+- FreePBX SBC provisioning (manual, out of scope)
 - ElevenLabs/OpenAI API validation (unchanged)
 
 ## Implementation Notes
@@ -126,17 +126,17 @@ This is a CLI tool without a formal test suite. Verification is manual:
 **BEFORE (Current):**
 ```
 ☎️  SIP Configuration
-  3CX domain (e.g., your-3cx.3cx.us): ____
-  3CX registrar IP (e.g., 192.168.1.100): ____  ← CONFUSING
+  FreePBX domain (e.g., your-3cx.3cx.us): ____
+  FreePBX registrar IP (e.g., 192.168.1.100): ____  ← CONFUSING
 ```
 
 **AFTER (Simplified):**
 ```
-📡 3CX SBC Connection
-  ℹ️  Pre-requisite: Create SBC in 3CX Admin → Settings → SBC
+📡 FreePBX SBC Connection
+  ℹ️  Pre-requisite: Create SBC in FreePBX Admin → Settings → SBC
 
-  3CX FQDN (e.g., mycompany.3cx.us): ____
-  SBC Auth Key ID (from 3CX admin): ____
+  FreePBX FQDN (e.g., mycompany.3cx.us): ____
+  SBC Auth Key ID (from FreePBX admin): ____
 ```
 
 ### Gotchas

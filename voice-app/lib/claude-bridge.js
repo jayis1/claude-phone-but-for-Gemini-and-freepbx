@@ -1,27 +1,27 @@
 /**
- * Claude HTTP API Bridge
- * HTTP client for Claude API server with session management
+ * Gemini HTTP API Bridge
+ * HTTP client for Gemini API server with session management
  */
 
 const axios = require('axios');
 
-const CLAUDE_API_URL = process.env.CLAUDE_API_URL || 'http://localhost:3333';
+const GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:3333';
 
 /**
- * Query Claude via HTTP API with session support
- * @param {string} prompt - The prompt/question to send to Claude
+ * Query Gemini via HTTP API with session support
+ * @param {string} prompt - The prompt/question to send to Gemini
  * @param {Object} options - Options including callId for session management
  * @param {string} options.callId - Call UUID for maintaining conversation context
  * @param {string} options.devicePrompt - Device-specific personality prompt
  * @param {number} options.timeout - Timeout in seconds (default: 30, AC27)
- * @returns {Promise<string>} Claude's response
+ * @returns {Promise<string>} Gemini's response
  */
 async function query(prompt, options = {}) {
   const { callId, devicePrompt, timeout = 30 } = options; // AC27: Default 30s timeout
   const timestamp = new Date().toISOString();
 
   try {
-    console.log(`[${timestamp}] CLAUDE Sending query to ${CLAUDE_API_URL}...`);
+    console.log(`[${timestamp}] CLAUDE Sending query to ${GEMINI_API_URL}...`);
     if (callId) {
       console.log(`[${timestamp}] CLAUDE Session: ${callId}`);
     }
@@ -30,7 +30,7 @@ async function query(prompt, options = {}) {
     }
 
     const response = await axios.post(
-      `${CLAUDE_API_URL}/ask`,
+      `${GEMINI_API_URL}/ask`,
       { prompt, callId, devicePrompt },
       {
         timeout: timeout * 1000,
@@ -39,7 +39,7 @@ async function query(prompt, options = {}) {
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Claude API returned failure');
+      throw new Error(response.data.error || 'Gemini API returned failure');
     }
 
     console.log(`[${timestamp}] CLAUDE Response received (${response.data.duration_ms}ms)`);
@@ -68,7 +68,7 @@ async function query(prompt, options = {}) {
 }
 
 /**
- * End a Claude session when a call ends
+ * End a Gemini session when a call ends
  * @param {string} callId - The call UUID to end the session for
  */
 async function endSession(callId) {
@@ -78,7 +78,7 @@ async function endSession(callId) {
   
   try {
     await axios.post(
-      `${CLAUDE_API_URL}/end-session`,
+      `${GEMINI_API_URL}/end-session`,
       { callId },
       { 
         timeout: 5000,
@@ -93,12 +93,12 @@ async function endSession(callId) {
 }
 
 /**
- * Check if Claude API is available
+ * Check if Gemini API is available
  * @returns {Promise<boolean>} True if API is reachable
  */
 async function isAvailable() {
   try {
-    await axios.get(`${CLAUDE_API_URL}/health`, { timeout: 5000 });
+    await axios.get(`${GEMINI_API_URL}/health`, { timeout: 5000 });
     return true;
   } catch {
     return false;

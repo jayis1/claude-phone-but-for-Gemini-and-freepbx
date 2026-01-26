@@ -1,10 +1,10 @@
-# GEMINI Claude Phone
+# Gemini Phone
 
-Voice interface for Gemini Code via SIP/3CX. Call your AI, and your AI can call you.
+Voice interface for Gemini Code via SIP/FreePBX. Call your AI, and your AI can call you.
 
 ## Project Overview
 
-Claude Phone gives your Gemini Code installation a phone number through 3CX PBX integration:
+Gemini Phone gives your Gemini Code installation a phone number through FreePBX PBX integration:
 
 - **Inbound**: Call an extension and talk to Claude - run commands, check status, ask questions
 - **Outbound**: Your server can call YOU with alerts, then have a conversation about what to do
@@ -19,7 +19,7 @@ Claude Phone gives your Gemini Code installation a phone number through 3CX PBX 
 | STT | OpenAI Whisper API |
 | TTS | ElevenLabs API |
 | AI Backend | Gemini CLI (via HTTP wrapper) |
-| PBX | 3CX (any SIP-compatible works) |
+| PBX | FreePBX (any SIP-compatible works) |
 | Container | Docker Compose |
 
 ## Architecture
@@ -30,7 +30,7 @@ Claude Phone gives your Gemini Code installation a phone number through 3CX PBX 
 │      │                                                       │
 │      ↓ Call extension 9000                                  │
 │  ┌─────────────┐                                            │
-│  │     3CX     │  ← PBX routes the call                    │
+│  │   FreePBX   │  ← PBX routes the call                    │
 │  └──────┬──────┘                                            │
 │         │ SIP                                               │
 │         ↓                                                    │
@@ -221,7 +221,7 @@ npm run lint:fix      # Auto-fix issues
 3. **Host networking mode** - Required for FreeSWITCH RTP
 4. **Separate gemini-api-server** - Runs where Gemini CLI is installed
 5. **Session-per-call** - Each call gets Gemini session for multi-turn context
-6. **RTP ports 30000-30100** - Avoids conflict with 3CX SBC (uses 20000-20099)
+6. **RTP ports 30000-30100** - Avoids conflict with standard PBX ports (e.g. 20000-20099)
 7. **Config in ~/.gemini-phone** - User config separate from codebase
 
 ## Environment Variables
@@ -234,7 +234,7 @@ See `.env.example` for all variables. Key ones:
 | `GEMINI_API_URL` | URL to gemini-api-server |
 | `ELEVENLABS_API_KEY` | TTS API key |
 | `OPENAI_API_KEY` | Whisper STT API key |
-| `SIP_DOMAIN` | 3CX server FQDN |
+| `SIP_DOMAIN` | FreePBX server FQDN |
 | `SIP_REGISTRAR` | SIP registrar address |
 
 ## Documentation

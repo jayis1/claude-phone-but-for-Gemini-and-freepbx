@@ -49,8 +49,8 @@
 - [x] **Implement**: ElevenLabs validator (list voices endpoint) [AC-7]
 - [x] **Test**: OpenAI key validation makes API call
 - [x] **Implement**: OpenAI validator (models endpoint) [AC-8]
-- [x] **Test**: Setup prompts for all required 3CX fields
-- [x] **Implement**: 3CX credential prompts [AC-9]
+- [x] **Test**: Setup prompts for all required FreePBX fields
+- [x] **Implement**: FreePBX credential prompts [AC-9]
 - [x] **Test**: Setup prompts for first device
 - [x] **Implement**: Device setup prompts (name, extension, voice, prompt) [AC-10]
 - [x] **Test**: Setup writes valid config.json
@@ -219,7 +219,7 @@
 ### 4.1 Backup Command
 
 - [x] **Implement**: `backup` command creates timestamped backup
-- [x] **Implement**: Backups stored in `~/.claude-phone/backups/`
+- [x] **Implement**: Backups stored in `~/.gemini-phone/backups/`
 - [x] **Implement**: Shows backup location and file size
 
 ### 4.2 Restore Command
@@ -291,7 +291,7 @@ All must pass before shipping.
 
 **Final Command Set:**
 ```
-claude-phone
+gemini-phone
 ├── setup           # Interactive setup wizard
 ├── start           # Start all services
 ├── stop            # Stop all services
@@ -329,7 +329,7 @@ claude-phone
 | AC-6 | Setup wizard launches | ✅ |
 | AC-7 | ElevenLabs validation | ✅ |
 | AC-8 | OpenAI validation | ✅ |
-| AC-9 | 3CX config prompts | ✅ |
+| AC-9 | FreePBX config prompts | ✅ |
 | AC-10 | Device setup prompts | ✅ |
 | AC-11 | Secure config save | ✅ |
 | AC-12 | Reconfigure support | ✅ |

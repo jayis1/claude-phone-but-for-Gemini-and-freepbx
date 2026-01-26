@@ -96,8 +96,8 @@ export function generateDockerCompose(config) {
     };
   }
 
-  // Determine drachtio port from config (5070 when 3CX SBC detected, 5060 otherwise)
-  const drachtioPort = config.deployment && config.deployment.pi && config.deployment.pi.drachtioPort
+  // Determine drachtio port from config (5070 when SIP conflict detected, 5060 otherwise)
+  const drachtioPort = config.deployment && config.deployment.pi && (config.deployment.pi.sipConflict || config.deployment.pi.has3cxSbc)
     ? config.deployment.pi.drachtioPort
     : 5060;
 
@@ -107,12 +107,12 @@ export function generateDockerCompose(config) {
   const freeswitchImage = 'drachtio/drachtio-freeswitch-mrf:latest';
   const platformLine = isPiMode ? '\n    platform: linux/arm64' : '';
 
-  return `# CRITICAL: All containers must use network_mode: host
-# Docker bridge networking causes FreeSWITCH to advertise internal IPs
-# in SDP, making RTP unreachable from external callers.
+  const installationType = config.installationType || 'both';
+  const services = [];
 
-services:
-  drachtio:
+  // Voice services (drachtio, freeswitch, voice-app)
+  if (installationType === 'voice-server' || installationType === 'both') {
+    services.push(`  drachtio:
     image: ${drachtioImage}${platformLine}
     container_name: drachtio
     restart: unless-stopped
@@ -134,7 +134,7 @@ services:
       --sip-port 5080
       --rtp-range-start 30000
       --rtp-range-end 30100
-    # RTP ports 30000-30100 avoid conflict with 3CX SBC (uses 20000-20099)
+    # RTP ports 30000-30100 avoid conflict with standard PBX systems (e.g. 20000-20099)
     environment:
       - EXTERNAL_IP=\${EXTERNAL_IP:-127.0.0.1}
 
@@ -150,7 +150,18 @@ services:
       - ${config.paths.voiceApp}/config:/app/config
     depends_on:
       - drachtio
-      - freeswitch
+      - freeswitch`);
+  }
+
+  // Gemini API server is now RUN LOCALLY, not in Docker
+  // It is removed from here to ensure it's not launched by Docker Compose
+
+  return `# CRITICAL: All containers must use network_mode: host
+# Docker bridge networking causes FreeSWITCH to advertise internal IPs
+# in SDP, making RTP unreachable from external callers.
+
+services:
+${services.join('\n\n')}
 `;
 }
 
@@ -198,7 +209,7 @@ export function generateEnvFile(config) {
     'DRACHTIO_HOST=127.0.0.1',
     'DRACHTIO_PORT=9022',
     `DRACHTIO_SECRET=${config.secrets.drachtio}`,
-    // SIP port for Contact header (5070 when 3CX SBC is present, 5060 otherwise)
+    // SIP port for Contact header (5070 when SIP conflict is present, 5060 otherwise)
     `DRACHTIO_SIP_PORT=${config.deployment?.pi?.drachtioPort || 5060}`,
     '',
     '# FreeSWITCH Configuration',
@@ -207,7 +218,7 @@ export function generateEnvFile(config) {
     // Note: This is the default ESL password for drachtio/drachtio-freeswitch-mrf
     'FREESWITCH_SECRET=JambonzR0ck$',
     '',
-    '# 3CX / SIP Configuration',
+    '# FreePBX / SIP Configuration',
     `SIP_DOMAIN=${config.sip.domain}`,
     `SIP_REGISTRAR=${config.sip.registrar}`,
     '',

@@ -32,7 +32,7 @@ Extend the existing CLI with **platform detection** and **conditional setup flow
 │  Setup       Flow                                               │
 │     │           │                                                │
 │     │           ├── Check Docker prerequisite                   │
-│     │           ├── Detect 3CX SBC (port 5060)                  │
+│     │           ├── Detect FreePBX SBC (port 5060)                  │
 │     │           ├── Ask for Mac IP                              │
 │     │           ├── Configure drachtio port (5060 or 5070)      │
 │     │           └── Generate split-architecture config           │
@@ -49,7 +49,7 @@ Extend the existing CLI with **platform detection** and **conditional setup flow
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Platform detection | `os.arch()` + `/proc/device-tree/model` | arm64 + Pi model string = definitive Pi detection |
-| 3CX SBC detection | `net.connect()` to port 5060 | Non-invasive check if port is already bound |
+| FreePBX SBC detection | `net.connect()` to port 5060 | Non-invasive check if port is already bound |
 | Docker check | `which docker && docker compose version` | Standard availability check |
 | Config schema | Extend existing with `deployment.mode` field | Backward compatible, single config format |
 | Mac command | New `api-server` subcommand | Fits existing commander.js pattern |
@@ -74,7 +74,7 @@ Extend the existing CLI with **platform detection** and **conditional setup flow
 
 ### Blockers
 
-- [x] Research confirms 3CX SBC coexistence is possible
+- [x] Research confirms FreePBX SBC coexistence is possible
 - [ ] ARM64 Docker images verified on actual Pi hardware (testing phase)
 
 ---
@@ -96,7 +96,7 @@ Extend the existing CLI with **platform detection** and **conditional setup flow
 
     // Pi-specific (only when mode === 'pi-split')
     pi: {
-      sbcDetected: boolean,      // 3CX SBC found on port 5060
+      sbcDetected: boolean,      // FreePBX SBC found on port 5060
       drachtioPPort: 5060 | 5070, // 5070 if SBC detected
       macApiUrl: string          // e.g., 'http://192.168.1.100:3333'
     }
@@ -218,7 +218,7 @@ export async function checkPiPrerequisites();
 export async function checkPort(port);
 
 /**
- * Detect if 3CX SBC is running (port 5060)
+ * Detect if FreePBX SBC is running (port 5060)
  * @returns {Promise<boolean>}
  */
 export async function detect3cxSbc();
@@ -315,16 +315,16 @@ Test components working together.
 
 - Actual Docker container behavior (covered by e2e)
 - Actual Pi hardware detection (manual testing)
-- 3CX SBC interaction (manual testing)
+- FreePBX SBC interaction (manual testing)
 
 ### Manual Testing Checklist
 
 - [ ] Run `<gemini-phone> setup` on actual Pi 4/5
-- [ ] Verify 3CX SBC detection when SBC is running
+- [ ] Verify FreePBX SBC detection when SBC is running
 - [ ] Verify drachtio starts on port 5070 with SBC
 - [ ] Verify drachtio starts on port 5060 without SBC
 - [ ] Test `<gemini-phone> api-server` on Mac
-- [ ] Test full call flow: Pi → Mac → Claude → response
+- [ ] Test full call flow: Pi → Mac → Gemini → response
 
 ---
 
@@ -333,7 +333,7 @@ Test components working together.
 ### Gotchas
 
 1. **Pi detection via /proc/device-tree/model** - File may not exist on non-Pi Linux. Use try/catch.
-2. **Port 5060 check timing** - 3CX SBC may not be running during setup. Warn user if port appears free but they claim SBC is installed.
+2. **Port 5060 check timing** - FreePBX SBC may not be running during setup. Warn user if port appears free but they claim SBC is installed.
 3. **Docker socket permissions** - On Pi, user may need to be in `docker` group. Check and advise.
 4. **IP validation** - Mac IP could change. Suggest static IP or hostname if available.
 

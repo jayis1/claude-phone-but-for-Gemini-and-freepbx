@@ -17,7 +17,7 @@ Add installation type selection to `<gemini-phone> setup` that customizes the se
 │ • drachtio      │ • claude-api-srv  │ • Docker + API server │
 │ • FreeSWITCH    │ • Port config     │ • Full setup flow     │
 │ • voice-app     │                   │                       │
-│ • SIP/3CX config│                   │                       │
+│ • SIP/FreePBX config│                   │                       │
 │ • API keys      │                   │                       │
 ├─────────────────┼───────────────────┼───────────────────────┤
 │ Prereqs:        │ Prereqs:          │ Prereqs:              │
@@ -92,7 +92,7 @@ async function promptInstallationType(currentType = 'both') {
         value: 'voice-server'
       },
       {
-        name: 'API Server - Claude Code wrapper, minimal setup',
+        name: 'API Server - Gemini Code wrapper, minimal setup',
         value: 'api-server'
       },
       {

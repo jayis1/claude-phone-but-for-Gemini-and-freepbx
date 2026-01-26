@@ -72,7 +72,7 @@ async function startApiServer(config) {
 
   // Verify path exists
   if (!fs.existsSync(config.paths.geminiApiServer)) {
-    console.log(chalk.red(`✗ G emini API server not found at: ${config.paths.geminiApiServer}`));
+    console.log(chalk.red(`✗ Gemini API server not found at: ${config.paths.geminiApiServer}`));
     console.log(chalk.gray('  Update paths in configuration\n'));
     process.exit(1);
   }
@@ -175,10 +175,10 @@ async function startVoiceServer(config, isPiMode) {
     if (error.message.includes('port') || error.message.includes('address already in use')) {
       console.log(chalk.yellow('\n⚠️  Port conflict detected\n'));
       console.log(chalk.gray('Possible causes:'));
-      console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
+      console.log(chalk.gray('  • Another PBX/SIP service is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
+      console.log(chalk.gray('  1. If a PBX is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }
@@ -298,10 +298,10 @@ async function startBoth(config, isPiMode) {
     if (error.message.includes('port') || error.message.includes('address already in use')) {
       console.log(chalk.yellow('\n⚠️  Port conflict detected\n'));
       console.log(chalk.gray('Possible causes:'));
-      console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
+      console.log(chalk.gray('  • Another PBX/SIP service is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
+      console.log(chalk.gray('  1. If a PBX is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }
@@ -371,7 +371,7 @@ async function startBoth(config, isPiMode) {
     }
   }
 
-  // Start gemini-api-server
+  // Start gemini-api-server last
   if (!isPiMode) {
     spinner.start('Starting Gemini API server...');
     try {
@@ -390,7 +390,7 @@ async function startBoth(config, isPiMode) {
   // Success
   console.log(chalk.bold.green('\n✓ All services running!\n'));
   console.log(chalk.gray('Services:'));
-  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch`));
+  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app`));
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {

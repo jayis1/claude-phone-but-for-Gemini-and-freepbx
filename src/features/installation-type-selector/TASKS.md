@@ -53,7 +53,7 @@
   - [ ] Return updated config
 
 - [ ] **4.3** Create `setupVoiceServer(config)` function (AC2)
-  - [ ] Call `setupSBC()` for 3CX config
+  - [ ] Call `setupSBC()` for FreePBX config
   - [ ] Ask for API server IP address
   - [ ] Ask for API server port
   - [ ] Call `setupApiKeys()` for ElevenLabs, OpenAI

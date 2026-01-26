@@ -43,8 +43,8 @@ export async function configShowCommand() {
   console.log(chalk.gray(`  OpenAI API Key: ${redactValue(config.api?.openai?.apiKey)}`));
   console.log(chalk.gray(`  ElevenLabs API Key: ${redactValue(config.api?.elevenlabs?.apiKey)}`));
 
-  // 3CX Configuration
-  console.log(chalk.bold('\n3CX Configuration:'));
+  // FreePBX / SIP Configuration
+  console.log(chalk.bold('\nFreePBX Configuration:'));
   console.log(chalk.gray(`  SIP Domain: ${config.sip.domain}`));
   console.log(chalk.gray(`  SIP Registrar: ${config.sip.registrar}`));
 

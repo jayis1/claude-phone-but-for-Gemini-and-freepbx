@@ -8,9 +8,9 @@ As a user installing <gemini-phone>, I want to specify whether I'm setting up a 
 
 ## Background
 
-Claude Phone supports split-mode deployment:
+Gemini Phone supports split-mode deployment:
 - **Voice Server** runs on Pi/Linux with Docker (drachtio, FreeSWITCH, voice-app)
-- **API Server** runs on a machine with Claude Code CLI (wraps Claude for voice queries)
+- **API Server** runs on a machine with Gemini Code CLI (wraps Gemini for voice queries)
 - **Both** runs everything on one machine (all-in-one deployment)
 
 Currently, `<gemini-phone> setup` always asks all questions, which is confusing when:
@@ -24,8 +24,8 @@ Currently, `<gemini-phone> setup` always asks all questions, which is confusing 
 
 | Type | What it installs | Questions to ask |
 |------|------------------|------------------|
-| **Voice Server** | Docker containers (drachtio, FreeSWITCH, voice-app) | 3CX FQDN, API server IP, ElevenLabs key, OpenAI key, device config |
-| **API Server** | claude-api-server process | Claude API port (default 3333), that's it |
+| **Voice Server** | Docker containers (drachtio, FreeSWITCH, voice-app) | FreePBX FQDN, API server IP, ElevenLabs key, OpenAI key, device config |
+| **API Server** | claude-api-server process | Gemini API port (default 3333), that's it |
 | **Both** | Everything | All questions (current behavior) |
 
 ### Prerequisite Requirements by Type
@@ -46,7 +46,7 @@ Currently, `<gemini-phone> setup` always asks all questions, which is confusing 
 
 ### AC2: Voice Server Flow
 - [ ] Skip API server config questions
-- [ ] Ask: 3CX FQDN (SBC mode)
+- [ ] Ask: FreePBX FQDN (SBC mode)
 - [ ] Ask: API server IP address
 - [ ] Ask: ElevenLabs API key
 - [ ] Ask: OpenAI API key
@@ -55,7 +55,7 @@ Currently, `<gemini-phone> setup` always asks all questions, which is confusing 
 - [ ] Don't create/manage claude-api-server
 
 ### AC3: API Server Flow
-- [ ] Skip SIP/3CX configuration
+- [ ] Skip SIP/FreePBX configuration
 - [ ] Skip ElevenLabs/OpenAI keys
 - [ ] Skip device configuration
 - [ ] Ask: API server port (default 3333)
@@ -100,7 +100,7 @@ Currently, `<gemini-phone> setup` always asks all questions, which is confusing 
 
 ### Fresh Install
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
   ✓ Node.js v20.11.0 (requires ≥18)
@@ -119,7 +119,7 @@ You selected: Voice Server
   ✓ Disk space 45GB free (requires ≥2GB)
 
 ☎️ SIP Configuration (Voice Server)
-? 3CX FQDN: mycompany.3cx.us
+? FreePBX FQDN: mycompany.3cx.us
 
 🖥️ API Server Connection
 ? API Server IP address: 10.77.14.30
@@ -138,7 +138,7 @@ $ gemini-phone setup
 📦 Installation Type
 ? What are you installing?
     Voice Server (Pi/Linux) - Handles calls, needs Docker
-  ❯ API Server - Claude Code wrapper, minimal setup
+  ❯ API Server - Gemini Code wrapper, minimal setup
     Both (all-in-one) - Full stack on one machine
 
 You selected: API Server

@@ -2,8 +2,8 @@
   "9000": {
     "name": "Assistant",
     "extension": "9000",
-    "authId": "your-3cx-auth-id",
-    "password": "your-3cx-password",
+    "authId": "your-pbx-auth-id",
+    "password": "your-pbx-password",
     "voiceId": "your-elevenlabs-voice-id",
     "prompt": "You are a helpful AI assistant. Keep voice responses under 40 words."
   },

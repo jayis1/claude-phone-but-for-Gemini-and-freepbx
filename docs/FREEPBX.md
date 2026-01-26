@@ -9,7 +9,7 @@ Gemini Phone is fully compatible with FreePBX, Asterisk, and other standard SIP 
 1. Log in to FreePBX Administration.
 2. Go to **Applications** > **Extensions**.
 3. Click **Add Extension** > **Add New PJSIP Extension**.
-4. **User Extension**: `9000` (or your preferred number).
+4. **User Extension**: `8000` (or your preferred number).
 5. **Display Name**: `Gemini AI`.
 6. **Secret**: Generate a strong password (e.g., `SuperSecret123`).
 7. Click **Submit** and **Apply Config**.
@@ -22,8 +22,8 @@ Update your `.env` file or `docker-compose.yml` with the FreePBX details.
 # SIP Configuration for FreePBX
 SIP_DOMAIN=192.168.1.50      # IP address of FreePBX
 SIP_REGISTRAR=192.168.1.50   # IP address of FreePBX
-SIP_EXTENSION=9000           # The extension number you created
-SIP_AUTH_ID=9000             # For FreePBX, Auth ID is usually the same as Extension
+SIP_EXTENSION=8000           # The extension number you created
+SIP_AUTH_ID=8000             # For FreePBX, Auth ID is usually the same as Extension
 SIP_AUTH_PASSWORD=SuperSecret123
 ```
 

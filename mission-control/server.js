@@ -1402,7 +1402,7 @@ app.post('/api/config/save', (req, res) => {
   }
 
   const env = parseEnv();
-  const provider = env.SIP_PROVIDER || '3cx';
+  const provider = env.SIP_PROVIDER || 'freepbx';
 
   profiles[provider] = {
     SIP_DOMAIN: config.SIP_DOMAIN,
@@ -1467,8 +1467,8 @@ app.post('/api/settings/save', (req, res) => {
 // Setup Page
 app.get('/setup', (req, res) => {
   const env = parseEnv();
-  const provider = env.SIP_PROVIDER || '3cx';
-  const providerName = provider === '3cx' ? '3CX Phone System' : 'FreePBX / Asterisk';
+  const provider = env.SIP_PROVIDER || 'freepbx';
+  const providerName = provider === 'freepbx' ? 'FreePBX / Asterisk' : 'Standard PBX';
 
   res.send(`
     <!DOCTYPE html>
@@ -1505,7 +1505,7 @@ app.get('/setup', (req, res) => {
               <form id="configForm" onsubmit="saveConfig(event)">
                 <div class="form-group">
                   <label>SIP Domain / IP Address</label>
-                  <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="e.g. 192.168.1.50 or mypbx.3cx.us">
+                  <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" required placeholder="e.g. 192.168.1.50 or pbx.example.com">
                 </div>
 
                 <div class="form-group">

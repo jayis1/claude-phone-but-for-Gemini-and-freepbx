@@ -29,9 +29,9 @@ Gemini Phone consists of three Docker containers and an optional API server:
 ### Ports
 
 | Port | Protocol | Service | Direction |
-|------|----------|---------|-----------|
+| :--- | :--- | :--- | :--- |
 | 5060 | UDP/TCP | SIP signaling (drachtio) | Inbound |
-| 5070 | UDP/TCP | SIP signaling (if 3CX SBC present) | Inbound |
+| 5070 | UDP/TCP | SIP signaling (if SIP conflict detected) | Inbound |
 | 3000 | TCP | Voice app HTTP API | Inbound (optional) |
 | 3333 | TCP | Gemini API server | Internal |
 | 30000-30100 | UDP | RTP audio (FreeSWITCH) | Bidirectional |
@@ -58,7 +58,7 @@ The `EXTERNAL_IP` setting must be your server's LAN IP that can receive RTP pack
 
 - Use your server's private IP (e.g., 192.168.1.50)
 - Ensure RTP ports are forwarded if behind NAT
-- 3CX handles NAT traversal for SIP; RTP is direct
+- PBX handles NAT traversal for SIP; RTP is direct
 
 ## Docker Configuration
 
@@ -77,7 +77,7 @@ This allows FreeSWITCH to bind RTP ports directly.
 
 ### RTP Port Range
 
-FreeSWITCH uses ports 30000-30100 by default (configured to avoid conflict with 3CX SBC which uses 20000-20099):
+FreeSWITCH uses ports 30000-30100 by default (configured to avoid conflict with standard PBX systems which use 20000-20099):
 
 ```yaml
 freeswitch:
@@ -93,10 +93,10 @@ Key environment variables in the generated `.env`:
 | Variable | Purpose |
 |----------|---------|
 | `EXTERNAL_IP` | Server LAN IP for RTP routing |
-| ` GEMINI_API_URL` | URL to gemini-api-server |
+| `GEMINI_API_URL` | URL to gemini-api-server |
 | `ELEVENLABS_API_KEY` | TTS API key |
 | `OPENAI_API_KEY` | Whisper STT API key |
-| `SIP_DOMAIN` | 3CX server FQDN |
+| `SIP_DOMAIN` | FreePBX server FQDN |
 | `SIP_REGISTRAR` | SIP registrar address |
 
 ## Split Deployment
@@ -104,8 +104,9 @@ Key environment variables in the generated `.env`:
 ### Voice Server (Pi/Linux)
 
 Requirements:
+
 - Docker and Docker Compose
-- Network access to 3CX and API server
+- Network access to PBX and API server
 - Static IP recommended
 
 The voice server runs Docker containers and connects to a remote API server:
@@ -118,6 +119,7 @@ gemini-phone start
 ### API Server (Mac/Linux with Claude Code)
 
 Requirements:
+
 - Node.js 18+
 - Claude Code CLI installed and authenticated
 - Network accessible from voice server
@@ -168,13 +170,15 @@ gemini-phone logs freeswitch
 ### Key Log Messages
 
 **Healthy startup:**
+
 ```
 [SIP] Connected to drachtio
-[SIP] Registered extension 9000 with 3CX
+[SIP] Registered extension 9000 with FreePBX
 [HTTP] Server listening on port 3000
 ```
 
 **Common errors:**
+
 ```
 # Wrong external IP
 AUDIO RTP REPORTS ERROR: [Bind Error]
@@ -203,7 +207,7 @@ Error connecting to Gemini API
 ### SIP Security
 
 - Use strong passwords for SIP extensions
-- 3CX provides TLS for signaling; verify it's enabled
+- PBX provides TLS for signaling; verify it's enabled
 - Monitor for unusual call patterns
 
 ## Troubleshooting
@@ -217,7 +221,7 @@ Error connecting to Gemini API
 
 ### SIP Registration Fails
 
-1. Verify 3CX extension credentials
+1. Verify FreePBX extension credentials
 2. Check SIP domain and registrar settings
 3. Ensure port 5060 (or 5070) is not blocked
 4. Verify no other service is using the SIP port
@@ -267,6 +271,7 @@ gemini-phone uninstall
 ```
 
 This removes:
+
 - Docker containers and images
 - CLI installation
 - Optionally: configuration files

@@ -65,7 +65,7 @@ export async function configResetCommand() {
     }
 
     console.log(chalk.bold.green('\n✓ Configuration reset complete'));
-    console.log(chalk.gray('  Run "claude-phone setup" to configure again\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" to configure again\n'));
   } catch (error) {
     console.log(chalk.red(`\n✗ Reset failed: ${error.message}\n`));
     throw error;

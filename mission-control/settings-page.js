@@ -147,11 +147,11 @@ module.exports = function generateSettingsPage(env) {
                   <div class="section-title"><span>📞</span> SIP Protocol</div>
                   <div class="form-group">
                     <label>PBX Domain / Address</label>
-                    <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" placeholder="mypbx.3cx.us">
+                    <input type="text" name="SIP_DOMAIN" value="${env.SIP_DOMAIN || ''}" placeholder="pbx.example.com">
                   </div>
                   <div class="form-group">
                     <label>SIP Registrar</label>
-                    <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="voice.3cx.us">
+                    <input type="text" name="SIP_REGISTRAR" value="${env.SIP_REGISTRAR || ''}" placeholder="registrar.example.com">
                   </div>
                   <div class="form-group">
                     <label>Main Extension</label>

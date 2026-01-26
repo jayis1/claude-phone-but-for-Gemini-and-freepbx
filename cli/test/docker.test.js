@@ -119,7 +119,7 @@ test('docker compose generation', async (t) => {
         geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'pbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -163,7 +163,7 @@ test('docker compose generation', async (t) => {
         geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'pbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -202,7 +202,7 @@ test('docker compose generation', async (t) => {
         geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'pbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -245,7 +245,7 @@ test('docker compose generation', async (t) => {
         geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'pbx.local',
         registrar: '192.168.1.10'
       },
       devices: [

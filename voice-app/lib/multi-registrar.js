@@ -1,6 +1,6 @@
 /**
  * Multi-Extension SIP Registrar
- * Registers multiple extensions with 3CX independently
+ * Registers multiple extensions with PBX independently
  */
 
 class MultiRegistrar {
@@ -17,7 +17,7 @@ class MultiRegistrar {
   registerAll(devices) {
     const extensions = Object.keys(devices);
     console.log('[MULTI-REGISTRAR] Starting registration for ' + extensions.length + ' devices');
-    
+
     for (const [extension, device] of Object.entries(devices)) {
       this.registerDevice(device);
     }
@@ -69,35 +69,35 @@ class MultiRegistrar {
         username: config.auth_id,
         password: config.password
       }
-    }, function(err, req) {
+    }, function (err, req) {
       if (err) {
         console.error('[MULTI-REGISTRAR] ' + device.name + ' request error: ' + err.message);
         self.scheduleRetry(device, config, 60);
         return;
       }
 
-      req.on('response', function(res) {
+      req.on('response', function (res) {
         if (res.status === 200) {
           console.log('[MULTI-REGISTRAR] ' + device.name + ' SUCCESS - Registered as ext ' + config.extension);
-          
+
           var expiry = config.expiry;
           var contactHeader = res.get('Contact');
           if (contactHeader) {
             var match = contactHeader.match(/expires=(\d+)/i);
             if (match) expiry = parseInt(match[1], 10);
           }
-          
+
           self.registrations.set(config.extension, {
             device: device,
             config: config,
             expiry: expiry,
             registeredAt: Date.now()
           });
-          
+
           var refreshTime = Math.floor(expiry * 0.9);
           console.log('[MULTI-REGISTRAR] ' + device.name + ' refresh in ' + refreshTime + 's');
           self.scheduleRefresh(device, config, refreshTime);
-          
+
         } else if (res.status === 401 || res.status === 407) {
           console.log('[MULTI-REGISTRAR] ' + device.name + ' auth challenge - handled by drachtio');
         } else {
@@ -110,7 +110,7 @@ class MultiRegistrar {
 
   scheduleRefresh(device, config, seconds) {
     const self = this;
-    setTimeout(function() {
+    setTimeout(function () {
       console.log('[MULTI-REGISTRAR] Refreshing ' + device.name);
       self.sendRegister(device, config);
     }, seconds * 1000);
@@ -119,7 +119,7 @@ class MultiRegistrar {
   scheduleRetry(device, config, seconds) {
     const self = this;
     console.log('[MULTI-REGISTRAR] ' + device.name + ' retry in ' + seconds + 's');
-    setTimeout(function() {
+    setTimeout(function () {
       self.sendRegister(device, config);
     }, seconds * 1000);
   }

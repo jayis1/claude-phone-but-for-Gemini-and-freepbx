@@ -52,7 +52,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     // Get local SDP from FreeSWITCH
     const localSdp = endpoint.local.sdp;
 
-    // Format SIP URI for 3CX
+    // Format SIP URI for PBX
     // Remove '+' from E.164 format for SIP URI
     // Internal extensions: dial as-is. External (E.164 with +): add 9 prefix for PSTN
     const isExternal = to.startsWith('+');
@@ -61,7 +61,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const externalIp = process.env.EXTERNAL_IP || '10.70.7.81';
     const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || '+15551234567';
 
-    // SIP Authentication for 3CX extension registration
+    // SIP Authentication for extension registration
     const sipAuthUsername = process.env.SIP_AUTH_USERNAME;
     const sipAuthPassword = process.env.SIP_AUTH_PASSWORD;
 
@@ -112,7 +112,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
 
     // Create the outbound call (returns dialog directly, not { uas, uac })
     const uac = await srf.createUAC(sipUri, uacOptions, {
-      cbRequest: function(err, req) {
+      cbRequest: function (err, req) {
         // Called when INVITE is sent
         if (err) {
           logger.error('INVITE send failed', { callId, error: err.message });
@@ -120,7 +120,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
           logger.info('INVITE sent successfully', { callId });
         }
       },
-      cbProvisional: function(res) {
+      cbProvisional: function (res) {
         // Called on provisional responses (180 Ringing, 183 Progress, etc.)
         logger.info('Provisional response received', {
           callId,
@@ -152,10 +152,10 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     logger.info('Media connection established', { callId });
 
     // Setup call cleanup on remote hangup
-    uac.on('destroy', function() {
+    uac.on('destroy', function () {
       logger.info('Remote party hung up', { callId });
       if (endpoint) {
-        endpoint.destroy().catch(function(err) {
+        endpoint.destroy().catch(function (err) {
           logger.warn('Failed to destroy endpoint on hangup', {
             callId,
             error: err.message

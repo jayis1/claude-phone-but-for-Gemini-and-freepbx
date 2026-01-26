@@ -230,7 +230,7 @@ class OutboundSession extends EventEmitter {
    * Record a conversation turn (for conversation mode)
    *
    * @param {string} userText - What the user said
-   * @param {string} assistantText - What Claude responded
+   * @param {string} assistantText - What Gemini responded
    */
   recordTurn(userText, assistantText) {
     this.turnCount++;

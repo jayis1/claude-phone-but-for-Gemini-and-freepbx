@@ -60,7 +60,7 @@ CONTACTS = {
 DEVICES = {
     "morpheus": {
         "name": "Morpheus",
-        "extension": "9000",
+        "extension": "8000",
         "description": "Principal AI assistant"
     },
     # Add more devices...
@@ -120,7 +120,7 @@ call devices
 
 | Device | Extension | Voice | Description |
 |--------|-----------|-------|-------------|
-| **Morpheus** | 9000 | Male | Default assistant |
+| **Morpheus** | 8000 | Male | Default assistant |
 | **Cephanie** | 9002 | Female | Storage server personality |
 
 ## Examples

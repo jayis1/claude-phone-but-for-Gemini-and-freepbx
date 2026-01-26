@@ -6,7 +6,7 @@
  * - VAD-based speech detection
  * - DTMF # key to end speech early
  * - Whisper transcription
- * - Claude API integration
+ * - Gemini API integration
  * - TTS response generation
  * - Turn-taking audio cues (beeps)
  * - Hold music during processing
@@ -19,7 +19,7 @@ const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
 const GOTIT_BEEP_URL = 'http://127.0.0.1:3000/static/gotit-beep.wav';
 const HOLD_MUSIC_URL = 'http://127.0.0.1:3000/static/hold-music.mp3';
 
-// Claude Code-style thinking phrases
+// Gemini Code-style thinking phrases
 const THINKING_PHRASES = [
   "Pondering...",
   "Elucidating...",
@@ -386,7 +386,7 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
 
       // 3. Query Gemini
       logger.info('Querying Gemini', { callUuid });
-      const geminiResponse = await claudeBridge.query(
+      const geminiResponse = await geminiBridge.query(
         transcript,
         { callId: callUuid, devicePrompt: devicePrompt }
       );
@@ -464,9 +464,9 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
       audioForkServer.cancelExpectation(callUuid);
     }
 
-    // End Claude session
+    // End Gemini session
     try {
-      await claudeBridge.endSession(callUuid);
+      await geminiBridge.endSession(callUuid);
     } catch (e) {
       // Ignore
     }

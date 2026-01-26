@@ -7,8 +7,8 @@
  * Each device has:
  * - name: Human-readable identifier (e.g., "Cephanie", "Morpheus")
  * - extension: SIP extension number (e.g., "9002")
- * - authId: 3CX authentication ID for SIP REGISTER
- * - password: 3CX authentication password
+ * - authId: PBX authentication ID for SIP REGISTER
+ * - password: PBX authentication password
  * - voiceId: ElevenLabs voice ID for TTS
  * - prompt: System prompt that defines device personality
  */

@@ -66,14 +66,14 @@ Verify before writing any code.
 **File:** `cli/lib/port-check.js`
 **Tests:** `cli/test/port-check.test.js`
 
-### AC3, AC4, AC5: 3CX SBC detection and port configuration
+### AC3, AC4, AC5: FreePBX SBC detection and port configuration
 
 - [ ] Write failing test: `checkPort(5060)` returns `{ inUse: true }` when port is bound
 - [ ] Implement port check via `net.connect()`
 - [ ] Write failing test: `checkPort(5060)` returns `{ inUse: false }` when port is free
 - [ ] Implement free port detection
 - [ ] Write failing test: `detect3cxSbc()` returns `true` when port 5060 is in use
-- [ ] Implement 3CX SBC detection
+- [ ] Implement FreePBX SBC detection
 - [ ] Write failing test: `detect3cxSbc()` returns `false` when port 5060 is free
 - [ ] Implement no-SBC case
 - [ ] Write failing test: Port check times out after 1 second
@@ -147,7 +147,7 @@ Verify before writing any code.
 
 ### AC3, AC4, AC5: SBC detection and port config
 
-- [ ] Add 3CX SBC detection prompt to Pi setup
+- [ ] Add FreePBX SBC detection prompt to Pi setup
 - [ ] If SBC detected: set drachtio port to 5070
 - [ ] If no SBC: set drachtio port to 5060
 - [ ] Display port configuration to user
@@ -260,7 +260,7 @@ Verify before writing any code.
 ### AC24: Port detection failure
 
 - [ ] Handle case where port check fails (permission denied, etc.)
-- [ ] Prompt user to manually confirm 3CX SBC status
+- [ ] Prompt user to manually confirm FreePBX SBC status
 - [ ] Allow manual port override
 
 ### AC25: Drachtio start failure
@@ -275,10 +275,10 @@ Verify before writing any code.
 - [ ] Play error message to caller: "I'm having trouble connecting. Please try again later."
 - [ ] Don't crash on connection failure
 
-### AC27: Claude API timeout
+### AC27: Gemini API timeout
 
 - [ ] Implement request timeout (30 seconds)
-- [ ] Display helpful error: "Check Mac firewall, verify claude-phone api-server is running"
+- [ ] Display helpful error: "Check Mac firewall, verify gemini-phone api-server is running"
 
 ---
 
@@ -302,15 +302,15 @@ Must complete on actual hardware.
 - [ ] Run `gemini-phone setup` on Raspberry Pi 4 or 5
 - [ ] Verify Pi detection works correctly
 - [ ] Verify Docker prerequisite check (with and without Docker)
-- [ ] Test 3CX SBC detection (with SBC running)
-- [ ] Test 3CX SBC detection (without SBC)
+- [ ] Test FreePBX SBC detection (with SBC running)
+- [ ] Test FreePBX SBC detection (without SBC)
 - [ ] Verify port 5070 configured when SBC present
 - [ ] Verify port 5060 configured when no SBC
 - [ ] Test Mac IP validation (reachable and unreachable)
 - [ ] Run `gemini-phone api-server` on Mac
 - [ ] Verify `gemini-phone status` shows Pi ↔ Mac connectivity
 - [ ] Run `gemini-phone doctor` and verify all checks pass
-- [ ] Make test call: phone → Pi → Mac → Claude → response
+- [ ] Make test call: phone → Pi → Mac → Gemini → response
 - [ ] Test error case: Mac unreachable during call
 
 ---

@@ -106,7 +106,7 @@ gemini-phone start
 ## Previous Updates (v2.1.x) 🚀
 
 + **Multi-Provider Switching**:
-  + Hot-swap between **3CX** and **FreePBX** directly from Mission Control.
+  + Hot-swap between **FreePBX** and **Asterisk** directly from Mission Control.
   + **Smart Profiles**: The system remembers your credentials for each provider, so switching is just one click.
   + **Standalone Restart**: Automatically restarts the Voice App service (no Docker requirement) to apply changes immediately.
 
@@ -132,7 +132,7 @@ Best for: Mac or Linux server that's always on and has Gemini Code installed.
 │      │                                                       │
 │      ↓ Call extension 9000                                  │
 │  ┌───────────────────────┐                                  │
-│  │   3CX / FreePBX       │  ← Cloud/Local PBX               │
+│  │   FreePBX / Asterisk  │  ← Cloud/Local PBX               │
 │  └──────┬────────────────┘                                  │
 │         │                                                    │
 │         │ SIP                                                │
@@ -161,7 +161,7 @@ Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 │      │                                                       │
 │      ↓ Call extension 9000                                  │
 │  ┌───────────────────────┐                                  │
-│  │   3CX / FreePBX       │  ← Cloud/Local PBX               │
+│  │   FreePBX / Asterisk  │  ← Cloud/Local PBX               │
 │  └──────┬────────────────┘                                  │
 │         │                                                    │
 │         ↓                                                    │
@@ -331,9 +331,9 @@ gemini-phone logs      # View logs
 | Problem | Likely Cause | Solution |
 | :--- | :--- | :--- |
 | Calls connect but no audio | Wrong external IP | Re-run `gemini-phone setup`, verify LAN IP |
-| Extension not registering | 3CX SBC not running | Check 3CX admin panel |
+| Extension not registering | FreePBX/Asterisk issue | Check PBX admin panel |
 | "Sorry, something went wrong" | API server unreachable | Check `gemini-phone status` |
-| Port conflict on startup | 3CX SBC using port 5060 | Setup auto-detects this; re-run setup |
+| Port conflict on startup | PBX using port 5060 | Setup auto-detects this; re-run setup |
 
 ### Manual Node.js Installation
 

@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import net from 'net';
 import {
   checkPort,
-  detect3cxSbc
+  detectSipConflict
 } from '../lib/port-check.js';
 
 test('port-check module', async (t) => {
@@ -57,16 +57,16 @@ test('port-check module', async (t) => {
     assert.ok(duration < 2000, 'Port check should complete within 2 seconds');
   });
 
-  await t.test('detect3cxSbc returns boolean', async () => {
-    const result = await detect3cxSbc();
+  await t.test('detectSipConflict returns boolean', async () => {
+    const result = await detectSipConflict();
 
-    assert.ok(typeof result === 'boolean', 'detect3cxSbc should return boolean');
+    assert.ok(typeof result === 'boolean', 'detectSipConflict should return boolean');
   });
 
-  await t.test('detect3cxSbc checks port 5060', async () => {
-    // This test checks that detect3cxSbc is checking the right port
-    // We can't guarantee 3CX is installed, so we just verify it returns a boolean
-    const result = await detect3cxSbc();
+  await t.test('detectSipConflict checks port 5060', async () => {
+    // This test checks that detectSipConflict is checking the right port
+    // We can't guarantee a PBX is installed, so we just verify it returns a boolean
+    const result = await detectSipConflict();
 
     // Should return true if port 5060 is in use, false otherwise
     assert.ok(typeof result === 'boolean', 'Should return boolean result');
@@ -95,7 +95,7 @@ test('port-check module', async (t) => {
       });
 
       if (serverStarted) {
-        const result = await detect3cxSbc();
+        const result = await detectSipConflict();
         assert.strictEqual(result, true, 'Should detect 5060 in use');
       }
       // If server didn't start (no permission), skip assertion

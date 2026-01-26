@@ -23,7 +23,7 @@ Build a **Node.js CLI tool** distributed via a bash install script. The CLI wrap
 │  │  - Detect OS (mac/linux)                                 │   │
 │  │  - Download gemini-phone CLI                             │   │
 │  │  - Add to PATH (~/.local/bin or /usr/local/bin)          │   │
-│  │  - Verify prerequisites (Docker, Claude CLI)             │   │
+│  │  - Verify prerequisites (Docker, Gemini CLI)             │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  User runs: gemini-phone setup                                  │
@@ -33,7 +33,7 @@ Build a **Node.js CLI tool** distributed via a bash install script. The CLI wrap
 │  │  Setup Wizard (inquirer prompts)                         │   │
 │  │  - Collect API keys                                      │   │
 │  │  - Validate each key with test API call                  │   │
-│  │  - Collect 3CX credentials                               │   │
+│  │  - Collect FreePBX credentials                               │   │
 │  │  - Create first device                                   │   │
 │  │  - Write ~/.gemini-phone/config.json                     │   │
 │  └─────────────────────────────────────────────────────────┘   │
@@ -269,12 +269,12 @@ device.command('remove <name>').description('Remove device').action(deviceRemove
 4. Prompt: OpenAI API key
    - Validate with test API call (models list)
    - Show success/fail
-5. Prompt: 3CX configuration
+5. Prompt: FreePBX configuration
    - SIP domain
    - Registrar IP
    - (No validation - just collect)
 6. Prompt: First device setup
-   - Name (default: "Claude")
+   - Name (default: "Gemini")
    - Extension (default: "9000")
    - Auth ID (default: same as extension)
    - Password

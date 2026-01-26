@@ -1,7 +1,7 @@
 {
   "name": "gemini-phone-voice-app",
   "version": "2.1.43",
-  "description": "Voice interface for Gemini Code via SIP/3CX",
+  "description": "Voice interface for Gemini Code via SIP/FreePBX",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -29,9 +29,9 @@
     "sip",
     "gemini",
     "ai",
-    "3cx",
+    "freepbx",
     "drachtio"
   ],
-  "author": "NetworkChuck",
+  "author": "NetworkChucks",
   "license": "MIT"
 }

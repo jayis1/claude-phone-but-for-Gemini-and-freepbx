@@ -150,8 +150,8 @@ async function showVoiceServerStatus(config, isPiSplit, installationType) {
     console.log(chalk.gray(`  Pi IP: ${config.server.externalIp}`));
     console.log(chalk.gray(`  API Server IP: ${config.deployment.pi.macIp}`));
     console.log(chalk.gray(`  Drachtio Port: ${config.deployment.pi.drachtioPort}`));
-    if (config.deployment.pi.has3cxSbc) {
-      console.log(chalk.yellow('  3CX SBC detected (using port 5070)'));
+    if (config.deployment.pi.sipConflict || config.deployment.pi.has3cxSbc) {
+      console.log(chalk.yellow('  SIP service conflict detected (using port 5070)'));
     }
   } else if (installationType === 'voice-server') {
     console.log(chalk.gray(`  Deployment Mode: Voice Server`));

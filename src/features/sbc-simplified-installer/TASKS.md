@@ -34,7 +34,7 @@
 
 - [ ] Create new `setupSBC(config)` async function
 - [ ] Display pre-requisite info box about manual SBC provisioning
-- [ ] Prompt for 3CX FQDN with validateHostname
+- [ ] Prompt for FreePBX FQDN with validateHostname
 - [ ] Prompt for SBC Auth Key ID with validateSbcAuthKey
 - [ ] Set `config.sip.domain` = FQDN
 - [ ] Set `config.sip.registrar` = FQDN (same value)
@@ -46,7 +46,7 @@
 **File:** `cli/lib/commands/setup.js`
 
 - [ ] In `setupPi()`, replace `setupSIP(config)` call with `setupSBC(config)`
-- [ ] Update step header from "☎️ SIP Configuration" to "📡 3CX SBC Connection"
+- [ ] Update step header from "☎️ SIP Configuration" to "📡 FreePBX SBC Connection"
 - [ ] Ensure Mac `setupStandard()` still uses `setupSIP()` (unchanged)
 
 ### Task 4: Update .env Generation
@@ -62,8 +62,8 @@
 **File:** `cli/lib/commands/setup.js`
 
 - [ ] Update Pi setup completion message
-- [ ] Add reminder about manual SBC provisioning in 3CX admin
-- [ ] Include link to 3CX SBC docs
+- [ ] Add reminder about manual SBC provisioning in FreePBX admin
+- [ ] Include link to FreePBX SBC docs
 
 ---
 
@@ -71,15 +71,15 @@
 
 ### Acceptance Criteria Checklist
 
-- [ ] AC1: Setup asks for 3CX FQDN
+- [ ] AC1: Setup asks for FreePBX FQDN
 - [ ] AC2: Setup asks for SBC Auth Key ID
 - [ ] AC3: Setup does NOT ask for "registrar IP"
-- [ ] AC4: Auto-detects 3CX SBC on port 5060
+- [ ] AC4: Auto-detects FreePBX SBC on port 5060
 - [ ] AC5: Uses port 5070 if SBC detected
 - [ ] AC6: .env has SIP_DOMAIN and SIP_REGISTRAR set to FQDN
 - [ ] AC7: .env includes SBC_AUTH_KEY reference
 - [ ] AC8: Pre-requisites message displayed
-- [ ] AC9: Step 1 is "3CX SBC Connection"
+- [ ] AC9: Step 1 is "FreePBX SBC Connection"
 - [ ] AC10-12: Steps 2-4 unchanged
 - [ ] AC13: Final summary includes SBC reminder
 - [ ] AC14: FQDN validation works

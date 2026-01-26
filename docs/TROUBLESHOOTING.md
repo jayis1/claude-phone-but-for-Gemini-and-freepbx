@@ -28,23 +28,26 @@ Start here for most problems:
 | Network issue | Check internet connectivity |
 
 **For OpenAI specifically:**
+
 - New accounts need billing enabled before API works
 - Free tier credits expire after 3 months
 - Check [platform.openai.com/account/billing](https://platform.openai.com/account/billing)
 
 **For ElevenLabs:**
+
 - Free tier has limited characters/month
 - Check [elevenlabs.io/subscription](https://elevenlabs.io/subscription)
 
-### "Can't detect 3CX SBC"
+### "Can't connect to PBX"
 
-**Symptom:** Setup can't connect to your 3CX server.
+**Symptom:** Setup can't connect to your FreePBX / SIP server.
 
 **Solutions:**
-1. Verify 3CX FQDN is correct (e.g., `yourcompany.3cx.us`)
-2. Ensure 3CX SBC (Session Border Controller) is enabled
+
+1. Verify FreePBX FQDN or IP is correct (e.g., `192.168.1.50`)
+2. Ensure extension is correctly configured in your PBX
 3. Check firewall allows port 5060 (SIP) outbound
-4. Try using port 5070 if 5060 is blocked
+4. Try using port 5070 if 5060 is used by another service on the same machine
 
 ### "Docker not found" or "Docker not running"
 
@@ -53,6 +56,7 @@ Start here for most problems:
 **Solutions:**
 
 **macOS:**
+
 ```bash
 # Install Docker Desktop
 brew install --cask docker
@@ -60,6 +64,7 @@ brew install --cask docker
 ```
 
 **Linux (Debian/Ubuntu):**
+
 ```bash
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
@@ -67,6 +72,7 @@ sudo usermod -aG docker $USER
 ```
 
 **Raspberry Pi:**
+
 ```bash
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker pi
@@ -80,36 +86,41 @@ sudo usermod -aG docker pi
 **Symptom:** Phone rings forever or immediately fails.
 
 **Checklist:**
-1. Is the extension registered with 3CX?
+
+1. Is the extension registered with the PBX?
+
    ```bash
-   claude-phone status
+   gemini-phone status
    # Look for "SIP Registration: OK"
    ```
 
 2. Is the SIP domain correct?
+
    ```bash
-   claude-phone config show
-   # Check sip.domain matches your 3CX FQDN
+   gemini-phone config show
+   # Check sip.domain matches your PBX FQDN/IP
    ```
 
 3. Are credentials correct?
-   - Log into 3CX admin panel
+   - Log into FreePBX admin panel
    - Check extension auth ID and password match config
 
 4. Is drachtio container running?
+
    ```bash
    docker ps | grep drachtio
    ```
 
-### Extension not registering with 3CX
+### Extension not registering
 
 **Symptom:** `<gemini-phone status` shows SIP registration failed.
 
 **Solutions:**
-1. Verify extension exists in 3CX
+
+1. Verify extension exists in FreePBX
 2. Check auth ID matches (usually same as extension number)
 3. Verify password is correct
-4. Ensure SBC is enabled in 3CX settings
+4. Ensure extension settings allow registration from this host
 5. Check if another device is using the same extension
 
 ### Calls connect but no audio
@@ -119,6 +130,7 @@ sudo usermod -aG docker pi
 **Most common cause:** Wrong `EXTERNAL_IP` setting.
 
 **Fix:**
+
 ```bash
 # Find your server's LAN IP
 ip addr show | grep "inet " | grep -v 127.0.0.1
@@ -129,25 +141,26 @@ ip addr show | grep "inet " | grep -v 127.0.0.1
 ```
 
 **Other causes:**
+
 - RTP ports blocked by firewall (needs 30000-30100 UDP)
 - NAT issues (server can't receive return audio)
 - FreeSWITCH container unhealthy
 
-### RTP Port Conflict (3CX SBC)
+### RTP Port Conflict
 
 **Symptom:** Calls fail with "INCOMPATIBLE_DESTINATION" error. Logs show `AUDIO RTP REPORTS ERROR: [Bind Error! IP:port]`.
 
-**Cause:** 3CX SBC uses RTP ports 20000-20099. If FreeSWITCH uses the same range, it can't bind.
+**Cause:** Standard PBX systems (like FreePBX/Asterisk) may use various RTP port ranges. If FreeSWITCH uses the same range, it can't bind.
 
-**Fix:** Claude Phone uses ports 30000-30100 by default. If you upgraded from an older version:
+**Fix:** Gemini Phone uses ports 30000-30100 by default. If you upgraded from an older version:
 
 ```bash
 # Check current port config
-grep "rtp-range" ~/.claude-phone/docker-compose.yml
+grep "rtp-range" ~/.gemini-phone/docker-compose.yml
 
 # If it shows 20000, update to 30000:
-sed -i 's/--rtp-range-start 20000/--rtp-range-start 30000/' ~/.claude-phone/docker-compose.yml
-sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.claude-phone/docker-compose.yml
+sed -i 's/--rtp-range-start 20000/--rtp-range-start 30000/' ~/.gemini-phone/docker-compose.yml
+sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.gemini-phone/docker-compose.yml
 
 # Restart services
 <gemini-phone stop
@@ -158,20 +171,22 @@ sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.claude-phone/docker-c
 
 ### "Sorry, something went wrong" on every call
 
-**Symptom:** Calls connect, but Claude always says there was an error.
+**Symptom:** Calls connect, but Gemini always says there was an error.
 
 **Causes:**
 
 1. **API server unreachable:**
+
    ```bash
    <gemini-phone status
-   # Check "Claude API Server" status
+   # Check "Gemini API Server" status
 
    # For split deployments, verify connectivity:
    curl http://<api-server-ip>:3333/health
    ```
 
-2. **Claude Code CLI not working:**
+2. **Gemini Code CLI not working:**
+
    ```bash
    # On the API server machine:
    <gemini> --version
@@ -179,13 +194,14 @@ sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.claude-phone/docker-c
    ```
 
 3. **Session errors:**
+
    ```bash
    <gemini-phone logs voice-app | grep -i error
    ```
 
 ### Whisper transcription errors
 
-**Symptom:** Claude responds to wrong words or doesn't understand speech.
+**Symptom:** Gemini responds to wrong words or doesn't understand speech.
 
 **Causes & Solutions:**
 
@@ -197,9 +213,10 @@ sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.claude-phone/docker-c
 
 ### ElevenLabs TTS errors
 
-**Symptom:** Claude's responses aren't spoken, or voice sounds wrong.
+**Symptom:** Gemini's responses aren't spoken, or voice sounds wrong.
 
 **Solutions:**
+
 1. Check ElevenLabs character quota isn't exhausted
 2. Verify voice ID is valid: `<gemini-phone device list`
 3. Check API key still works
@@ -209,6 +226,7 @@ sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.claude-phone/docker-c
 **Symptom:** Call connects, maybe plays greeting, then drops.
 
 **Causes:**
+
 - FreeSWITCH timeout (check logs)
 - SIP session timeout
 - Network instability
@@ -225,15 +243,17 @@ sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.claude-phone/docker-c
 **Symptom:** Voice services start but calls fail with connection errors.
 
 **Diagnostics:**
+
 ```bash
 # On the Pi, test connectivity:
 curl http://<api-server-ip>:3333/health
 
 # Check configured API URL:
-<gemini-phone config show | grep claudeApiUrl
+<gemini-phone config show | grep geminiApiUrl
 ```
 
 **Solutions:**
+
 1. Verify API server IP is correct in Pi's config
 2. Ensure API server is running: `<gemini-phone api-server`
 3. Check firewall allows port 3333
@@ -244,12 +264,15 @@ curl http://<api-server-ip>:3333/health
 **Symptom:** `<gemini-phone api-server` fails immediately.
 
 **Solutions:**
+
 1. Check port 3333 isn't already in use:
+
    ```bash
    lsof -i :3333
    ```
 
-2. Verify Claude Code CLI works:
+2. Verify Gemini Code CLI works:
+
    ```bash
    <gemini-phone> --version
    ```
@@ -259,6 +282,7 @@ curl http://<api-server-ip>:3333/health
 ## Getting Logs
 
 ### Voice App Logs
+
 ```bash
 <gemini-phone logs voice-app
 # or
@@ -266,6 +290,7 @@ docker compose logs -f voice-app
 ```
 
 ### SIP Server Logs
+
 ```bash
 <gemini-phone logs drachtio
 # or
@@ -273,6 +298,7 @@ docker compose logs -f drachtio
 ```
 
 ### Media Server Logs
+
 ```bash
 <gemini-phone logs freeswitch
 # or
@@ -280,6 +306,7 @@ docker compose logs -f freeswitch
 ```
 
 ### API Server Logs
+
 ```bash
 # If running in foreground, check terminal output
 # If running via start command, check:
@@ -290,9 +317,10 @@ cat ~/.gemini-phone/api-server.log
 
 1. **Check the video tutorial:** [youtu.be/cT22fTzotYc](https://youtu.be/cT22fTzotYc) covers common setup issues
 2. **Run full diagnostics:** `<gemini-phone doctor`
-3. **Open an issue:** [github.com/networkchuck/claude-phone/issues](https://github.com/networkchuck/claude-phone/issues)
+3. **Open an issue:** [github.com/jayis1/networkschucks-phone-but-for-gemini/issues](https://github.com/jayis1/networkschucks-phone-but-for-gemini/issues)
 
 When opening an issue, include:
+
 - Output of `<gemini-phone doctor`
 - Output of `<gemini-phone status`
 - Relevant log snippets (redact any API keys!)

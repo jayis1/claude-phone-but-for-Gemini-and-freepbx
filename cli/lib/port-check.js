@@ -99,12 +99,12 @@ export async function checkUdpPort(port, timeout = 1000) {
 }
 
 /**
- * Check if 3CX SBC process is running
- * @returns {Promise<boolean>} True if 3cxsbc process is running
+ * Check if a PBX or SIP process is running
+ * @returns {Promise<boolean>} True if PBX process is running
  */
-export async function check3cxSbcProcess() {
+export async function checkPbxProcess() {
   try {
-    const { stdout } = await execAsync('pgrep -x 3cxsbc || systemctl is-active 3cxsbc 2>/dev/null');
+    const { stdout } = await execAsync('pgrep -x 3cxsbc || pgrep -x asterisk || systemctl is-active 3cxsbc 2>/dev/null || systemctl is-active asterisk 2>/dev/null');
     return stdout.trim().length > 0 || stdout.includes('active');
   } catch {
     return false;
@@ -112,13 +112,13 @@ export async function check3cxSbcProcess() {
 }
 
 /**
- * Detect if 3CX SBC is running
- * Checks: 1) 3cxsbc process, 2) UDP port 5060, 3) TCP port 5060
- * @returns {Promise<boolean>} True if 3CX SBC detected
+ * Detect if a local SIP service (like a PBX or SBC) is running
+ * Checks: 1) PBX processes, 2) UDP port 5060, 3) TCP port 5060
+ * @returns {Promise<boolean>} True if SIP conflict detected
  */
-export async function detect3cxSbc() {
-  // Check for 3cxsbc process first (most reliable)
-  const processRunning = await check3cxSbcProcess();
+export async function detectSipConflict() {
+  // Check for PBX processes first (most reliable)
+  const processRunning = await checkPbxProcess();
   if (processRunning) {
     return true;
   }

@@ -602,7 +602,7 @@ async function executeOutboundCall({ to, message, mode, device }) {
 
 /**
  * POST /call
- * Initiate an outbound call via 3CX/voice-app
+ * Initiate an outbound call via PBX/voice-app
  *
  * Request body matches voice-app/outbound-call:
  *   - to: Phone number/Extension

@@ -68,7 +68,7 @@
   - [ ] Implement `readLines(file, count)` for preview
   - [ ] Implement `showPreview(file)` - display first 50 lines
   - [ ] Implement `runWithLogging(script, options)` - execute and log
-  - [ ] Log all commands to `~/.claude-phone/prereq-install.log`
+  - [ ] Log all commands to `~/.gemini-phone/prereq-install.log`
 
 - [ ] **3.2** Create `cli/lib/prereqs/utils/sudo.js`
   - [ ] Implement `checkSudoNeeded()` - check if current user needs sudo
@@ -136,7 +136,7 @@
   - [ ] Implement `saveState()` - capture current versions
   - [ ] Implement `loadState()` - read saved state
   - [ ] Implement `rollback(state)` - attempt restoration
-  - [ ] Store state in `~/.claude-phone/prereq-state.json`
+  - [ ] Store state in `~/.gemini-phone/prereq-state.json`
   - [ ] Provide manual recovery instructions if rollback limited
 
 - [ ] **6.2** Write tests for rollback

@@ -14,10 +14,10 @@
     "gemini",
     "voice",
     "sip",
-    "3cx",
+    "freepbx",
     "ai"
   ],
-  "author": "Chuck",
+  "author": "Jais",
   "license": "MIT",
   "dependencies": {
     "commander": "^12.1.0",

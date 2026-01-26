@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * MCP Server for Gemini 3CX Integration
+ * MCP Server for Gemini Phone Integration
  * 
  * Exposes tools to control the phone system via Gemini.
  * Transport: stdio (defaults for MCP)
@@ -39,7 +39,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         tools: [
             {
                 name: "make_outbound_call",
-                description: "Initiate a physical phone call via 3CX PBX system. Use this to call real phone numbers or extensions.",
+                description: "Initiate a physical phone call via PBX system (FreePBX/Asterisk). Use this to call real phone numbers or extensions.",
                 inputSchema: zodToJSONSchema(
                     z.object({
                         to: z.string().describe("The phone number (E.164 format, e.g. +15551234567) or extension (e.g. 100) to call"),
@@ -67,7 +67,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 throw new Error("Missing required arguments: to, message");
             }
 
-            // Call the local API server which handles the 3CX logic
+            // Call the local API server which handles the PBX logic
             const response = await fetch(`${API_BASE_URL}/call`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

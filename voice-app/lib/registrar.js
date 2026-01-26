@@ -1,9 +1,9 @@
 const Srf = require('drachtio-srf');
 
 /**
- * Handles SIP Registration (UAC) with 3CX
+ * Handles SIP Registration (UAC) with FreePBX/Asterisk
  * 
- * 3CX requires:
+ * Requirements:
  * - From/To/Contact: Use EXTENSION NUMBER (e.g., 5756)
  * - Auth credentials: Use AUTH ID + PASSWORD (e.g., pEmNzYscb4)
  */
@@ -21,7 +21,7 @@ class Registrar {
     this.password = config.password;
 
     // Server addresses
-    this.domain = config.domain; // 3CX server address
+    this.domain = config.domain; // PBX server address
     this.registrar = config.registrar; // Usually same as domain
     this.registrarPort = config.registrar_port || 5060;
 
