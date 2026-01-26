@@ -88,7 +88,7 @@ module.exports = function generateHtopPage() {
           }
 
           /* ANSI Color Mapping */
-          .ansi-black { color: #000000; }
+          .ansi-black { color: #4b5563; }
           .ansi-red { color: #ef4444; }
           .ansi-green { color: #22c55e; }
           .ansi-yellow { color: #eab308; }
@@ -96,19 +96,25 @@ module.exports = function generateHtopPage() {
           .ansi-magenta { color: #a855f7; }
           .ansi-cyan { color: #06b6d4; }
           .ansi-white { color: #ffffff; }
-          .ansi-bright-black { color: #64748b; font-weight: bold; }
-          .ansi-bright-red { color: #f87171; font-weight: bold; }
-          .ansi-bright-green { color: #4ade80; font-weight: bold; }
-          .ansi-bright-yellow { color: #facc15; font-weight: bold; }
-          .ansi-bright-blue { color: #60a5fa; font-weight: bold; }
-          .ansi-bright-magenta { color: #c084fc; font-weight: bold; }
-          .ansi-bright-cyan { color: #22d3ee; font-weight: bold; }
-          .ansi-bright-white { color: #ffffff; font-weight: bold; }
+          .ansi-bright-black { color: #9ca3af; }
+          .ansi-bright-red { color: #f87171; }
+          .ansi-bright-green { color: #4ade80; }
+          .ansi-bright-yellow { color: #facc15; }
+          .ansi-bright-blue { color: #60a5fa; }
+          .ansi-bright-magenta { color: #c084fc; }
+          .ansi-bright-cyan { color: #22d3ee; }
+          .ansi-bright-white { color: #ffffff; }
           
           .ansi-bg-black { background-color: #000000; }
+          .ansi-bg-red { background-color: #ef4444; color: #fff; }
           .ansi-bg-green { background-color: #22c55e; color: #000; }
-          .ansi-bg-cyan { background-color: #06b6d4; color: #000; }
+          .ansi-bg-yellow { background-color: #eab308; color: #000; }
           .ansi-bg-blue { background-color: #3b82f6; color: #fff; }
+          .ansi-bg-magenta { background-color: #a855f7; color: #fff; }
+          .ansi-bg-cyan { background-color: #06b6d4; color: #000; }
+          .ansi-bg-white { background-color: #ffffff; color: #000; }
+          
+          .ansi-bold { font-weight: bold; }
 
           .status-bar {
             margin-top: 0.5rem;
@@ -164,15 +170,16 @@ module.exports = function generateHtopPage() {
         </div>
 
         <script>
-          // Simple client-side ANSI to HTML converter
+          // Enhanced client-side ANSI to HTML converter
           function ansiToHtml(text) {
             if (!text) return "";
             
-            // Strip non-color terminal sequences (cursor moves, mode switches, etc.)
-            text = text.replace(/\\x1b\\[[0-9;?]*[A-Za-z]/g, (match) => {
-              // Keep only the color sequences (the ones ending in 'm')
-              return match.endsWith('m') ? match : '';
-            });
+            // 1. Strip character set sequences like \x1b(B
+            text = text.replace(/\x1b\(B/g, '');
+            
+            // 2. Strip non-color terminal sequences (positioning, etc.)
+            // We strip anything that isn't a color (m) sequence
+            text = text.replace(/\x1b\[[0-9;?]*[A-ln-z]/g, '');
 
             const colors = {
               30: 'ansi-black', 31: 'ansi-red', 32: 'ansi-green', 33: 'ansi-yellow',
@@ -188,14 +195,17 @@ module.exports = function generateHtopPage() {
             let html = "";
             let currentClasses = new Set();
             
-            // Match the escape sequence: \\x1b\\[ (digits separated by ;) m
-            const parts = text.split(/\\x1b\\[(([0-9]+;?)+)m/);
+            // 3. Split by color escape sequences: \x1b[ (codes) m
+            const parts = text.split(/\x1b\[([0-9;]*)m/);
             
             for (let i = 0; i < parts.length; i++) {
-               // Due to splitting with a capture group, every 3rd element (indices 1, 4, 7...) is the captured code string
-               // Index 0, 3, 6... are the actual text parts
-               if (i % 3 === 0) {
-                 const part = parts[i];
+               if (i % 2 === 0) {
+                 // Text part - Escape HTML entities
+                 let part = parts[i]
+                   .replace(/&/g, '&amp;')
+                   .replace(/</g, '&lt;')
+                   .replace(/>/g, '&gt;');
+                   
                  if (part) {
                    if (currentClasses.size > 0) {
                      html += '<span class="' + Array.from(currentClasses).join(' ') + '">' + part + '</span>';
@@ -203,26 +213,30 @@ module.exports = function generateHtopPage() {
                      html += part;
                    }
                  }
-               } else if (i % 3 === 1) {
+               } else {
+                 // ANSI code part
                  const codeStr = parts[i];
-                 const codes = codeStr.split(';');
-                 
-                 codes.forEach(code => {
-                   const c = parseInt(code);
-                   if (c === 0) {
-                     currentClasses.clear();
-                   } else if (colors[c]) {
-                     // Clear previous foreground colors
-                     Object.values(colors).forEach(cls => currentClasses.delete(cls));
-                     currentClasses.add(colors[c]);
-                   } else if (bgColors[c]) {
-                     // Clear previous background colors
-                     Object.values(bgColors).forEach(cls => currentClasses.delete(cls));
-                     currentClasses.add(bgColors[c]);
-                   } else if (c === 1) {
-                     currentClasses.add('bold');
-                   }
-                 });
+                 if (!codeStr || codeStr === '0' || codeStr === '') {
+                   currentClasses.clear();
+                 } else {
+                   const codes = codeStr.split(';');
+                   codes.forEach(code => {
+                     const c = parseInt(code);
+                     if (c === 0) {
+                       currentClasses.clear();
+                     } else if (colors[c]) {
+                       // Clear previous foreground colors
+                       Object.values(colors).forEach(cls => currentClasses.delete(cls));
+                       currentClasses.add(colors[c]);
+                     } else if (bgColors[c]) {
+                       // Clear previous background colors
+                       Object.values(bgColors).forEach(cls => currentClasses.delete(cls));
+                       currentClasses.add(bgColors[c]);
+                     } else if (c === 1) {
+                       currentClasses.add('ansi-bold');
+                     }
+                   });
+                 }
                }
             }
             
