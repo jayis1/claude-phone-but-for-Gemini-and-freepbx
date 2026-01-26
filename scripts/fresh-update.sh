@@ -39,5 +39,18 @@ else
   echo "[UPDATE] Gemini CLI found."
 fi
 
-# 4. Success message
+# 4. Repair Permissions & Symlinks
+echo "[UPDATE] Verifying permissions..."
+chmod +x cli/bin/gemini-phone.js
+
+# Re-link binary if needed
+if [ -d "/usr/local/bin" ] && [ ! -f "/usr/local/bin/gemini-phone" ]; then
+    echo "[UPDATE] Restoring global symlink..."
+    ln -sf "$(pwd)/cli/bin/gemini-phone.js" "/usr/local/bin/gemini-phone" || echo "[WARN] Failed to link binary (permission denied?)"
+elif [ -d "$HOME/.local/bin" ] && [ ! -f "$HOME/.local/bin/gemini-phone" ]; then
+     echo "[UPDATE] Restoring user symlink..."
+     ln -sf "$(pwd)/cli/bin/gemini-phone.js" "$HOME/.local/bin/gemini-phone"
+fi
+
+# 5. Success message
 echo "[UPDATE] Update Complete! Please restart services."
