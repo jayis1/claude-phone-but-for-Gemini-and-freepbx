@@ -4,7 +4,7 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.2.3
+## What's New in v2.2.4
 
 + 🛠️ **Advanced Web Orchestration** - Every .env variable now manageable via UI.
 + 🌈 **True htop Visuals** - Resolved monochrome issue for real colorful system bars.
