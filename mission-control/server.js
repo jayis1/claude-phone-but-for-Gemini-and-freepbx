@@ -510,7 +510,12 @@ app.get('/', (req, res) => {
                 <button class="btn" onclick="apiAction('system-info')">ℹ️ Info</button>
               </div>
 
-              <div id="api-result" style="display: none;"></div>
+              <div style="margin-top: 1rem; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="stat-label">Results & Output</div>
+                <div id="api-result" class="log-container" style="background: #000; min-height: 100px; font-size: 0.8rem; color: var(--success); white-space: pre-wrap; word-break: break-all;">
+                  Waiting for action...
+                </div>
+              </div>
             </div>
           </div>
 
@@ -780,15 +785,19 @@ app.get('/', (req, res) => {
           async function apiAction(action) {
             const out = document.getElementById('api-result');
             if(!out) return;
-            out.innerText = 'Running...';
+            out.style.display = 'block';
+            out.style.color = 'var(--warning)';
+            out.innerText = 'Running ' + action + '...';
             try {
               const res = await fetch('/api/proxy/api/' + action);
               const d = await res.json();
+              out.style.color = 'var(--success)';
               out.innerText = JSON.stringify(d, null, 2);
               setStatus('api-status', true);
               const dot = document.getElementById('dot-api');
               if(dot) dot.className = 'service-dot online';
             } catch(e) {
+              out.style.color = 'var(--error)';
               out.innerText = 'Error: ' + e.message;
               setStatus('api-status', false);
               const dot = document.getElementById('dot-api');
