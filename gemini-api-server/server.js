@@ -109,18 +109,9 @@ function buildGeminiEnvironment() {
     GEMINI_ENTRYPOINT: 'cli',
   };
 
-  // Load Root .env (if available) - for GEMINI_API_KEY
-  const rootEnvPath = path.join(__dirname, '../.env');
-  if (fs.existsSync(rootEnvPath)) {
-    try {
-      const rootContent = fs.readFileSync(rootEnvPath, 'utf8');
-      for (const line of rootContent.split('\n')) {
-        const match = line.match(/^GEMINI_API_KEY=(.*)$/);
-        if (match) {
-          env['GEMINI_API_KEY'] = match[1].replace(/["']/g, '').trim();
-        }
-      }
-    } catch (e) { }
+  // PRIORITIZE INJECTED ENV (from CLI spawn)
+  if (process.env.GEMINI_API_KEY) {
+    env['GEMINI_API_KEY'] = process.env.GEMINI_API_KEY;
   }
 
   return env;

@@ -174,12 +174,14 @@ module.exports = function generateHtopPage() {
           function ansiToHtml(text) {
             if (!text) return "";
             
-            // 1. Strip character set sequences like \x1b(B or \x1b(0
-            text = text.replace(/\\u001b\\([B0]/g, '');
+            // 1. Preserve character set sequences for layout (like lines/corners in htop)
+            // But strip the pesky \x1b(B / \x1b(0 if they cause issues
+            // text = text.replace(/\\u001b\\([B0]/g, '');
 
-            // 2. Strip non-color terminal sequences
-            // We strip anything that isn't a color (m) sequence
-            text = text.replace(/\\u001b\\[[0-9;?]*[A-ln-z]/g, '');
+            // 2. Strip non-color/non-format terminal sequences
+            // We ONLY strip cursor movements and clear-screens, NOT layout chars
+            text = text.replace(/\\u001b\\[[0-9;?]*[A-KJK]/g, '');
+            text = text.replace(/\\u001b\\[[0-9;]*[Hfr]/g, ''); 
 
             const colors = {
               30: 'ansi-black', 31: 'ansi-red', 32: 'ansi-green', 33: 'ansi-yellow',
