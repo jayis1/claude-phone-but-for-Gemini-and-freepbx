@@ -31,7 +31,7 @@ function generateTopPage() {
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            border-bottom: 2px solid #00f; /* BLUE SEPARATOR asked by user */
+            border-bottom: 2px solid #00f; /* BLUE SEPARATOR requested by user */
             position: relative;
           }
           
@@ -44,15 +44,17 @@ function generateTopPage() {
           #bottom-left {
             border-right: 2px solid #333;
             padding: 10px;
-            border: 2px solid #f00; /* RED BOX asked by user */
+            border: 2px solid #f00; /* RED BOX requested by user */
             margin: 5px;
-            overflow-y: auto;
+            overflow-y: hidden; /* Controlled by internal sections */
+            display: flex;
+            flex-direction: column;
           }
   
           #bottom-right {
             display: grid;
             grid-template-rows: 1fr auto; /* Playlist takes space, Input takes auto */
-            border: 2px solid #0f0; /* GREEN BOX asked by user */
+            border: 2px solid #0f0; /* GREEN BOX requested by user */
             margin: 5px;
             overflow: hidden;
           }
@@ -63,7 +65,7 @@ function generateTopPage() {
           }
   
           #input-area {
-            background: #222; /* GRAY BOX asked by user */
+            background: #222; /* GRAY BOX requested by user */
             padding: 10px;
             border-top: 1px solid #0f0;
             display: flex;
@@ -86,7 +88,7 @@ function generateTopPage() {
           .stats-container { display: flex; gap: 40px; margin-bottom: 10px; font-size: 12px; }
           .bar-row { margin-bottom: 2px; display: flex; align-items: center; }
           .bar-label { display: inline-block; width: 40px; color: #0ff; font-weight: bold; }
-          .bar-track { display: inline-block; width: 250px; background: #222; position: relative; height: 14px; margin-right: 10px; }
+          .bar-track { display: inline-block; width: 250px; background: #222; position: relative; height: 14px; margin-right: 17px; }
           .bar-fill { height: 100%; background: #0f0; display: block; }
           .bar-text { color: #fff; }
   
@@ -99,7 +101,7 @@ function generateTopPage() {
           .pid { color: #f00; } .user { color: #ff0; } .cmd { color: #fff; font-weight: bold; }
   
           /* === BOTTOM SECTIONS CONTENT === */
-          .section-title { font-size: 1.2rem; margin-bottom: 10px; border-bottom: 1px dashed #555; padding-bottom: 5px; color: #fff; }
+          .section-title { font-size: 1.1rem; margin-bottom: 5px; border-bottom: 1px dashed #555; padding-bottom: 5px; color: #fff; display: flex; justify-content: space-between; align-items: center;}
           
           /* Playlist Items */
           .playlist-item { display: flex; gap: 10px; margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #111; }
@@ -117,9 +119,22 @@ function generateTopPage() {
           }
           button.add-btn:hover { background: #006600; }
   
-          /* Ideas Area */
-          .idea-card { background: #111; border: 1px solid #333; padding: 10px; margin-bottom: 10px; color: #ddd; font-family: sans-serif; }
-          .idea-title { color: #f00; font-weight: bold; margin-bottom: 5px; }
+          /* === NOTES UI (RED BOX) === */
+          .btn-sm { background: #333; color: #fff; border: 1px solid #555; padding: 2px 8px; cursor: pointer; font-size: 0.8rem; }
+          .btn-sm:hover { background: #555; }
+          
+          #notes-list-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+          #notes-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+          
+          .note-card { background: #111; border: 1px solid #333; padding: 8px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
+          .note-card:hover { background: #1a1a1a; border-color: #555; }
+          .note-card-title { color: #f00; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; }
+          .note-card-prev { color: #aaa; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          
+          #note-editor { display: none; flex-direction: column; height: 100%; }
+          #edit-title { background: #000; color: #f00; border: 1px solid #333; padding: 5px; margin-bottom: 5px; font-weight: bold; width: 100%; }
+          #edit-content { flex: 1; background: #000; color: #ddd; border: 1px solid #333; padding: 5px; resize: none; margin-bottom: 5px; font-family: inherit; }
+          .editor-actions { display: flex; gap: 5px; justify-content: flex-end; }
   
         </style>
       </head>
@@ -160,9 +175,30 @@ function generateTopPage() {
         <!-- BOTTOM PANEL -->
         <div id="bottom-panel">
           
-          <!-- LEFT: IDEAS (RED BOX) -->
+          <!-- LEFT: NOTES (RED BOX) -->
           <div id="bottom-left">
-            <!-- Reserved for future use -->
+            <!-- List View -->
+            <div id="notes-list-view">
+               <div class="section-title">
+                 <span>MY NOTES</span>
+                 <button class="btn-sm" onclick="newNote()">+ New Note</button>
+               </div>
+               <div id="notes-list">
+                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading notes...</div>
+               </div>
+            </div>
+  
+            <!-- Editor View ("Fane") -->
+            <div id="note-editor">
+               <input type="hidden" id="edit-id">
+               <input type="text" id="edit-title" placeholder="Note Title...">
+               <textarea id="edit-content" placeholder="Type your note here..."></textarea>
+               <div class="editor-actions">
+                 <button class="btn-sm" style="color:#f00; border-color:#f00" onclick="deleteNote()">Delete</button>
+                 <button class="btn-sm" onclick="cancelEdit()">Cancel</button>
+                 <button class="btn-sm" style="background:#004400; border-color:#0f0" onclick="saveNote()">SAVE</button>
+               </div>
+            </div>
           </div>
   
           <!-- RIGHT: PLAYLIST & INPUT (GREEN & GRAY BOXES) -->
@@ -179,10 +215,6 @@ function generateTopPage() {
                     <div class="song-thumb" style="background:#0044cc"></div>
                     <div class="song-info"><div class="song-title">Synthwave Mix 2024</div><div class="song-meta">ThePrimeThanatos • 1:04:20</div></div>
                  </div>
-                 <div class="playlist-item">
-                    <div class="song-thumb" style="background:#cc6600"></div>
-                    <div class="song-info"><div class="song-title">Hackers Soundtrack</div><div class="song-meta">OST • 44:02</div></div>
-                 </div>
               </div>
             </div>
             
@@ -198,26 +230,102 @@ function generateTopPage() {
         <!-- SCRIPTS -->
         <script>
           /* UTILS */
-          function formatBytes(bytes) {
-            if (bytes === 0) return '0K';
-            const k = 1024;
-            const sizes = ['K', 'M', 'G', 'T'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
-          }
-          function formatTime(seconds) {
-            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-            return \`\${h}:\${m}:\${s}\`;
+          function formatBytes(bytes) { if (bytes===0) return '0K'; const k=1024, sizes=['K','M','G','T'], i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+sizes[i]; }
+          function formatTime(s) { const h=Math.floor(s/3600).toString().padStart(2,'0'), m=Math.floor((s%3600)/60).toString().padStart(2,'0'), sec=Math.floor(s%60).toString().padStart(2,'0'); return \`\${h}:\${m}:\${sec}\`; }
+  
+          /* NOTES LOGIC */
+          let currentNotes = [];
+  
+          async function fetchNotes() {
+            try {
+              const res = await fetch('/api/notes');
+              currentNotes = await res.json();
+              renderNotes();
+            } catch(e) { console.error('Failed to load notes', e); }
           }
   
-          /* UPDATE LOGIC */
+          function renderNotes() {
+            const list = document.getElementById('notes-list');
+            list.innerHTML = '';
+            if(currentNotes.length === 0) {
+              list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">No notes yet.</div>';
+              return;
+            }
+            currentNotes.forEach(note => {
+               const div = document.createElement('div');
+               div.className = 'note-card';
+               div.onclick = () => editNote(note.id);
+               div.innerHTML = \`
+                 <div class="note-card-title">
+                    <span>\${note.title || '(Untitled)'}</span>
+                    <span style="font-weight:normal; color:#666; font-size:0.8em">\${new Date(note.timestamp).toLocaleDateString()}</span>
+                 </div>
+                 <div class="note-card-prev">\${note.content || ''}</div>
+               \`;
+               list.appendChild(div);
+            });
+          }
+  
+          function newNote() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('edit-title').value = '';
+            document.getElementById('edit-content').value = '';
+            showEditor(true);
+          }
+  
+          function editNote(id) {
+            const note = currentNotes.find(n => n.id === id);
+            if(!note) return;
+            document.getElementById('edit-id').value = note.id;
+            document.getElementById('edit-title').value = note.title || '';
+            document.getElementById('edit-content').value = note.content || '';
+            showEditor(true);
+          }
+  
+          function showEditor(show) {
+            document.getElementById('notes-list-view').style.display = show ? 'none' : 'flex';
+            document.getElementById('note-editor').style.display = show ? 'flex' : 'none';
+          }
+  
+          function cancelEdit() { showEditor(false); }
+  
+          async function saveNote() {
+            const id = document.getElementById('edit-id').value;
+            const title = document.getElementById('edit-title').value;
+            const content = document.getElementById('edit-content').value;
+            
+            if(!title && !content) { alert('Writes something!'); return; }
+  
+            try {
+              await fetch('/api/notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id || null, title, content })
+              });
+              await fetchNotes(); // Reload
+              showEditor(false);
+            } catch(e) { alert('Save failed'); console.error(e); }
+          }
+  
+          async function deleteNote() {
+             const id = document.getElementById('edit-id').value;
+             if(!id) { showEditor(false); return; }
+             if(!confirm('Delete this note?')) return;
+             
+             try {
+               await fetch('/api/notes/' + id, { method: 'DELETE' });
+               await fetchNotes();
+               showEditor(false);
+             } catch(e) { alert('Delete failed'); }
+          }
+  
+          // Initial Load
+          fetchNotes();
+  
+          /* SYSTEM MONITOR LOGIC */
           async function updateStats() {
             try {
-              // Real Clock
               document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-  
               const res = await fetch('/api/system/stats');
               const data = await res.json();
               
@@ -229,7 +337,9 @@ function generateTopPage() {
               const memPct = (memVals.active / memVals.total) * 100;
               document.getElementById('mem-bar').style.width = memPct + '%';
               document.getElementById('mem-text').innerText = formatBytes(memVals.active) + '/' + formatBytes(memVals.total);
-              
+              document.getElementById('swap-bar').style.width = '0%';
+              document.getElementById('swap-text').innerText = '0/0';
+  
               document.getElementById('uptime').innerText = formatTime(data.uptime || 0);
               const loads = data.currentLoad?.cpus?.map(c => c.load.toFixed(2)).slice(0,3).join(' ') || "0.00 0.00 0.00"; 
               document.getElementById('load-avg').innerText = loads;
@@ -241,11 +351,9 @@ function generateTopPage() {
                 { pid: 1245, user: 'gemini', pri: 20, ni: 0, virt: 98000000, res: 22000000, s: 'S', cpu: 0.1, mem: 0.5, time: 450, cmd: 'mission-control' },
                 { pid: 4001, user: 'docker', pri: 20, ni: 0, virt: 450000000, res: 128000000, s: 'S', cpu: 1.2, mem: 4.5, time: 33201, cmd: 'freeswitch' },
               ];
-              // Add filler rows
               for(let i=0; i<15; i++) {
                  processes.push({ pid: 5000+i, user: 'root', pri: 20, ni: 0, virt: 10000, res: 2000, s: 'S', cpu: 0.0, mem: 0.0, time: 0, cmd: 'kworker/u'+i });
               }
-  
               processes.forEach(p => {
                 const row = document.createElement('tr');
                 row.innerHTML = \`
@@ -263,10 +371,8 @@ function generateTopPage() {
                 \`;
                 tbody.appendChild(row);
               });
-  
             } catch(e) { console.error(e); }
           }
-  
           setInterval(updateStats, 2000);
           updateStats();
         </script>

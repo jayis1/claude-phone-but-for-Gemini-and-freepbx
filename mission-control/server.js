@@ -343,7 +343,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.28
+            MISSION CONTROL v2.2.29
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
@@ -1794,6 +1794,68 @@ app.post('/api/update/apply', (req, res) => {
   });
 });
 
+const fs = require('fs');
+/* === NOTES SYSTEM === */
+const NOTES_DIR = path.join(__dirname, 'data');
+const NOTES_FILE = path.join(NOTES_DIR, 'notes.json');
+
+// Ensure data dir
+if (!fs.existsSync(NOTES_DIR)) {
+  fs.mkdirSync(NOTES_DIR, { recursive: true });
+}
+
+// Ensure notes file
+if (!fs.existsSync(NOTES_FILE)) {
+  fs.writeFileSync(NOTES_FILE, JSON.stringify([]));
+}
+
+// Helpers
+function getNotes() {
+  try {
+    return JSON.parse(fs.readFileSync(NOTES_FILE, 'utf8'));
+  } catch (e) { return []; }
+}
+function saveNotes(notes) {
+  fs.writeFileSync(NOTES_FILE, JSON.stringify(notes, null, 2));
+}
+
+// Routes
+app.get('/api/notes', (req, res) => {
+  res.json(getNotes());
+});
+
+app.post('/api/notes', (req, res) => {
+  const note = req.body; // { id, title, content, timestamp }
+  const notes = getNotes();
+
+  if (!note.title && !note.content) return res.status(400).json({ error: 'Empty note' });
+
+  if (note.id) {
+    // Edit existing
+    const idx = notes.findIndex(n => n.id === note.id);
+    if (idx >= 0) {
+      notes[idx] = { ...notes[idx], ...note };
+    } else {
+      note.timestamp = new Date().toISOString();
+      notes.unshift(note);
+    }
+  } else {
+    // Create new
+    note.id = Date.now().toString();
+    note.timestamp = new Date().toISOString();
+    notes.unshift(note);
+  }
+  saveNotes(notes);
+  res.json({ success: true, notes });
+});
+
+app.delete('/api/notes/:id', (req, res) => {
+  let notes = getNotes();
+  notes = notes.filter(n => n.id !== req.params.id);
+  saveNotes(notes);
+  res.json({ success: true, notes });
+});
+
 // Logs API - Aggregated (Existing)
 app.post('/api/logs', (req, res) => {
   const { level, service, message, data } = req.body;
@@ -1842,6 +1904,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.28]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.29]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
