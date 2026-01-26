@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
  * @returns {Promise<object>} Check result
  */
 export async function checkDisk(platform) {
-  const requiredGB = 2;
+  const requiredGB = 10;
   const requiredBytes = requiredGB * 1024 * 1024 * 1024;
 
   try {
