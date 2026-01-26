@@ -293,8 +293,7 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
     console.log(chalk.gray('To start the API server:'));
     console.log(chalk.gray('gemini-phone start\n'));
     console.log(chalk.gray(`The API server will listen on port ${config.server.geminiApiPort}.`));
-    const ip = getLocalIP();
-    console.log(chalk.gray('Voice servers can connect to: http://' + ip + ':' + config.server.geminiApiPort + '\n'));
+    console.log(chalk.gray('Voice servers can connect to: http://YOUR_IP:' + config.server.geminiApiPort + '\n'));
   } else if (installationType === 'voice-server') {
     if (isPi) {
       console.log(chalk.bold.cyan('📋 API server instructions:\n'));
