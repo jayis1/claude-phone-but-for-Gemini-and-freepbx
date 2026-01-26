@@ -343,7 +343,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.40
+            MISSION CONTROL v2.2.41
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
@@ -1376,7 +1376,12 @@ const PROFILES_FILE = path.join(__dirname, 'profiles.json');
 const os = require('os');
 const HOME_ENV = path.join(os.homedir(), '.gemini-phone', '.env');
 const LOCAL_ENV = path.join(__dirname, '../.env');
-const ENV_FILE = fs.existsSync(HOME_ENV) ? HOME_ENV : LOCAL_ENV;
+const CONTAINER_ENV = '/app/.env';
+
+// Determine ENV_FILE location
+let ENV_FILE = LOCAL_ENV;
+if (fs.existsSync(CONTAINER_ENV)) ENV_FILE = CONTAINER_ENV;
+else if (fs.existsSync(HOME_ENV)) ENV_FILE = HOME_ENV;
 
 // Helper: Read .env into object
 function parseEnv() {
@@ -1387,8 +1392,14 @@ function parseEnv() {
       const match = line.match(/^([^=]+)=(.*)$/);
       if (match) env[match[1].trim()] = match[2].trim();
     });
-    return env;
-  } catch (e) { return {}; }
+
+    // FALLBACK: Merge with process.env for any missing keys
+    // This allows the UI to populate even if file read failed or is partial
+    return { ...process.env, ...env };
+  } catch (e) {
+    // If file read fails, return process.env so UI isn't empty
+    return process.env;
+  }
 }
 
 // Helper: Write object to .env
@@ -1903,6 +1914,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.40]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.41]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
