@@ -1293,8 +1293,8 @@ app.post('/api/gemini-cli', async (req, res) => {
       maxBuffer: 1024 * 1024, // 1MB
       env: {
         ...process.env,
-        GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-        GOOGLE_API_KEY: process.env.GEMINI_API_KEY // Alias for some tools
+        GEMINI_API_KEY: process.env.MISSION_CONTROL_GEMINI_KEY || process.env.GEMINI_API_KEY,
+        GOOGLE_API_KEY: process.env.MISSION_CONTROL_GEMINI_KEY || process.env.GEMINI_API_KEY // Alias for some tools
       }
     });
 

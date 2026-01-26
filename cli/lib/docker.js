@@ -168,7 +168,9 @@ export function generateDockerCompose(config) {
       - VOICE_APP_URL=http://localhost:${config.server.httpPort || 3000}
       - API_SERVER_URL=http://localhost:${config.server.geminiApiPort}
       - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}
+      - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}
       - GEMINI_API_KEY=\${GEMINI_API_KEY}
+      - MISSION_CONTROL_GEMINI_KEY=\${MISSION_CONTROL_GEMINI_KEY}
       - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
   }
 
@@ -258,6 +260,8 @@ export function generateEnvFile(config) {
     '',
     '# Gemini API Key',
     `GEMINI_API_KEY=${config.api.gemini?.apiKey || ''}`,
+    `MISSION_CONTROL_GEMINI_KEY=${config.api.gemini?.missionControlKey || ''}`,
+
     '',
     '# Application Settings',
     `HTTP_PORT=${config.server.httpPort || 3000}`,

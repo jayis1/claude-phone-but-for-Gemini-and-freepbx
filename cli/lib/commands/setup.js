@@ -959,6 +959,24 @@ async function setupAPIKeys(config) {
     }
   }
 
+  // -----------------------------------------------------------
+  // 5. Mission Control Gemini Key (Optional)
+  // -----------------------------------------------------------
+
+  const missionControlAnswers = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'missionControlKey',
+      message: 'Mission Control Gemini Key (Optional - leave empty to use main key):',
+      default: config.api.gemini.missionControlKey || '',
+    }
+  ]);
+
+  if (missionControlAnswers.missionControlKey && missionControlAnswers.missionControlKey.trim() !== '') {
+    config.api.gemini.missionControlKey = missionControlAnswers.missionControlKey.trim();
+    console.log(chalk.green('✓ Mission Control specific key saved'));
+  }
+
   return config;
 }
 
@@ -1438,6 +1456,9 @@ function mergeEnvWithConfig(config, env) {
   }
   if (env.GEMINI_API_KEY) {
     newConfig.api.gemini.apiKey = env.GEMINI_API_KEY;
+  }
+  if (env.MISSION_CONTROL_GEMINI_KEY) {
+    newConfig.api.gemini.missionControlKey = env.MISSION_CONTROL_GEMINI_KEY;
   }
 
   // Outbound Settings
