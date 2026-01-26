@@ -167,7 +167,9 @@ export function generateDockerCompose(config) {
       - PORT=3030
       - VOICE_APP_URL=http://localhost:${config.server.httpPort || 3000}
       - API_SERVER_URL=http://localhost:${config.server.geminiApiPort}
-      - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}`);
+      - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
   }
 
   // Gemini API server is now RUN LOCALLY, not in Docker
