@@ -361,9 +361,9 @@ async function startBoth(config, isPiMode) {
         const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
 
         await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid', 'server.js', {
-          VOICE_APP_URL: `http://127.0.0.1:${voiceAppPort}`,
-          INFERENCE_URL: `http://127.0.0.1:${inferencePort}`,
-          API_SERVER_URL: `http://127.0.0.1:${config.server.geminiApiPort}`,
+          VOICE_APP_URL: `http://localhost:${voiceAppPort}`,
+          INFERENCE_URL: `http://localhost:${inferencePort}`,
+          API_SERVER_URL: `http://localhost:${config.server.geminiApiPort}`,
           GEMINI_API_KEY: geminiKey
         });
         spinner.succeed(`Mission Control Dashboard started on port ${missionControlPort}`);
@@ -407,10 +407,10 @@ async function startBoth(config, isPiMode) {
   } else {
     const voiceAppPort = config.server.httpPort || 3000;
     const inferencePort = config.server.inferencePort || 4000;
-    console.log(chalk.gray(`  • Voice App:         http://127.0.0.1:${voiceAppPort} (Voice Controls)`));
-    console.log(chalk.gray(`  • Inference Brain:   http://127.0.0.1:${inferencePort} (AI Reasoning)`));
-    console.log(chalk.gray(`  • Mission Control:   http://127.0.0.1:3030 (Dashboard)`));
-    console.log(chalk.gray(`  • API Server:        http://127.0.0.1:${config.server.geminiApiPort} (Tool Execution)`));
+    console.log(chalk.gray(`  • Voice App:         http://localhost:${voiceAppPort} (Voice Controls)`));
+    console.log(chalk.gray(`  • Inference Brain:   http://localhost:${inferencePort} (AI Reasoning)`));
+    console.log(chalk.gray(`  • Mission Control:   http://localhost:3030 (Dashboard)`));
+    console.log(chalk.gray(`  • API Server:        http://localhost:${config.server.geminiApiPort} (Tool Execution)`));
     console.log();
   }
 }
