@@ -10,7 +10,7 @@ const si = require('systeminformation');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
-const generateHtopPage = require('./htop-page');
+const generateTopPage = require('./htop-page');
 const generateSettingsPage = require('./settings-page');
 
 const app = express();
@@ -339,15 +339,15 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.15
+            MISSION CONTROL v2.2.16
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
               </button>
-              <a href="/htop" style="text-decoration: none;">
+              <a href="/top" style="text-decoration: none;">
                 <button style="padding: 4px 8px; background: #8b5cf6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
-                  <span>📊</span> htop
+                  <span>📊</span> top
                 </button>
               </a>
             </div>
@@ -1838,6 +1838,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.15]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.2.16]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

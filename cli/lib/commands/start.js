@@ -329,13 +329,10 @@ async function startBoth(config, isPiMode) {
         const inferencePort = config.server.inferencePort || 4000;
 
         // Ensure GEMINI_API_KEY is available
-        if (!process.env.GEMINI_API_KEY) {
-          // Try to load from env file if available
-          // But since we are here, we hope it's in process.env
-        }
+        const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
 
         await startInferenceServer(inferencePath, inferencePort, `http://localhost:${config.server.geminiApiPort}`, 'inference.pid', 'server.js', {
-          GEMINI_API_KEY: process.env.GEMINI_API_KEY
+          GEMINI_API_KEY: geminiKey
         });
         spinner.succeed(`Inference Server (Brain) started on port ${inferencePort}`);
       } catch (error) {
@@ -360,10 +357,14 @@ async function startBoth(config, isPiMode) {
         const voiceAppPort = config.server.httpPort || 3000;
         const inferencePort = config.server.inferencePort || 4000;
 
+        // Ensure GEMINI_API_KEY is available for terminal
+        const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+
         await startInferenceServer(missionControlPath, missionControlPort, null, 'mission-control.pid', 'server.js', {
           VOICE_APP_URL: `http://127.0.0.1:${voiceAppPort}`,
           INFERENCE_URL: `http://127.0.0.1:${inferencePort}`,
-          API_SERVER_URL: `http://127.0.0.1:${config.server.geminiApiPort}`
+          API_SERVER_URL: `http://127.0.0.1:${config.server.geminiApiPort}`,
+          GEMINI_API_KEY: geminiKey
         });
         spinner.succeed(`Mission Control Dashboard started on port ${missionControlPort}`);
       } catch (error) {
