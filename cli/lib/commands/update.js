@@ -161,7 +161,7 @@ function showManualInstructions(release) {
   console.log(chalk.bold('   cp ~/.gemini-phone/config.json ~/config.json.backup\n'));
 
   console.log(chalk.gray('3. Run the installer:'));
-  console.log(chalk.bold('   curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.33/install.sh | bash\n'));
+  console.log(chalk.bold('   curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.34/install.sh | bash\n'));
 
   console.log(chalk.gray('4. Start services:'));
   console.log(chalk.bold('   gemini-phone start\n'));
