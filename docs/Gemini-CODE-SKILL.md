@@ -12,7 +12,7 @@ This skill wraps the Gemini Phone outbound API, allowing natural language comman
 
 ## Skill Structure
 
-```
+```text
 ~/.gemini/skills/Call/
 ├── SKILL.md              # Skill definition and routing
 ├── bin/
@@ -127,21 +127,21 @@ call devices
 
 **Call when task completes:**
 
-```
+```text
 User: "Run this script and call me when it's done"
 → Executes script, then calls with status update
 ```
 
 **Call with conversation:**
 
-```
+```text
 User: "Call me and let's discuss the test results"
 → Calls in conversation mode, you can ask follow-up questions
 ```
 
 **Device-specific call:**
 
-```
+```text
 User: "Have Cephanie call me about disk usage"
 → Cephanie's voice delivers the message
 ```
@@ -562,8 +562,7 @@ call outbound <number> --message "<message>" [--mode conversation] [--device Cep
 ## Usage Examples
 
 Once installed, your AI can handle requests like:
-
-```
+```text
 
 You: Run the backup and call me when done
 AI: [runs backup]
@@ -572,7 +571,7 @@ AI: Calling you now with the results.
 
 ```
 
-```
+```text
 
 You: If disk usage goes over 90%, have Cephanie call me
 AI: [monitors disk]
@@ -582,7 +581,7 @@ AI: Cephanie is calling you about disk usage.
 
 ```
 
-```
+```text
 
 You: Call me and let's discuss the deployment
 AI: Calling you in conversation mode.

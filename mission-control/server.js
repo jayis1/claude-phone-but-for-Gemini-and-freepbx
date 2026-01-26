@@ -10,7 +10,7 @@ const si = require('systeminformation');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
-const generateTopPage = require('./htop-page');
+const generateTopPage = require('./tiptop.js');
 const generateSettingsPage = require('./settings-page');
 
 const app = express();
