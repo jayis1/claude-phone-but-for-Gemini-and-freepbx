@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.14/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.15/install.sh | bash
 
 
 main() {
@@ -421,24 +421,11 @@ main() {
   echo ""
 
   # Setup Gemini API Key
-  # (GEMINI_KEY was detected at start of script)
-
-  if [ -z "$GEMINI_KEY" ]; then
-    echo "Would you like to configure your Gemini API Key now?"
-    # Use /dev/tty for input to avoid consuming script stdin when piped
-    if [ -t 0 ]; then
-      read -p "Enter API Key (leave blank to skip): " GEMINI_KEY
-    elif [ -c /dev/tty ]; then
-      read -p "Enter API Key (leave blank to skip): " GEMINI_KEY < /dev/tty
-    else
-      echo "Skipping API Key setup (non-interactive mode)"
-      GEMINI_KEY=""
-    fi
-  fi
+  # (GEMINI_KEY was detected at start of script from .env)
 
   if [ -n "$GEMINI_KEY" ]; then
     echo ""
-    echo "Saving GEMINI_API_KEY..."
+    echo "Using GEMINI_API_KEY found in .env..."
     
     # Detect shell to update
     USER_SHELL=$(basename "$SHELL")
