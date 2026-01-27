@@ -1152,30 +1152,122 @@ app.get('/htop', (req, res) => {
   res.send(generateTipTopPage());
 });
 
-// htop Data API (Simulated htop using 'top' command for web safety)
-app.get('/api/htop', async (req, res) => {
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
+// ============================================
+// TipTop APIs (Real System Data)
+// ============================================
+
+// In-memory storage for TipTop features (simple persistence)
+let tipTopNotes = [
+  { id: '1', title: 'Welcome', content: 'Welcome to TipTop! Use F6 to sort, F9 to kill.', timestamp: Date.now() }
+];
+let tipTopPlaylist = [];
+
+// 1. System Stats (CPU, MEM, Processes)
+app.get('/api/system/stats', async (req, res) => {
+  try {
+    const [cpu, mem, load, time, processes] = await Promise.all([
+      si.currentLoad(),
+      si.mem(),
+      si.currentLoad(), // load average included in currentLoad or separate
+      si.time(),
+      si.processes()
+    ]);
+
+    // Format for frontend
+    const processList = processes.list.map(p => ({
+      pid: p.pid,
+      user: p.user,
+      pri: p.priority,
+      ni: p.nice,
+      virt: p.mem_vsz,
+      res: p.mem_rss,
+      s: p.state,
+      cpu: p.pcpu.toFixed(1),
+      mem: p.pmem.toFixed(1),
+      time: p.started, // formatted on front end
+      cmd: p.name + ' ' + p.command
+    }));
+
+    res.json({
+      cpu: { currentLoad: cpu.currentLoad.toFixed(1) },
+      mem: { active: mem.active, total: mem.total },
+      uptime: time.uptime,
+      load: load.avgLoad ? load.avgLoad.join(' ') : "0.00 0.00 0.00", // si sometimes returns different structures
+      tasks: { total: processes.all, running: processes.running },
+      processes: processList
+    });
+  } catch (error) {
+    console.error('Stats Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. Kill Process
+app.get('/api/process/kill', (req, res) => {
+  res.status(405).json({ error: 'Use POST' });
+});
+
+app.post('/api/process/kill', (req, res) => {
+  const { pid } = req.body;
+  if (!pid) return res.status(400).json({ error: 'PID required' });
 
   try {
-    // Try htop -n 1 (snapshot mode) for better visuals
-    // Fallback to top -b if htop fails or is missing
-    // Use 'script' to fake a TTY to get htop's colorful bars
-    // Use head to limit output
-    let cmd = 'script -q -c "export TERM=xterm-256color; export COLORTERM=truecolor; export COLUMNS=300; export LINES=150; htop -n 1" /dev/null';
-    try {
-      const { execSync } = require('child_process');
-      execSync('command -v htop');
-    } catch (e) {
-      cmd = 'top -b -n 1 | head -n 50';
-    }
-
-    const { stdout } = await execPromise(cmd);
-    res.json({ success: true, output: stdout });
+    process.kill(pid, 'SIGTERM'); // Start with SIGTERM
+    // Double check if we should allow SIGKILL via a force flag?
+    // For now, simple kill.
+    res.json({ success: true, message: `Signal sent to ${pid}` });
   } catch (error) {
-    res.json({ success: false, error: 'Failed to run monitor: ' + error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// 3. Notes API
+app.get('/api/notes', (req, res) => res.json(tipTopNotes));
+
+app.post('/api/notes', (req, res) => {
+  const { id, title, content } = req.body;
+  if (id) {
+    // Edit
+    const note = tipTopNotes.find(n => n.id === id);
+    if (note) {
+      note.title = title;
+      note.content = content;
+      note.timestamp = Date.now();
+    }
+  } else {
+    // New
+    tipTopNotes.unshift({
+      id: Date.now().toString(),
+      title,
+      content,
+      timestamp: Date.now()
+    });
+  }
+  res.json({ success: true });
+});
+
+app.delete('/api/notes/:id', (req, res) => {
+  tipTopNotes = tipTopNotes.filter(n => n.id !== req.params.id);
+  res.json({ success: true });
+});
+
+// 4. Playlist API
+app.get('/api/playlist', (req, res) => res.json(tipTopPlaylist));
+
+app.post('/api/playlist', (req, res) => {
+  const { url, title } = req.body;
+  tipTopPlaylist.push({
+    id: Date.now().toString(),
+    url,
+    title,
+    color: '#' + Math.floor(Math.random() * 16777215).toString(16) // Random color for fun
+  });
+  res.json({ success: true });
+});
+
+app.delete('/api/playlist/:id', (req, res) => {
+  tipTopPlaylist = tipTopPlaylist.filter(p => p.id !== req.params.id);
+  res.json({ success: true });
 });
 
 // ============================================
