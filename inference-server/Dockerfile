@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
@@ -6,7 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies and Python
-RUN apk add --no-cache python3 py3-pip make g++ && \
+RUN apt-get update && apt-get install -y python3 python3-pip make g++ && \
+    rm -rf /var/lib/apt/lists/* && \
     npm ci --only=production
 
 # Copy application files

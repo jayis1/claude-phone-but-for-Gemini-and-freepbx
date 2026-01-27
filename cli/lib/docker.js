@@ -345,7 +345,7 @@ export async function buildContainers() {
     const child = spawn(compose.cmd, composeArgs, {
       cwd: configDir,
       stdio: 'inherit', // Show build output directly to user
-      env: { ...process.env, BUILDX_NO_DEFAULT_ATTESTATIONS: '1' } // Fix provenance hang
+      env: { ...process.env, DOCKER_BUILDKIT: '0', COMPOSE_DOCKER_CLI_BUILD: '0' } // Fix provenance hang by using legacy builder
     });
 
     child.on('close', (code) => {
