@@ -2,7 +2,8 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.53/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.54/install.sh | bash
+
 
 
 
@@ -76,6 +77,24 @@ main() {
       exit 1
       ;;
   esac
+
+  # Check disk space (Linux only)
+  if [ "$OS" = "Linux" ]; then
+    echo ""
+    echo "🔍 Checking disk space..."
+    # Get available space in KB for the root filesystem
+    AVAILABLE_KB=$(df -k / | awk 'NR==2 {print $4}')
+    REQUIRED_KB=$((30 * 1024 * 1024)) # 30GB in KB
+    
+    if [ "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]; then
+      AVAILABLE_GB=$(echo "scale=1; $AVAILABLE_KB / 1024 / 1024" | bc 2>/dev/null || echo "$((AVAILABLE_KB / 1024 / 1024))")
+      echo "✗ Insufficient disk space: ${AVAILABLE_GB}GB available, 30GB required."
+      echo "  Starting Docker containers and pulling images requires significant space."
+      echo "  Please free up space and try again."
+      exit 1
+    fi
+    echo "✓ Disk space OK"
+  fi
 
   # Function to install Node.js
   install_nodejs() {
