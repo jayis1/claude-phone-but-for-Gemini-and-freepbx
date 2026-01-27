@@ -11,6 +11,10 @@ import { checkPort } from '../port-check.js';
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 
@@ -233,8 +237,16 @@ async function checkNetworkConfig(configIp) {
  * @returns {Promise<void>}
  */
 export async function doctorCommand() {
-  const pkg = JSON.parse(fs.readFileSync(path.join(getConfigDir(), '../package.json'), 'utf8'));
-  console.log(chalk.bold.cyan(`\n🔍 Gemini Phone Health Check v${pkg.version || 'unknown'}\n`));
+  let version = '3.3.4';
+  try {
+    const pkgPath = path.resolve(__dirname, '../../../package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      version = pkg.version || version;
+    }
+  } catch (e) { /* ignore */ }
+
+  console.log(chalk.bold.cyan(`\n🔍 Gemini Phone Health Check v${version}\n`));
 
   if (!configExists()) {
     console.log(chalk.red('✗ Not configured'));
