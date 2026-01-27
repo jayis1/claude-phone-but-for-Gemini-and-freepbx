@@ -719,6 +719,10 @@ async function setupPi(config) {
   console.log(chalk.bold('\n📞 Outbound Configuration'));
   config = await setupOutbound(config);
 
+  // Step 4.5: PBX API (Optional Automation)
+  console.log(chalk.bold('\n📡 FreePBX API (Optional Automation)'));
+  config = await setupPbxApi(config);
+
   // Step 5: Server Configuration (Pi-specific)
   console.log(chalk.bold('\n⚙️  Server Configuration'));
   config = await setupPiServer(config);

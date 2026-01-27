@@ -76,6 +76,38 @@ async function checkVoiceApp() {
 }
 
 /**
+ * Check FreePBX API connectivity (M2M)
+ * @param {object} pbxConfig - PBX config
+ * @returns {Promise<{connected: boolean, error?: string}>}
+ */
+async function checkPbxApi(pbxConfig) {
+  if (!pbxConfig || !pbxConfig.apiUrl || !pbxConfig.clientId || !pbxConfig.clientSecret) {
+    return { connected: false, error: 'Configuration missing (URL, Client ID, or Secret)' };
+  }
+
+  const tokenUrl = `${pbxConfig.apiUrl}/admin/api/api/token`;
+
+  try {
+    const response = await axios.post(tokenUrl, {
+      grant_type: 'client_credentials',
+      client_id: pbxConfig.clientId,
+      client_secret: pbxConfig.clientSecret
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 5000
+    });
+
+    if (response.data && response.data.access_token) {
+      return { connected: true };
+    } else {
+      return { connected: false, error: 'Failed to retrieve access token' };
+    }
+  } catch (error) {
+    return { connected: false, error: error.response?.data?.message || error.message };
+  }
+}
+
+/**
  * Check if gemini-api-server is running
  * @param {number} port - Port to check
  * @returns {Promise<{running: boolean, pid?: number, healthy?: boolean, error?: string}>}
@@ -409,6 +441,20 @@ async function runVoiceServerChecks(config, isPiSplit) {
     console.log(chalk.gray(`  → Ensure 'gemini-phone start' is running (Port ${voiceAppPort})\n`));
   }
   checks.push({ name: 'SIP registration', passed: true });
+
+  // Check FreePBX API (if configured)
+  const pbxApiSpinner = ora('Checking FreePBX M2M API...').start();
+  const pbxApiResult = await checkPbxApi(config.pbx);
+  if (pbxApiResult.connected) {
+    pbxApiSpinner.succeed(chalk.green('FreePBX M2M API connected'));
+    passedCount++;
+  } else if (config.pbx?.apiUrl) {
+    pbxApiSpinner.fail(chalk.red(`FreePBX M2M API failed: ${pbxApiResult.error}`));
+    console.log(chalk.gray('  → Run "gemini-phone setup" to reconfigure PBX API\n'));
+  } else {
+    pbxApiSpinner.info(chalk.blue('FreePBX M2M API not configured (Optional)'));
+  }
+  checks.push({ name: 'FreePBX M2M API', passed: pbxApiResult.connected || !config.pbx?.apiUrl });
 
   return { checks, passedCount };
 }
