@@ -79,6 +79,38 @@ sudo usermod -aG docker pi
 # Reboot the Pi
 ```
 
+### "failed to mount ... permission denied" (LXC/Proxmox)
+
+**Symptom:** `gemini-phone start` fails during Docker build/pull with an "overlayfs" permission error.
+
+**Cause:** You are running in an unprivileged LXC container (common on Proxmox or some VPS providers) which blocks the default `overlay2` storage driver.
+
+**Solution (The "vfs" fix):**
+
+1. Edit or create `/etc/docker/daemon.json`:
+
+    ```json
+    {
+      "storage-driver": "vfs"
+    }
+    ```
+
+2. Restart Docker:
+
+    ```bash
+    systemctl restart docker
+    ```
+
+3. Clean up and retry:
+
+    ```bash
+    docker system prune -a  # Clean partial downloads
+    gemini-phone start
+    ```
+
+> [!NOTE]
+> If you have access to the Proxmox host, you can also fix this by enabling **Nesting** and **FUSE** in the container options, then restarting the container.
+
 ## Connection Issues
 
 ### Calls don't connect at all
