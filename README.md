@@ -83,7 +83,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.2.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.2.1/install.sh | bash
 ```
 
 The installer performs the following steps:
