@@ -2,6 +2,7 @@
 FROM node:20-slim
 
 WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies only once
 RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*

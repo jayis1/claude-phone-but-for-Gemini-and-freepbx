@@ -6,6 +6,7 @@ FROM us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.1
 # Ensure we have permissions to write to /app
 USER root
 WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Copy package definition
 COPY package.json ./

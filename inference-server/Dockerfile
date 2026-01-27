@@ -1,6 +1,7 @@
 FROM node:20-slim
 
 WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Copy package files
 COPY package*.json ./
