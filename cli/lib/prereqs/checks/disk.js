@@ -65,7 +65,7 @@ function getDiskSpace(platform) {
 
       // Parse output
       // Filesystem     1K-blocks    Used Available Use% Mounted on
-      // /dev/disk1s1   245107200 8912.4.7 147294848  38% /
+      // /dev/disk1s1   245107200 8912.4.8 147294848  38% /
       const lines = output.trim().split('\n');
 
       if (lines.length < 2) {

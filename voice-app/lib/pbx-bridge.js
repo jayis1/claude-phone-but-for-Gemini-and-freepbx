@@ -161,6 +161,33 @@ async function provisionTrunk(hostIp) {
 }
 
 /**
+ * Whitelist App Stack IP in FreePBX Firewall
+ * @param {string} hostIp - The IP of the Gemini App Stack
+ */
+async function whitelistAppStackIp(hostIp) {
+    console.log(`[PBX-BRIDGE] Whitelisting IP ${hostIp} in FreePBX Firewall...`);
+
+    const mutation = `
+    mutation ($host: String!) {
+      addFirewallTrustedNetwork(input: {
+        network: $host,
+        description: "Gemini App Stack"
+      }) {
+        status
+        message
+      }
+    }
+  `;
+
+    try {
+        return await graphql(mutation, { host: hostIp });
+    } catch (e) {
+        console.warn('[PBX-BRIDGE] Firewall whitelisting failed (Module might be missing):', e.message);
+        return { success: false, error: e.message };
+    }
+}
+
+/**
  * Run full provisioning sequence
  */
 async function provisionAll() {
@@ -178,6 +205,7 @@ async function provisionAll() {
         const appStackIp = process.env.GEMINI_APP_STACK_IP;
         if (appStackIp) {
             results.trunk = await provisionTrunk(appStackIp);
+            results.firewall = await whitelistAppStackIp(appStackIp);
         }
 
         // Apply changes (Reload)
@@ -197,5 +225,6 @@ module.exports = {
     provisionExtension,
     provisionOutboundRoute,
     provisionTrunk,
+    whitelistAppStackIp,
     provisionAll
 };

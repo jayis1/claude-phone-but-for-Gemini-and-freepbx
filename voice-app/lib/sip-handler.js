@@ -310,21 +310,41 @@ function stripVideoFromSdp(sdp) {
  * Handle incoming SIP INVITE
  */
 async function handleInvite(req, res, options) {
-  const { mediaServer, deviceRegistry } = options;
+  const { mediaServer, deviceRegistry, srf } = options;
 
   const callerId = extractCallerId(req);
   const dialedExt = extractDialedExtension(req);
 
-  // Look up device config using deviceRegistry.get() (works with name OR extension)
+  // Look up device config
   let deviceConfig = null;
   if (deviceRegistry && dialedExt) {
     deviceConfig = deviceRegistry.get(dialedExt);
-    if (deviceConfig) {
-      console.log('[' + new Date().toISOString() + '] CALL Device matched: ' + deviceConfig.name + ' (ext ' + dialedExt + ')');
-    } else {
-      console.log('[' + new Date().toISOString() + '] CALL Unknown extension ' + dialedExt + ', using default');
-      deviceConfig = deviceRegistry.getDefault();
+  }
+
+  // CATCH-ALL PROXY LOGIC: If no device matched and it's not the default extension,
+  // we proxy the call to the FreePBX registrar (The "All Routes" request).
+  const defaultExt = process.env.SIP_EXTENSION || '9000';
+  if (!deviceConfig && dialedExt !== defaultExt && dialedExt) {
+    const registrar = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN;
+    console.log(`[` + new Date().toISOString() + `] PROXY Forwarding unknown extension ${dialedExt} to ${registrar}`);
+
+    try {
+      return await srf.proxyRequest(req, `sip:${dialedExt}@${registrar}`, {
+        recordRoute: true,
+        followRedirects: true
+      });
+    } catch (err) {
+      console.error(`[` + new Date().toISOString() + `] PROXY Error:`, err.message);
+      // Fall through to default if proxy fails
     }
+  }
+
+  // If we get here, it's either matched or we treat as default AI extension
+  if (deviceConfig) {
+    console.log('[' + new Date().toISOString() + '] CALL Device matched: ' + deviceConfig.name + ' (ext ' + dialedExt + ')');
+  } else {
+    console.log('[' + new Date().toISOString() + '] CALL Handling via default AI handler');
+    deviceConfig = deviceRegistry ? deviceRegistry.getDefault() : null;
   }
 
   console.log('[' + new Date().toISOString() + '] CALL Incoming from: ' + callerId + ' to ext: ' + (dialedExt || 'unknown'));

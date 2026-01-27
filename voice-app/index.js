@@ -104,49 +104,24 @@ console.error = function (msg, ...args) {
   originalError.apply(console, [msg, ...args]);
 };
 
-// Log startup
-console.log("\n" + "=".repeat(64));
-console.log("          Voice Interface Application Starting                 ");
-console.log("       (with Multi-Extension + Query API Support)              ");
-console.log("=".repeat(64));
-console.log("\nConfiguration:");
-console.log("  - drachtio:    " + config.drachtio.host + ":" + config.drachtio.port);
-console.log("  - FreeSWITCH:  " + config.freeswitch.host + ":" + config.freeswitch.port);
-console.log("  - SIP Domain:  " + config.sip.domain);
-console.log("  - Registrar:   " + config.sip.registrar + ":" + config.sip.registrar_port);
-console.log("  - External IP: " + config.external_ip);
-console.log("  - HTTP Port:   " + config.http_port);
-console.log("  - WS Port:     " + config.ws_port);
-console.log("  - Audio Dir:   " + config.audio_dir);
-console.log("  - Mix Type:    " + (process.env.AUDIO_FORK_MIXTYPE || "L") + " (capture direction)");
-console.log("\n[DEVICES] Loaded " + Object.keys(deviceRegistry.getAllDevices()).length + " device extensions");
-console.log("\nWaiting for connections...\n");
+/**
+ * Initialize HTTP server for and Google Speech/Gemini
+ */
+async function initializeHttpServer() {
+  httpServer = createHttpServer(config.http_port);
 
-// ==========================================
-// START HTTP SERVER IMMEDIATELY
-// ==========================================
-function initializeHttpServer() {
-  var fs = require("fs");
-  if (!fs.existsSync(config.audio_dir)) {
-    fs.mkdirSync(config.audio_dir, { recursive: true });
-  }
+  // Audio fork server (WebSockets)
+  audioForkServer = new AudioForkServer(config.ws_port);
+  await audioForkServer.start();
+  console.log("[" + new Date().toISOString() + "] WS Audio Fork Server running on port " + config.ws_port);
 
-  // HTTP server for TTS audio
-  httpServer = createHttpServer(config.audio_dir, config.http_port);
-  console.log("[" + new Date().toISOString() + "] HTTP Server started on port " + config.http_port);
+  // Gemini Bridge
+  geminiBridge.setInferenceUrl(process.env.GEMINI_API_URL || "http://localhost:3333");
+  console.log("[" + new Date().toISOString() + "] GEMINI Bridge pointing to " + (process.env.GEMINI_API_URL || "http://localhost:3333"));
 
-  // Add configuration routes for voice/speed settings
-  httpServer.addConfigRoutes(deviceRegistry);
-  console.log("[" + new Date().toISOString() + "] Voice configuration API enabled");
-
-  // WebSocket server for audio fork
-  audioForkServer = new AudioForkServer({ port: config.ws_port });
-  audioForkServer.start();
-  audioForkServer.on("listening", function () {
-    console.log("[" + new Date().toISOString() + "] WEBSOCKET Audio fork server started on port " + config.ws_port);
-  });
-  audioForkServer.on("session", function (session) {
-    console.log("[AUDIO] New session for call " + session.callUuid);
+  // Device Registry (Model/Voice mapping)
+  deviceRegistry.on('change', (devices) => {
+    console.log("[" + new Date().toISOString() + "] DEVICE Registry updated: " + devices.length + " devices");
   });
 
   // TTS service
@@ -249,31 +224,25 @@ srf.on("connect", function (err, hostport) {
     registrar = new MultiRegistrar(srf, {
       domain: config.sip.domain,
       registrar: config.sip.registrar,
-      registrar_port: config.sip.registrar_port,
-      local_address: localAddress,
-      local_port: parseInt(process.env.DRACHTIO_SIP_PORT) || 5060,
+      password: config.sip.password,
       expiry: config.sip.expiry
     });
-
-    // Register all devices from config
-    registrar.registerAll(deviceRegistry.getRegistrationConfigs());
+    registrar.start();
   }
 
   checkReadyState();
 });
 
 srf.on("error", function (err) {
-  console.error("[" + new Date().toISOString() + "] DRACHTIO error: " + err.message);
+  console.error("[" + new Date().toISOString() + "] DRACHTIO Error: " + err.message);
   drachtioConnected = false;
 });
 
-// Initialize FreeSWITCH MRF with retry logic
-var mrf = new Mrf(srf);
-
-// Define FreeSWITCH connection function
+// Connect to FreeSWITCH
 function connectToFreeswitch() {
+  const mrf = new Mrf(srf);
   return mrf.connect({
-    address: config.freeswitch.host,
+    host: config.freeswitch.host,
     port: config.freeswitch.port,
     secret: config.freeswitch.secret
   });
@@ -335,6 +304,7 @@ function checkReadyState() {
     // Register SIP INVITE handler
     srf.invite(function (req, res) {
       handleInvite(req, res, {
+        srf: srf,
         audioForkServer: audioForkServer,
         mediaServer: mediaServer,
         deviceRegistry: deviceRegistry,

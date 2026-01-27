@@ -798,7 +798,8 @@ function createDefaultConfig() {
       clientSecret: '',
       trunkName: 'RedSpot',
       automateTrunk: false,
-      appStackIp: ''
+      appStackIp: '',
+      whitelistIp: false
     },
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
@@ -1407,7 +1408,7 @@ async function setupOutbound(config) {
     {
       type: 'input',
       name: 'callerId',
-      message: 'Default Caller ID (e.g., +155512.4.77):',
+      message: 'Default Caller ID (e.g., +155512.4.87):',
       default: config.outbound?.callerId || '',
       validate: (input) => {
         // Optional, but if provided should look like a number
@@ -1697,6 +1698,12 @@ async function setupPbxApi(config) {
       default: config.pbx?.appStackIp || config.server?.externalIp || '',
       when: (answers) => answers.automateTrunk,
       validate: (input) => (input && input.trim() !== '') ? true : 'App Stack IP is required for trunk automation'
+    },
+    {
+      type: 'confirm',
+      name: 'whitelistIp',
+      message: 'Do you want to whitelist this App Stack IP in the FreePBX Firewall?',
+      default: config.pbx?.whitelistIp || false
     }
   ]);
 
@@ -1706,7 +1713,8 @@ async function setupPbxApi(config) {
     clientSecret: answers.clientSecret,
     trunkName: answers.trunkName,
     automateTrunk: answers.automateTrunk,
-    appStackIp: answers.appStackIp || ''
+    appStackIp: answers.appStackIp || '',
+    whitelistIp: answers.whitelistIp
   };
 
   return config;
