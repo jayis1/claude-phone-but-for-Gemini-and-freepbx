@@ -347,15 +347,24 @@ export async function buildContainers() {
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
       cwd: configDir,
-      stdio: 'inherit', // Show build output directly to user
+      stdio: 'pipe',
       env: { ...process.env, DOCKER_BUILDKIT: '0', COMPOSE_DOCKER_CLI_BUILD: '0' } // Fix provenance hang by using legacy builder
+    });
+
+    let output = '';
+    child.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      output += data.toString();
     });
 
     child.on('close', (code) => {
       if (code === 0) {
         resolve();
       } else {
-        reject(new Error(`Docker build failed (exit ${code})`));
+        reject(new Error(`Docker build failed (exit ${code}):\n${output}`));
       }
     });
   });
