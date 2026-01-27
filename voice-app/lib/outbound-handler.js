@@ -58,7 +58,8 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const phoneNumber = to;
     const sipTrunkHost = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN || '127.0.0.1';
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
-    const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || '+15551234567';
+    const fallbackCallerId = process.env.SIP_EXTENSION || '9000';
+    const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || fallbackCallerId;
 
     // SIP Authentication
     const sipAuthUsername = process.env.SIP_AUTH_ID || process.env.SIP_EXTENSION;
@@ -73,8 +74,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
       hasAuth: !!(sipAuthUsername && sipAuthPassword)
     });
 
-    // STEP 2: Create UAC (outbound call) with Early Offer
-    // Use device extension and display name if available, otherwise fall back to callerId
+    // Use device extension and display name if available, otherwise fall back to SIP_EXTENSION or callerId
     const fromExtension = deviceConfig ? deviceConfig.extension : defaultCallerId.replace('+', '');
     const displayName = deviceConfig ? deviceConfig.name : null;
     const fromHeader = displayName
