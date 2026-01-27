@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { spawn } from 'child_process';
 import axios from 'axios';
-import { loadConfig, configExists, getInstallationType } from '../config.js';
+import { loadConfig, configExists, getInstallationType, getConfigDir } from '../config.js';
 import { checkDocker, getContainerStatus } from '../docker.js';
 import { isServerRunning, getServerPid } from '../process-manager.js';
 import { validateElevenLabsKey, validateOpenAIKey } from '../validators.js';
@@ -184,7 +184,7 @@ async function checkStoragePermissions() {
   ];
 
   for (const dir of dirs) {
-    const absPath = path.resolve(process.cwd(), dir.path);
+    const absPath = path.resolve(getConfigDir(), dir.path.replace('./', ''));
     try {
       if (!fs.existsSync(absPath)) {
         result.push({ name: dir.name, passed: false, error: 'Directory missing' });
@@ -565,7 +565,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
 
   // Network Check (External IP)
   const networkSpinner = ora('Validating network configuration...').start();
-  const extIp = process.env.EXTERNAL_IP || config.network?.externalIp;
+  const extIp = process.env.EXTERNAL_IP || config.server?.externalIp || config.network?.externalIp;
   const networkResult = await checkNetworkConfig(extIp);
   if (networkResult.valid) {
     networkSpinner.succeed(chalk.green(`External IP configuration valid (${extIp})`));
