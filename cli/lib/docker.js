@@ -408,8 +408,6 @@ export async function startContainers() {
         }
       }
     });
-  }
-    });
   });
 }
 

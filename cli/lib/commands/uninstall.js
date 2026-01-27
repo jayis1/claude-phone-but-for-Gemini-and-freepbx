@@ -236,7 +236,7 @@ export async function uninstallCommand() {
     const imageSpinner = ora('Removing Docker images...').start();
     try {
       // Remove images
-      await execAsync('docker image rm drachtio/drachtio-server:latest drachtio/drachtio-freeswitch-mrf:latest gemini-phone-voice-app gemini-phone-mission-control gemini-phone-gemini-api-server gemini-phone-inference-server || true');
+      await execAsync('docker image rm -f drachtio/drachtio-server:latest drachtio/drachtio-freeswitch-mrf:latest gemini-phone-voice-app gemini-phone-mission-control gemini-phone-gemini-api-server gemini-phone-inference-server || true');
       // Prune builder cache
       await execAsync('docker builder prune -f || true');
       imageSpinner.succeed('Docker images and cache removed');
