@@ -648,6 +648,34 @@ function createHttpServer(audioDir, port = 3000) {
     res.json({ success: true, logs });
   });
 
+  // Call History Storage
+  const callHistory = [];
+  const MAX_HISTORY = 10;
+
+  /**
+   * Add a call to history
+   * @param {Object} call - Call object
+   */
+  function addCallToHistory(call) {
+    const entry = {
+      id: call.id || crypto.randomBytes(4).toString('hex'),
+      timestamp: new Date().toISOString(),
+      type: call.type || 'unknown', // 'inbound' or 'outbound'
+      from: call.from || 'unknown',
+      to: call.to || 'unknown',
+      status: call.status || 'completed',
+      duration: call.duration || 0
+    };
+
+    callHistory.unshift(entry);
+    if (callHistory.length > MAX_HISTORY) callHistory.pop();
+    debug('Added call to history:', entry);
+  }
+
+  // History Endpoint
+  app.get('/api/history', (req, res) => {
+    res.json({ success: true, history: callHistory });
+  });
 
   // Audio upload endpoint
   app.post("/audio", async (req, res) => {
@@ -776,7 +804,8 @@ function createHttpServer(audioDir, port = 3000) {
     getAudioUrl,
     close: () => server.close(),
     finalize,
-    addConfigRoutes
+    addConfigRoutes,
+    addCallToHistory
   };
 }
 

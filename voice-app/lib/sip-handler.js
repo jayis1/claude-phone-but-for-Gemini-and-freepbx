@@ -369,6 +369,19 @@ async function handleInvite(req, res, options) {
     });
 
     await conversationLoop(endpoint, dialog, callUuid, options, deviceConfig);
+
+    // Log successful call
+    if (options.addCallToHistory) {
+      options.addCallToHistory({
+        id: callUuid,
+        type: 'inbound',
+        from: callerId,
+        to: dialedExt,
+        status: 'completed',
+        duration: 0 // TODO: Calculate duration
+      });
+    }
+
     return { endpoint: endpoint, dialog: dialog, callerId: callerId, callUuid: callUuid };
 
   } catch (error) {

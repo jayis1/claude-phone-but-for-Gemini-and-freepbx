@@ -300,7 +300,8 @@ function enableOutboundCalling() {
     whisperClient: whisperClient,
     geminiBridge: geminiBridge,
     ttsService: ttsService,
-    wsPort: config.ws_port
+    wsPort: config.ws_port,
+    addCallToHistory: httpServer.addCallToHistory
   });
 
   httpServer.app.use("/api", outboundRouter);
@@ -335,8 +336,11 @@ function checkReadyState() {
         whisperClient: whisperClient,
         geminiBridge: geminiBridge,
         ttsService: ttsService,
+        geminiBridge: geminiBridge,
+        ttsService: ttsService,
         wsPort: config.ws_port,
-        externalIp: config.external_ip
+        externalIp: config.external_ip,
+        addCallToHistory: httpServer.addCallToHistory
       }).catch(function (err) {
         console.error("[" + new Date().toISOString() + "] CALL Error: " + err.message);
       });

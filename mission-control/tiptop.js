@@ -39,37 +39,24 @@ function generateTopPage() {
             display: grid;
             grid-template-columns: 1fr 1fr;
             overflow: hidden;
+            padding: 5px;
+            gap: 5px;
           }
   
           #bottom-left {
-            border-right: 2px solid #333;
-            padding: 10px;
             border: 2px solid #f00; /* RED BOX requested by user */
-            margin: 5px;
+            padding: 10px;
             overflow-y: hidden; /* Controlled by internal sections */
             display: flex;
             flex-direction: column;
           }
-  
+
           #bottom-right {
-            display: grid;
-            grid-template-rows: 1fr auto; /* Playlist takes space, Input takes auto */
             border: 2px solid #0f0; /* GREEN BOX requested by user */
-            margin: 5px;
-            overflow: hidden;
-          }
-  
-          #playlist-area {
             padding: 10px;
-            overflow-y: auto;
-          }
-  
-          #input-area {
-            background: #222; /* GRAY BOX requested by user */
-            padding: 10px;
-            border-top: 1px solid #0f0;
+            overflow-y: hidden;
             display: flex;
-            align-items: center;
+            flex-direction: column;
           }
   
           /* === TOP PANEL (HTOP STYLE) === */
@@ -122,38 +109,34 @@ function generateTopPage() {
           /* === BOTTOM SECTIONS CONTENT === */
           .section-title { font-size: 1.1rem; margin-bottom: 5px; border-bottom: 1px dashed #555; padding-bottom: 5px; color: #fff; display: flex; justify-content: space-between; align-items: center;}
           
-          /* Playlist Items */
-          .playlist-item { display: flex; gap: 10px; margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #111; }
-          .song-thumb { width: 50px; height: 40px; background: #444; }
-          .song-info { display: flex; flex-direction: column; justify-content: center; }
-          .song-title { color: #fff; font-weight: bold; }
-          .song-meta { font-size: 0.8rem; color: #888; }
-  
-          /* Input Form */
-          input[type="text"] {
-            flex: 1; background: #000; border: 1px solid #444; color: #fff; padding: 8px; font-family: inherit; font-size: 1rem;
-          }
-          button.add-btn {
-            background: #004400; color: #fff; border: none; padding: 8px 15px; margin-left: 5px; cursor: pointer; font-weight: bold;
-          }
-          button.add-btn:hover { background: #006600; }
-  
           /* === NOTES UI (RED BOX) === */
           .btn-sm { background: #333; color: #fff; border: 1px solid #555; padding: 2px 8px; cursor: pointer; font-size: 0.8rem; }
           .btn-sm:hover { background: #555; }
           
           #notes-list-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-          #notes-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+          #notes-list { flex: 1; overflow-y: auto; padding-right: 5px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; align-content: start; }
           
-          .note-card { background: #111; border: 1px solid #333; padding: 8px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
+          .note-card { background: #111; border: 1px solid #333; padding: 10px; cursor: pointer; transition: background 0.2s; height: 100px; display: flex; flex-direction: column; }
           .note-card:hover { background: #1a1a1a; border-color: #555; }
-          .note-card-title { color: #f00; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; }
-          .note-card-prev { color: #aaa; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .note-card-title { color: #f00; font-weight: bold; margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 0.95rem; }
+          .note-card-prev { color: #aaa; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; flex: 1; }
           
           #note-editor { display: none; flex-direction: column; height: 100%; }
-          #edit-title { background: #000; color: #f00; border: 1px solid #333; padding: 5px; margin-bottom: 5px; font-weight: bold; width: 100%; }
-          #edit-content { flex: 1; background: #000; color: #ddd; border: 1px solid #333; padding: 5px; resize: none; margin-bottom: 5px; font-family: inherit; }
+          #edit-title { background: #000; color: #f00; border: 1px solid #333; padding: 5px; margin-bottom: 5px; font-weight: bold; width: 100%; font-family: inherit; font-size: 1rem; }
+          #edit-content { flex: 1; background: #000; color: #ddd; border: 1px solid #333; padding: 10px; resize: none; margin-bottom: 5px; font-family: inherit; font-size: 0.9rem; line-height: 1.4; }
           .editor-actions { display: flex; gap: 5px; justify-content: flex-end; }
+
+          /* === RECENT CALLS UI (GREEN BOX) === */
+          #calls-list { flex: 1; overflow-y: auto; }
+          .call-item { display: flex; align-items: center; padding: 5px; border-bottom: 1px solid #111; font-size: 0.9rem; }
+          .call-item:hover { background: #111; }
+          .call-icon { width: 24px; text-align: center; margin-right: 10px; font-size: 1.2rem; }
+          .call-details { flex: 1; }
+          .call-number { color: #fff; font-weight: bold; }
+          .call-time { color: #666; font-size: 0.8rem; }
+          .call-status { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 10px; }
+          .status-completed { background: #0f0; color: #000; }
+          .status-failed { background: #f00; color: #fff; }
   
         </style>
       </head>
@@ -213,11 +196,11 @@ function generateTopPage() {
             <!-- List View -->
             <div id="notes-list-view">
                <div class="section-title">
-                 <span>MY NOTES</span>
+                 <span>MY NOTES / SCRATCHPAD</span>
                  <button class="btn-sm" onclick="newNote()">+ New Note</button>
                </div>
                <div id="notes-list">
-                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading notes...</div>
+                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px; width: 100%;">Loading notes...</div>
                </div>
             </div>
   
@@ -233,25 +216,16 @@ function generateTopPage() {
                </div>
             </div>
           </div>
-  
-          <!-- RIGHT: PLAYLIST & INPUT (GREEN & GRAY BOXES) -->
+
+          <!-- RIGHT: RECENT CALLS (GREEN BOX) -->
           <div id="bottom-right">
-            <!-- GREEN BOX: Playlist -->
-            <div id="playlist-area">
-              <div class="section-title">
-                <span>BRAIN PLAYLIST</span>
-                <span style="font-size:0.8rem" id="playlist-count">0 items</span>
-              </div>
-              <div id="queue">
-                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading...</div>
-              </div>
-            </div>
-            
-            <!-- GRAY BOX: Input -->
-            <div id="input-area">
-              <input type="text" placeholder="Add song URL..." id="song-input" onkeypress="if(event.key==='Enter') addSong()">
-              <button class="add-btn" onclick="addSong()">ADD</button>
-            </div>
+             <div class="section-title">
+               <span>RECENT CALLS</span>
+               <button class="btn-sm" onclick="fetchCalls()" style="background:transparent; border:none; color:#0f0;">Refresh</button>
+             </div>
+             <div id="calls-list">
+                <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading calls...</div>
+             </div>
           </div>
   
         </div>
@@ -261,6 +235,20 @@ function generateTopPage() {
           /* UTILS */
           function formatBytes(bytes) { if (bytes===0) return '0K'; const k=1024, sizes=['K','M','G','T'], i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+sizes[i]; }
           function formatTime(s) { const h=Math.floor(s/3600).toString().padStart(2,'0'), m=Math.floor((s%3600)/60).toString().padStart(2,'0'), sec=Math.floor(s%60).toString().padStart(2,'0'); return \`\${h}:\${m}:\${sec}\`; }
+          function timeAgo(date) {
+            const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return "just now";
+          }
   
           /* TIPTOP LOGIC */
           let currentProcesses = [];
@@ -404,17 +392,24 @@ function generateTopPage() {
   
           async function fetchNotes() {
             try {
-              const res = await fetch('/api/notes');
+              // Try local server path first since this is served by Mission Control
+              const res = await fetch('/api/notes'); 
+              if (!res.ok) throw new Error('Failed to load notes');
               currentNotes = await res.json();
               renderNotes();
-            } catch(e) { console.error('Failed to load notes', e); }
+            } catch(e) { 
+               console.error('Failed to load notes', e); 
+               // Fallback / Mock
+               // currentNotes = [{id:1, title:'Welcome', content:'This is your scratchpad.', timestamp: Date.now()}];
+               // renderNotes();
+            }
           }
   
           function renderNotes() {
             const list = document.getElementById('notes-list');
             list.innerHTML = '';
             if(currentNotes.length === 0) {
-              list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">No notes yet.</div>';
+              list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px; width:100%">No notes yet. Start typing...</div>';
               return;
             }
             currentNotes.forEach(note => {
@@ -484,73 +479,67 @@ function generateTopPage() {
                showEditor(false);
              } catch(e) { alert('Delete failed'); }
           }
+
+          /* RECENT CALLS LOGIC */
+          async function fetchCalls() {
+             const list = document.getElementById('calls-list');
+             try {
+               // The Voice App is on port 3000, but Mission Control is on 3030.
+               // We need to proxy through Mission Control -> Voice App
+               // Assuming Mission Control has a proxy set up or we fetch directly if CORS allows.
+               // Since Mission-Control's server isn't shown here, we assume it proxies /api/voice/history 
+               // OR we assume user is hitting Voice App directly if this page is rendered by Voice App.
+               // But this file seems to be rendered by Mission Control.
+               // Let's assume there is a proxy at /api/proxy/voice/history or similar.
+               // Wait, the user said "Mission Control Page 2". 
+               // Let's try fetching from the voice app URL via client-side if possible, or assume proxy.
+               // Voice App is usually http://localhost:3000.
+               
+               const res = await fetch('/api/voice/history'); // Using Mission Control proxy
+               if(!res.ok) throw new Error('API failed');
+               
+               const data = await res.json();
+               if(data.history) renderCalls(data.history);
+             } catch(e) {
+               console.error(e);
+               list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Failed to load calls.<br>Is Voice App running?</div>';
+             }
+          }
+
+          function renderCalls(calls) {
+             const list = document.getElementById('calls-list');
+             list.innerHTML = '';
+             
+             if(!calls || calls.length === 0) {
+                list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">No recent calls.</div>';
+                return;
+             }
+             
+             calls.forEach(call => {
+                const isInbound = call.type === 'inbound';
+                const icon = isInbound ? '📞' : '📡';
+                const color = isInbound ? '#0ff' : '#f0f';
+                const number = isInbound ? call.from : call.to;
+                const statusClass = call.status === 'completed' ? 'status-completed' : 'status-failed';
+                
+                const item = document.createElement('div');
+                item.className = 'call-item';
+                item.innerHTML = \`
+                   <div class="call-icon" style="color:\${color}">\${icon}</div>
+                   <div class="call-details">
+                      <div class="call-number">\${number || 'Unknown'}</div>
+                      <div class="call-time">\${timeAgo(call.timestamp)} • \${call.duration}s</div>
+                   </div>
+                   <div class="call-status \${statusClass}">\${call.status}</div>
+                \`;
+                list.appendChild(item);
+             });
+          }
   
           // Initial Load
           fetchNotes();
-          fetchPlaylist();
-  
-          /* PLAYLIST LOGIC */
-          let currentPlaylist = [];
-  
-          async function fetchPlaylist() {
-            try {
-              const res = await fetch('/api/playlist');
-              currentPlaylist = await res.json();
-              renderPlaylist();
-            } catch(e) { console.error('Failed to load playlist', e); }
-          }
-  
-          function renderPlaylist() {
-            const list = document.getElementById('queue');
-            document.getElementById('playlist-count').innerText = currentPlaylist.length + ' items';
-            
-            list.innerHTML = '';
-            if(currentPlaylist.length === 0) {
-              list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Queue empty. Add URLs below.</div>';
-              return;
-            }
-            
-            currentPlaylist.forEach(item => {
-               const div = document.createElement('div');
-               div.className = 'playlist-item';
-               div.innerHTML = \`
-                  <div class="song-thumb" style="background:\${item.color}"></div>
-                  <div class="song-info" style="flex:1; overflow:hidden;">
-                    <div class="song-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${item.title}</div>
-                    <div class="song-meta"><a href="\${item.url}" target="_blank" style="color:#888; text-decoration:underline;">\${item.url}</a></div>
-                  </div>
-                  <button class="btn-sm" style="background:#300; border:1px solid #500; color:#f00;" onclick="removeSong('\${item.id}')">X</button>
-               \`;
-               list.appendChild(div);
-            });
-          }
-  
-          async function addSong() {
-            const input = document.getElementById('song-input');
-            const url = input.value.trim();
-            if(!url) return;
-            
-            // Simple title extraction or placeholder
-            const title = "Track " + (currentPlaylist.length + 1);
-  
-            try {
-              await fetch('/api/playlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, title })
-              });
-              input.value = '';
-              fetchPlaylist();
-            } catch(e) { alert('Failed to add song'); }
-          }
-  
-          async function removeSong(id) {
-            if(!confirm('Remove this track?')) return;
-            try {
-              await fetch('/api/playlist/' + id, { method: 'DELETE' });
-              fetchPlaylist();
-            } catch(e) { alert('Failed to remove song'); }
-          }
+          fetchCalls();
+          setInterval(fetchCalls, 5000); // Poll calls
         </script>
       </body>
       </html>

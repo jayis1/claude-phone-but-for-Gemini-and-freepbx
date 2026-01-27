@@ -21,6 +21,7 @@ var whisperClient = null;
 var geminiBridge = null;
 var ttsService = null;
 var wsPort = 3001;
+var addCallToHistory = null;
 
 /**
  * Validate phone number format
@@ -263,6 +264,18 @@ router.post('/outbound-call', async function (req, res) {
             await hangupCall(dialog, endpoint, callId);
             session.transition('COMPLETED', 'conversation_complete');
 
+            // Log successful conversation
+            if (addCallToHistory) {
+              addCallToHistory({
+                id: callId,
+                type: 'outbound',
+                from: callerId || 'Default',
+                to: to,
+                status: 'completed',
+                duration: Math.round((Date.now() - startTime) / 1000)
+              });
+            }
+
           } catch (convError) {
             logger.error('Conversation loop error', {
               callId: callId,
@@ -393,8 +406,10 @@ function setupRoutes(deps) {
   audioForkServer = deps.audioForkServer || null;
   whisperClient = deps.whisperClient || null;
   geminiBridge = deps.geminiBridge || null;
+  geminiBridge = deps.geminiBridge || null;
   ttsService = deps.ttsService || null;
   wsPort = deps.wsPort || 3001;
+  addCallToHistory = deps.addCallToHistory || null;
 
   var conversationReady = !!(audioForkServer && whisperClient && geminiBridge && ttsService);
 
