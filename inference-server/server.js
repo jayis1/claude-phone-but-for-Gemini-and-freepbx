@@ -68,10 +68,29 @@ function getCpuUsage() {
 }
 
 function getGpuUsage() {
+  const vendor = process.env.GPU_VENDOR || 'none';
+
   return new Promise((resolve) => {
-    exec('nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits', (err, stdout) => {
-      resolve((err || !stdout) ? 0 : (parseInt(stdout.trim(), 10) || 0));
-    });
+    if (vendor === 'nvidia') {
+      exec('nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits', (err, stdout) => {
+        resolve((err || !stdout) ? 0 : (parseInt(stdout.trim(), 10) || 0));
+      });
+    } else if (vendor === 'amd') {
+      // rocm-smi --showuse returns something like 'GPU[0] : GPU use (%) : 15'
+      exec('rocm-smi --showuse --csv', (err, stdout) => {
+        if (err || !stdout) return resolve(0);
+        // Minimal CSV parsing for ROCm
+        const lines = stdout.split('\n');
+        if (lines.length > 1) {
+          const usage = lines[1].split(',')[1]; // Adjust based on rocm-smi csv output
+          resolve(parseInt(usage, 10) || 0);
+        } else {
+          resolve(0);
+        }
+      });
+    } else {
+      resolve(0);
+    }
   });
 }
 

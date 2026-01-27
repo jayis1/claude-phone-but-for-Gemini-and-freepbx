@@ -218,6 +218,7 @@ ${getGpuSnippet(gpuVendor)}
       - PORT=${config.server.inferencePort || 4000}
       - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort}
       - GEMINI_API_KEY=\${GEMINI_API_KEY}
+      - GPU_VENDOR=${gpuVendor}
 ${getGpuSnippet(gpuVendor)}
 
   gemini-api-server:
