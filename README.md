@@ -75,7 +75,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.1/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -341,6 +341,7 @@ gemini-phone logs      # View logs
 | Extension not registering | FreePBX/Asterisk issue | Check PBX admin panel |
 | "Sorry, something went wrong" | API server unreachable | Check `gemini-phone status` |
 | Port conflict on startup | PBX using port 5060 | Setup auto-detects this; re-run setup |
+| Calls fail with 503 error | SIP "Cause 34" | No Trunk/Outbound Route; see [Solve Guide](docs/TROUBLESHOOTING_CAUSE_34.md) |
 
 ### Manual Node.js Installation
 
@@ -406,6 +407,7 @@ npm run lint:fix
 + [Outbound API](voice-app/README-OUTBOUND.md) - Outbound calling API reference
 + [Deployment](voice-app/DEPLOYMENT.md) - Production deployment guide
 + [FreePBX Guide](docs/FREEPBX.md) - Setup for FreePBX / Asterisk
++ [SIP Cause 34 Guide](docs/TROUBLESHOOTING_CAUSE_34.md) - Fix "No circuit/channel" 503 errors
 + [Gemini Code Skill](docs/GEMINI-CODE-SKILL.md) - Build a "call me" skill for Gemini Code
 
 ## License

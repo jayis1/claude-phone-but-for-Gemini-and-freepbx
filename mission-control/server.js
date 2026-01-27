@@ -408,7 +408,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.3.0
+            MISSION CONTROL v2.3.1
           </div>
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button onclick="triggerTestCall()" id="testBtn" style="padding: 4px 10px; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
@@ -2225,6 +2225,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.3.0]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.3.1]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

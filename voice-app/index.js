@@ -304,6 +304,11 @@ function checkReadyState() {
 
     enableOutboundCalling();
 
+    // Register SIP OPTIONS handler (heartbeats)
+    srf.options(function (req, res) {
+      res.send(200);
+    });
+
     // Register SIP INVITE handler
     srf.invite(function (req, res) {
       handleInvite(req, res, {
