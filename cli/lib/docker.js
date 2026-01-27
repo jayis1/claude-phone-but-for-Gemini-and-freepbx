@@ -303,6 +303,7 @@ export function generateEnvFile(config) {
     '',
     '# Outbound Call Settings',
     `DEFAULT_CALLER_ID=${config.outbound?.callerId || ''}`,
+    `DIAL_PREFIX=${config.outbound?.dialPrefix || ''}`,
     `MAX_CONVERSATION_TURNS=${config.outbound?.maxTurns || 10}`,
     `OUTBOUND_RING_TIMEOUT=${config.outbound?.ringTimeout || 30}`,
     `TEST_PHONE_NUMBER=${config.outbound?.testPhoneNumber || ''}`,

@@ -7,7 +7,7 @@ Command-line interface for Gemini Phone. Single-command setup and management.
 ### One-Line Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.3/install.sh | bash
 ```
 
 ### Manual Install
@@ -191,7 +191,7 @@ All configuration is stored in `~/.gemini-phone/`:
 
 ```bash
 # Install
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.3/install.sh | bash
 
 # Setup - select "Voice Server"
 # Enter your Mac's IP when prompted for API server
@@ -205,7 +205,7 @@ gemini-phone start
 
 ```bash
 # Install (if not already)
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.3/install.sh | bash
 
 # Start API server (no setup needed)
 gemini-phone api-server
