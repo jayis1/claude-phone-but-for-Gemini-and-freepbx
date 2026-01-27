@@ -309,7 +309,7 @@ app.get('/', (req, res) => {
           .control-group {
             margin-top: 1rem;
           padding: 1rem;
-          background: rgba(2.5.355,2.5.3.03);
+          background: rgba(255, 255, 255, 0.03);
           border-radius: 8px;
           border: 1px solid var(--border);
           }
@@ -629,15 +629,14 @@ app.get('/', (req, res) => {
                 <span id="val-cpu">--%</span>
               </div>
 
-               <!-- Brain Load & Model (Moved Here) -->
-                      <div class="progress-bar" style="margin: 0; height: 6px; flex:1;">
-                        <div class="progress-fill" id="bar-ai-load" style="background: #ec4899; width: 0%;"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style="margin-top: 0.75rem;">
+              <!-- Brain Load & Model -->
+              <div class="monitor-row">
+                <span style="width: 40px">AI</span>
+                <div class="progress-bar"><div class="progress-fill" id="bar-ai-load" style="background: #ec4899"></div></div>
+                <span id="ai-load">0%</span>
+              </div>
+
+              <div style="margin-top: 0.75rem;">
                    <div class="stat-label" style="margin-bottom: 0.25rem;">Active Model</div>
                    <div style="display: flex; gap: 6px;">
                     <select id="model-select" style="flex: 1; background:#000; color:#fff; border:1px solid #3f3f46; padding:2px 6px; border-radius:4px; font-size: 0.8rem;">
@@ -2259,6 +2258,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.4]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.5]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
