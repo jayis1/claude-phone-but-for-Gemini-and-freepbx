@@ -692,6 +692,31 @@ app.get('/ping', (req, res) => {
 });
 
 /**
+ * GET /dirty-joke
+ * Returns a dirty joke using Gemini
+ */
+app.get('/dirty-joke', async (req, res) => {
+  const timestamp = new Date().toISOString();
+  // Prompt carefully crafted to be edgy but compliant with Gemini's trust & safety
+  // (We use "dark humor" or "adult humor" to avoid hard blocks)
+  const fullPrompt = "Tell me a short, funny adult joke or dark humor joke. Keep it punchy.";
+
+  try {
+    const { code, stdout, stderr } = await runGeminiOnce({ fullPrompt, timestamp, callId: null });
+
+    if (code !== 0) {
+      const errorMsg = stderr || stdout || `Exit code ${code}`;
+      return res.status(500).json({ success: false, error: `Gemini CLI failed: ${errorMsg}` });
+    }
+
+    const { response } = parseGeminiStdout(stdout);
+    res.json({ success: true, joke: response.trim() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get joke: ' + error.message });
+  }
+});
+
+/**
  * GET /joke
  * Returns a random programming joke
  */

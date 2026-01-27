@@ -97,10 +97,12 @@ export function generateDockerCompose(config) {
     };
   }
 
-  // Determine drachtio port from config (5070 when SIP conflict detected or manually specified, 5060 otherwise)
-  const drachtioPort = config.deployment && config.deployment.pi && (config.deployment.pi.sipConflict || config.deployment.pi.drachtioPort === 5070)
-    ? 5070
-    : 5060;
+  // Determine drachtio port from config (universal or legacy)
+  const drachtioPort = (config.sip && config.sip.port)
+    ? config.sip.port
+    : (config.deployment && config.deployment.pi && (config.deployment.pi.sipConflict || config.deployment.pi.drachtioPort === 5070)
+      ? 5070
+      : 5060);
 
 
   // Determine if running on Pi (ARM64) - use specific versions with platform

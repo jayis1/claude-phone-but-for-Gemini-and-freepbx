@@ -374,8 +374,9 @@ async function runVoiceServerChecks(config, isPiSplit) {
   checks.push({ name: 'PBX reachability', passed: pbxReachable });
 
 
+
   // Check SIP Registration Status via Voice App API
-  const voiceAppPort = config.server?.voicePort || 3000;
+  const voiceAppPort = config.server?.httpPort || 3000;
   const regSpinner = ora('Checking SIP registration status...').start();
 
   try {
@@ -385,21 +386,27 @@ async function runVoiceServerChecks(config, isPiSplit) {
     if (response.data.success) {
       const registrations = response.data.registrations || {};
       const extensions = Object.keys(registrations);
+      const registeredExts = extensions.filter(ext => registrations[ext].registered);
 
-      if (extensions.length > 0) {
-        regSpinner.succeed(chalk.green(`SIP registered: ${extensions.join(', ')}`));
+      if (registeredExts.length > 0) {
+        const statuses = registeredExts.map(ext => `${ext} (${registrations[ext].expires}s)`).join(', ');
+        regSpinner.succeed(chalk.green(`SIP registered: ${statuses}`));
         passedCount++;
       } else {
-        regSpinner.fail(chalk.red('No SIP extensions registered'));
-        console.log(chalk.gray('  → Check your extension credentials in ~/.gemini-phone/config.json\n'));
-        console.log(chalk.gray('  → Check FreePBX logs for registration failures\n'));
+        if (extensions.length > 0) {
+          regSpinner.fail(chalk.red(`SIP registration failed for: ${extensions.join(', ')}`));
+          console.log(chalk.gray(`  → Check passwords in ~/.gemini-phone/config.json`));
+        } else {
+          regSpinner.fail(chalk.red('No SIP extensions configured'));
+        }
+        console.log(chalk.gray('  → Check FreePBX logs for authentication failures\n'));
       }
     } else {
-      regSpinner.fail(chalk.red('Failed to get registration status from voice-app'));
+      regSpinner.fail(chalk.red('Voice-app status API returned error'));
     }
   } catch (error) {
-    regSpinner.fail(chalk.red('Voice-app status API not responding'));
-    console.log(chalk.gray(`  → ${error.message}\n`));
+    regSpinner.warn(chalk.yellow('Voice-app status API not responding'));
+    console.log(chalk.gray(`  → Ensure 'gemini-phone start' is running (Port ${voiceAppPort})\n`));
   }
   checks.push({ name: 'SIP registration', passed: true });
 
