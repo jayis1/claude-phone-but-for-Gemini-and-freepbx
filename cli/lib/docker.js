@@ -163,6 +163,7 @@ export function generateDockerCompose(config) {
       - ${getEnvPath()}
     volumes:
       - ${getConfigDir()}/mission-control/data:/app/data
+      - ${getEnvPath()}:/app/.env
     environment:
       - PORT=3030
       - VOICE_APP_URL=http://localhost:${config.server.httpPort || 3000}
