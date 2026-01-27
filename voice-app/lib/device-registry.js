@@ -13,6 +13,7 @@
  * - prompt: System prompt that defines device personality
  */
 
+const EventEmitter = require('events');
 const fs = require('fs');
 const path = require('path');
 const logger = require('./logger');
@@ -29,8 +30,9 @@ const MORPHEUS_DEFAULT = {
   prompt: 'You are Morpheus, Chuck\'s principal AI assistant. You are meticulous, systematic, and excellence-driven. Keep voice responses under 40 words.'
 };
 
-class DeviceRegistry {
+class DeviceRegistry extends EventEmitter {
   constructor() {
+    super();
     this.devices = {};
     this.devicesByName = {};
     this.loaded = false;
@@ -88,6 +90,8 @@ class DeviceRegistry {
         deviceCount: Object.keys(this.devices).length,
         devices: Object.keys(this.devices)
       });
+
+      this.emit('change', Object.keys(this.devices));
 
     } catch (error) {
       logger.error('Failed to load device config', { error: error.message });

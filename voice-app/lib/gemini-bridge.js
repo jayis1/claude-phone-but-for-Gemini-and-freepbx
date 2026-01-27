@@ -5,7 +5,18 @@
 
 const axios = require('axios');
 
-const GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:4000';
+let GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:4000';
+
+/**
+ * Set the Gemini API URL dynamically
+ * @param {string} url - New API URL
+ */
+function setInferenceUrl(url) {
+  if (url) {
+    GEMINI_API_URL = url;
+    console.log(`[GEMINI-BRIDGE] URL updated to: ${GEMINI_API_URL}`);
+  }
+}
 
 /**
  * Query Gemini via HTTP API with session support
@@ -112,5 +123,6 @@ async function isAvailable() {
 module.exports = {
   query,
   endSession,
-  isAvailable
+  isAvailable,
+  setInferenceUrl
 };

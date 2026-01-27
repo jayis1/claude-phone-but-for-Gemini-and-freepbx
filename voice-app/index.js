@@ -129,15 +129,8 @@ async function initializeHttpServer() {
   ttsService.setAudioDir(config.audio_dir);
   console.log("[" + new Date().toISOString() + "] TTS Service configured");
 
-  // ========== QUERY API ROUTES ==========
-  setupQueryRoutes({
-    geminiBridge: geminiBridge
-  });
-
-  httpServer.app.use("/api", queryRouter);
-  console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
-
   // Status Endpoint (for gemini-phone doctor)
+  // MOVED UP before queryRouter to ensure priority
   httpServer.app.get('/api/status', (req, res) => {
     const regState = {};
     if (registrar) {
@@ -157,6 +150,14 @@ async function initializeHttpServer() {
       registrations: regState
     });
   });
+
+  // ========== QUERY API ROUTES ==========
+  setupQueryRoutes({
+    geminiBridge: geminiBridge
+  });
+
+  httpServer.app.use("/api", queryRouter);
+  console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
 
   /**
    * PBX Provisioning Endpoint
@@ -195,20 +196,55 @@ async function initializeHttpServer() {
   }, 60 * 1000);
 }
 
-// START IT NOW
-initializeHttpServer();
-
 // ==========================================
-// CONNECT TO PBX / SIP
+// MAIN STARTUP SEQUENCE
 // ==========================================
 
-// Connect to drachtio
-srf.connect({
-  host: config.drachtio.host,
-  port: config.drachtio.port,
-  secret: config.drachtio.secret
-});
+async function start() {
+  try {
+    console.log("[" + new Date().toISOString() + "] Starting Gemini Phone Voice App...");
 
+    // 1. Initialize HTTP Server and Routes FIRST
+    // This ensures all routes are registered before any 404 handlers
+    await initializeHttpServer();
+
+    // 2. Connect to PBX / SIP (Drachtio)
+    console.log("[" + new Date().toISOString() + "] Connecting to Drachtio...");
+    srf.connect({
+      host: config.drachtio.host,
+      port: config.drachtio.port,
+      secret: config.drachtio.secret
+    });
+
+    // 3. Connect to Media Server (FreeSWITCH)
+    // Connect with exponential backoff retry
+    console.log("[" + new Date().toISOString() + "] Connecting to FreeSWITCH...");
+    connectWithRetry(connectToFreeswitch, {
+      maxRetries: 10,
+      retryDelays: [1000, 2000, 3000, 5000, 5000, 5000, 10000, 10000, 1000, 10000, 10000],
+      name: 'FREESWITCH'
+    })
+      .then(function (ms) {
+        mediaServer = ms;
+        freeswitchConnected = true;
+        console.log("[" + new Date().toISOString() + "] FREESWITCH Ready for calls");
+        checkReadyState();
+      })
+      .catch(function (err) {
+        console.error("[" + new Date().toISOString() + "] FREESWITCH Connection failed permanently: " + err.message);
+        // Don't exit, keep HTTP server alive for Dashboard
+      });
+
+  } catch (error) {
+    console.error("FATAL: Failed to start voice-app:", error);
+    process.exit(1);
+  }
+}
+
+// Start the application
+start();
+
+// Connect to drachtio events
 srf.on("connect", function (err, hostport) {
   console.log("[" + new Date().toISOString() + "] DRACHTIO Connected at " + hostport);
   drachtioConnected = true;
@@ -242,7 +278,7 @@ srf.on("error", function (err) {
   drachtioConnected = false;
 });
 
-// Connect to FreeSWITCH
+// Connect to FreeSWITCH helper
 function connectToFreeswitch() {
   const mrf = new Mrf(srf);
   return mrf.connect({
@@ -251,23 +287,6 @@ function connectToFreeswitch() {
     secret: config.freeswitch.secret
   });
 }
-
-// Connect with exponential backoff retry
-connectWithRetry(connectToFreeswitch, {
-  maxRetries: 10,
-  retryDelays: [1000, 2000, 3000, 5000, 5000, 5000, 10000, 10000, 10000, 10000],
-  name: 'FREESWITCH'
-})
-  .then(function (ms) {
-    mediaServer = ms;
-    freeswitchConnected = true;
-    console.log("[" + new Date().toISOString() + "] FREESWITCH Ready for calls");
-    checkReadyState();
-  })
-  .catch(function (err) {
-    console.error("[" + new Date().toISOString() + "] FREESWITCH Connection failed permanently: " + err.message);
-    // process.exit(1); // Don't exit, keep HTTP server alive for Dashboard
-  });
 
 function enableOutboundCalling() {
   console.log("[" + new Date().toISOString() + "] Enabling Outbound Calling...");
