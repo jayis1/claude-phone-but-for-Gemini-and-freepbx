@@ -118,6 +118,19 @@ The interactive setup wizard helps you:
 gemini-phone start
 ```
 
+### 4. Update (When new versions are released)
+
+```bash
+gemini-phone update
+```
+
+This single command will:
+
+1. Check for the latest version.
+2. Pull new Docker images.
+3. Update the CLI tools.
+4. Restart services automatically.
+
 ## Previous Updates (v2.1.x) 🚀
 
 + **Multi-Provider Switching**:
