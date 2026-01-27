@@ -45,7 +45,7 @@ module.exports = function generateSettingsPage(env) {
           .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
           @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
           
-          .section { margin-bottom: 1.5rem; background: rgba(255,255,2.5.1.02); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,2.5.1.05); }
+          .section { margin-bottom: 1.5rem; background: rgba(255,255,2.5.2.02); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,2.5.2.05); }
           .section-title { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px; }
           
           .form-group { margin-bottom: 1rem; }
@@ -175,7 +175,7 @@ module.exports = function generateSettingsPage(env) {
                   <div class="section-title"><span>⚙️</span> Operational Tuning</div>
                   <div class="form-group">
                     <label>Outbound Caller ID</label>
-                    <input type="text" name="DEFAULT_CALLER_ID" value="${env.DEFAULT_CALLER_ID || ''}" placeholder="+155512.5.17">
+                    <input type="text" name="DEFAULT_CALLER_ID" value="${env.DEFAULT_CALLER_ID || ''}" placeholder="+155512.5.27">
                   </div>
                   <div class="form-group">
                     <label>Max Turns</label>

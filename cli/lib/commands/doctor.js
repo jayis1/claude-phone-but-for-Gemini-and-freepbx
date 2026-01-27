@@ -88,12 +88,15 @@ async function checkPbxApi(pbxConfig) {
   const tokenUrl = `${pbxConfig.apiUrl}/admin/api/api/token`;
 
   try {
-    const response = await axios.post(tokenUrl, {
-      grant_type: 'client_credentials',
-      client_id: pbxConfig.clientId,
-      client_secret: pbxConfig.clientSecret
-    }, {
-      headers: { 'Content-Type': 'application/json' },
+    const auth = Buffer.from(`${pbxConfig.clientId}:${pbxConfig.clientSecret}`).toString('base64');
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+
+    const response = await axios.post(tokenUrl, params, {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       timeout: 5000
     });
 

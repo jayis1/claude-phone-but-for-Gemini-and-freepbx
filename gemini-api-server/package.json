@@ -1,6 +1,6 @@
 {
   "name": "gemini-api-server",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "description": "HTTP API wrapper for Gemini Code CLI - Voice Interface",
   "main": "server.js",
   "scripts": {

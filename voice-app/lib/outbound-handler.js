@@ -19,7 +19,7 @@ const ttsService = require('./tts-service');
  * @param {Object} srf - drachtio SRF instance
  * @param {Object} mediaServer - FreeSWITCH media server
  * @param {Object} options - Call options
- * @param {string} options.to - Phone number in E.164 format (+155512.5.17)
+ * @param {string} options.to - Phone number in E.164 format (+155512.5.27)
  * @param {string} options.message - Message to play when answered
  * @param {string} [options.callerId] - Caller ID (defaults to DEFAULT_CALLER_ID env var)
  * @param {number} [options.timeoutSeconds=30] - Ring timeout in seconds
