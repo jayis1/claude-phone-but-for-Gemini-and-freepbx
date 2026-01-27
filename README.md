@@ -4,10 +4,11 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.2.46
+## What's New in v2.3.2
 
++ 🏗️ **Self-Contained AI Stack** - Gemini CLI integrated directly into API Server Docker.
++ 🌍 **Global Redspot Denmark Fix** - Added `DIAL_PREFIX` to setup wizard for universal connectivity.
 + 🛠️ **Advanced Web Orchestration** - Every .env variable now manageable via UI.
-+ 🌈 **True htop Visuals** - Resolved monochrome issue for real colorful system bars.
 
 + ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
 + 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
