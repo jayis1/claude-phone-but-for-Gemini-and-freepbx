@@ -8,6 +8,9 @@ import { isServerRunning, getServerPid } from '../process-manager.js';
 import { validateElevenLabsKey, validateOpenAIKey } from '../validators.js';
 import { isReachable, checkGeminiApiServer as checkGeminiApiHealth } from '../network.js';
 import { checkPort } from '../port-check.js';
+import os from 'os';
+import fs from 'fs';
+import path from 'path';
 
 
 
@@ -153,6 +156,75 @@ async function checkGeminiAPIServer(port, containerName = 'gemini-api-server') {
       error: 'Health endpoint not responding'
     };
   }
+}
+
+/**
+ * Check Mission Control dashboard connectivity
+ * @param {number} port - Mission Control port
+ * @returns {Promise<{running: boolean, error?: string}>}
+ */
+async function checkMissionControl(port = 3030) {
+  try {
+    const response = await axios.get(`http://localhost:${port}`, { timeout: 2000 });
+    return { running: response.status === 200 };
+  } catch (error) {
+    return { running: false, error: error.message };
+  }
+}
+
+/**
+ * Check storage write permissions
+ * @returns {Promise<{checks: Array}>}
+ */
+async function checkStoragePermissions() {
+  const result = [];
+  const dirs = [
+    { name: 'Recordings', path: './data/recordings' },
+    { name: 'Mission Control Data', path: './data/mission-control' }
+  ];
+
+  for (const dir of dirs) {
+    const absPath = path.resolve(process.cwd(), dir.path);
+    try {
+      if (!fs.existsSync(absPath)) {
+        result.push({ name: dir.name, passed: false, error: 'Directory missing' });
+        continue;
+      }
+      fs.accessSync(absPath, fs.constants.W_OK);
+      result.push({ name: dir.name, passed: true });
+    } catch (error) {
+      result.push({ name: dir.name, passed: false, error: `Not writable: ${error.message}` });
+    }
+  }
+  return result;
+}
+
+/**
+ * Check External IP configuration
+ * @param {string} configIp - IP from config
+ * @returns {Promise<{valid: boolean, localIps: string[], error?: string}>}
+ */
+async function checkNetworkConfig(configIp) {
+  const interfaces = os.networkInterfaces();
+  const localIps = [];
+
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        localIps.push(iface.address);
+      }
+    }
+  }
+
+  if (!configIp || configIp === '127.0.0.1') {
+    return { valid: false, localIps, error: 'EXTERNAL_IP is not set or is localhost' };
+  }
+
+  if (!localIps.includes(configIp)) {
+    return { valid: false, localIps, error: `Configured IP (${configIp}) does not match any local interface` };
+  }
+
+  return { valid: true, localIps };
 }
 
 
@@ -458,6 +530,53 @@ async function runVoiceServerChecks(config, isPiSplit) {
     pbxApiSpinner.info(chalk.blue('FreePBX M2M API not configured (Optional)'));
   }
   checks.push({ name: 'FreePBX M2M API', passed: pbxApiResult.connected || !config.pbx?.apiUrl });
+
+  // --- Doctor 2.0 Expansion ---
+
+  // Check Mission Control Dashboard
+  const mcPort = config.server?.missionControlPort || 3030;
+  const mcSpinner = ora(`Checking Mission Control Dashboard (Port ${mcPort})...`).start();
+  const mcResult = await checkMissionControl(mcPort);
+  if (mcResult.running) {
+    mcSpinner.succeed(chalk.green('Mission Control dashboard reachable'));
+    passedCount++;
+  } else {
+    mcSpinner.warn(chalk.yellow(`Mission Control unreachable: ${mcResult.error || 'Port not responding'}`));
+    console.log(chalk.gray(`  → Ensure 'gemini-phone start' is running\n`));
+    passedCount++; // Optional part
+  }
+  checks.push({ name: 'Mission Control', passed: mcResult.running });
+
+  // Check Storage Permissions
+  const storageSpinner = ora('Checking storage permissions...').start();
+  const storageResults = await checkStoragePermissions();
+  const storageFailed = storageResults.filter(r => !r.passed);
+  if (storageFailed.length === 0) {
+    storageSpinner.succeed(chalk.green('Storage directories are writable'));
+    passedCount++;
+  } else {
+    storageSpinner.fail(chalk.red('Storage permission issues detected'));
+    for (const f of storageFailed) {
+      console.log(chalk.gray(`  → ${f.name}: ${f.error}`));
+    }
+    console.log(chalk.gray('  → Fix permissions with: sudo chown -R $USER:$USER data/\n'));
+  }
+  checks.push({ name: 'Storage Permissions', passed: storageFailed.length === 0 });
+
+  // Network Check (External IP)
+  const networkSpinner = ora('Validating network configuration...').start();
+  const extIp = process.env.EXTERNAL_IP || config.network?.externalIp;
+  const networkResult = await checkNetworkConfig(extIp);
+  if (networkResult.valid) {
+    networkSpinner.succeed(chalk.green(`External IP configuration valid (${extIp})`));
+    passedCount++;
+  } else {
+    networkSpinner.warn(chalk.yellow(`Network config issue: ${networkResult.error}`));
+    console.log(chalk.gray(`  → Local IPs found: ${networkResult.localIps.join(', ')}`));
+    console.log(chalk.gray('  → Ensure EXTERNAL_IP in .env matches one of these for audio to work\n'));
+    passedCount++; // Warn but don't fail the whole check
+  }
+  checks.push({ name: 'Network Config', passed: networkResult.valid });
 
   return { checks, passedCount };
 }
