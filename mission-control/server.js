@@ -408,7 +408,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.3.1
+            MISSION CONTROL v2.3.2
           </div>
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button onclick="triggerTestCall()" id="testBtn" style="padding: 4px 10px; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
@@ -435,10 +435,15 @@ app.get('/', (req, res) => {
               <span style="font-size: 1.2rem; cursor: pointer; vertical-align: middle;">⚙️</span>
             </a>
           </div>
+          <div style="flex: 1; display:flex; justify-content:center;">
+             <div id="ai-stack-status" style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 20px; padding: 4px 16px; font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                <div id="ai-stack-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #52525b;"></div>
+                <span id="ai-stack-text">AI STACK: INITIALIZING</span>
+             </div>
+          </div>
           <div class="service-status">
             <span>Services:</span>
             <div class="service-dots">
-
               <span class="service-dot offline" id="dot-drachtio" title="Drachtio (SIP)"></span>
               <span class="service-dot offline" id="dot-freeswitch" title="FreeSWITCH (Media)"></span>
               <span class="service-dot offline" id="dot-freepbx" title="FreePBX/Asterisk"></span>
@@ -449,7 +454,7 @@ app.get('/', (req, res) => {
               <span class="service-dot offline" id="dot-system" title="System Monitor"></span>
             </div>
           </div>
-          <div id="clock" style="font-family: 'JetBrains Mono', monospace; color: var(--text-dim);">--:--:--</div>
+          <div id="clock" style="font-family: 'JetBrains Mono', monospace; color: var(--text-dim); width: 80px; text-align: right;">--:--:--</div>
         </div>
 
         <div class="grid">
@@ -834,9 +839,14 @@ app.get('/', (req, res) => {
                 if(loadVal) loadVal.innerText = load + '%';
                 const loadBar = document.getElementById('bar-ai-load');
                 if(loadBar) loadBar.style.width = load + '%';
+                
+                brainOnline = true;
+                updateStackStatus();
               }
             } catch(e) {
               setStatus('inference-status', false);
+              brainOnline = false;
+              updateStackStatus();
               const dot = document.getElementById('dot-brain');
               if(dot) dot.className = 'service-dot offline';
             }
@@ -886,9 +896,13 @@ app.get('/', (req, res) => {
                 setStatus('api-status', true);
                 const dot = document.getElementById('dot-api');
                 if(dot) dot.className = 'service-dot online';
+                handsOnline = true;
+                updateStackStatus();
               } else throw new Error('Unhealthy');
             } catch(e) {
               setStatus('api-status', false);
+              handsOnline = false;
+              updateStackStatus();
               const dot = document.getElementById('dot-api');
               if(dot) dot.className = 'service-dot offline';
             }
@@ -1108,6 +1122,39 @@ app.get('/', (req, res) => {
           setInterval(updateApiStatus, 5000);
           setInterval(updateSystem, 2000);
           setInterval(updateLogs, 2000);
+          
+          let brainOnline = false;
+          let handsOnline = false;
+
+          function updateStackStatus() {
+            const el = document.getElementById('ai-stack-status');
+            const dot = document.getElementById('ai-stack-dot');
+            const text = document.getElementById('ai-stack-text');
+            if(!el || !dot || !text) return;
+
+            if (brainOnline && handsOnline) {
+              el.style.background = 'rgba(16, 185, 129, 0.1)';
+              el.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+              dot.style.background = 'var(--success)';
+              dot.style.boxShadow = '0 0 8px var(--success)';
+              text.innerText = 'AI STACK: 🧠 BRAIN + ⚡ HANDS ONLINE';
+              text.style.color = 'var(--success)';
+            } else if (brainOnline || handsOnline) {
+              el.style.background = 'rgba(245, 158, 11, 0.1)';
+              el.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+              dot.style.background = 'var(--warning)';
+              dot.style.boxShadow = '0 0 8px var(--warning)';
+              text.innerText = brainOnline ? 'AI STACK: 🧠 BRAIN ONLY' : 'AI STACK: ⚡ HANDS ONLY';
+              text.style.color = 'var(--warning)';
+            } else {
+              el.style.background = 'rgba(239, 68, 68, 0.1)';
+              el.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+              dot.style.background = 'var(--error)';
+              dot.style.boxShadow = '0 0 8px var(--error)';
+              text.innerText = 'AI STACK: OFFLINE';
+              text.style.color = 'var(--error)';
+            }
+          }
 
           // Update Checker (Silent Background)
           // Auto-Check Updates on Load to Populate Button
@@ -2225,6 +2272,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.3.1]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.3.2]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

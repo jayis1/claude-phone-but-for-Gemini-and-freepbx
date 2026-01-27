@@ -5,7 +5,7 @@
 
 const axios = require('axios');
 
-const GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:3333';
+const GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:4000';
 
 /**
  * Query Gemini via HTTP API with session support
@@ -20,8 +20,12 @@ async function query(prompt, options = {}) {
   const { callId, devicePrompt, timeout = 30 } = options; // AC27: Default 30s timeout
   const timestamp = new Date().toISOString();
 
+  // Determine if we are talking to Brain (4000) or Hands (3333)
+  const isBrain = GEMINI_API_URL.includes(':4000');
+  const targetLabel = isBrain ? 'BRAIN (Inference)' : 'HANDS (API Server)';
+
   try {
-    console.log(`[${timestamp}] GEMINI Sending query to ${GEMINI_API_URL}...`);
+    console.log(`[${timestamp}] GEMINI Querying ${targetLabel} at ${GEMINI_API_URL}...`);
     if (callId) {
       console.log(`[${timestamp}] GEMINI Session: ${callId}`);
     }
