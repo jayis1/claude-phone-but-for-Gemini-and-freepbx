@@ -55,9 +55,11 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     // Format SIP URI for PBX
     // Use the phone number as provided, but strip the '+' for compatibility with most PBX systems.
     // For SIP URIs, we ensure it has transport=udp to match most PBX configurations.
-    const phoneNumber = to.replace(/^\+/, '');
+    const dialPrefix = process.env.DIAL_PREFIX || '';
+    const phoneNumber = dialPrefix + to.replace(/^\+/, '');
     const sipTrunkHost = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN || '127.0.0.1';
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
+    const headerDomain = (externalIp && externalIp !== '127.0.0.1') ? externalIp : sipTrunkHost;
     const extensionNumber = process.env.SIP_EXTENSION || '9000';
     const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || extensionNumber;
 
@@ -79,15 +81,18 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const fromExtension = deviceConfig ? deviceConfig.extension : extensionNumber;
     const displayName = deviceConfig ? deviceConfig.name : (defaultCallerId !== extensionNumber ? defaultCallerId : null);
     const fromHeader = displayName
-      ? '"' + displayName + '" <sip:' + fromExtension + '@' + sipTrunkHost + '>'
-      : '<sip:' + fromExtension + '@' + sipTrunkHost + '>';
+      ? '"' + displayName + '" <sip:' + fromExtension + '@' + headerDomain + '>'
+      : '<sip:' + fromExtension + '@' + headerDomain + '>';
+
+    // Prepare PAI and RPID identity (keep + if present)
+    const identityPart = defaultCallerId.includes('+') ? defaultCallerId : `+${defaultCallerId.replace(/^\+/, '')}`;
 
     const uacOptions = {
       localSdp: localSdp,
       headers: {
         'From': fromHeader,
-        'P-Asserted-Identity': `<sip:${defaultCallerId.replace('+', '')}@${sipTrunkHost}>`,
-        'Remote-Party-ID': `<sip:${defaultCallerId.replace('+', '')}@${sipTrunkHost}>;party=calling;screen=yes;privacy=off`,
+        'P-Asserted-Identity': `<sip:${identityPart}@${headerDomain}>`,
+        'Remote-Party-ID': `<sip:${identityPart}@${headerDomain}>;party=calling;screen=yes;privacy=off`,
         'User-Agent': 'NetworkChuck-VoiceServer/1.0',
         'X-Call-ID': callId
       }

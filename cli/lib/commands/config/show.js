@@ -51,9 +51,8 @@ export async function configShowCommand() {
   // Server Configuration
   console.log(chalk.bold('\nServer:'));
   console.log(chalk.gray(`  External IP: ${config.server.externalIp}`));
-  console.log(chalk.gray(`  Voice App Port: ${config.server.voiceAppPort}`));
+  console.log(chalk.gray(`  Voice App Port: ${config.server.httpPort}`));
   console.log(chalk.gray(`  Gemini API Port: ${config.server.geminiApiPort}`));
-  console.log(chalk.gray(`  Gemini API URL: ${config.server.geminiApiUrl}`));
 
   // Devices
   console.log(chalk.bold('\nDevices:'));
