@@ -196,8 +196,11 @@ async function initiateOutboundCall(srf, mediaServer, options) {
       // Specifically check for Q.850 Cause 34 (No circuit/channel available)
       // This is almost always an Outbound Route issue in FreePBX
       if (error.message && error.message.includes('cause=34')) {
-        logger.error('CRITICAL SIP ERROR: No path to destination (Cause 34)');
-        logger.error('SOLUTION: Check your FreePBX "Outbound Routes". Ensure a route exists that matches this number pattern and points to a Trunk.');
+        logger.error('🚨 CRITICAL SIP ERROR: No path to destination (Cause 34)');
+        logger.error('🔎 FREEPBX DIAGNOSIS: The link between the AI (Port 5070) and FreePBX (Port 5060) is HEALTHY.');
+        logger.error('🔎 PROBLEM: FreePBX cannot find a matching "Outbound Route" for the dialed number.');
+        logger.error(`🔎 ATTEMPTED: ${dialPrefix}${to.replace(/^\+/, '')}`);
+        logger.error('🛠️ FIX: In FreePBX -> Outbound Routes, ensure you have a pattern like "00." or "00XXXXXXX" that matches your country.');
         throw new Error('no_route_to_destination');
       }
 
@@ -208,6 +211,8 @@ async function initiateOutboundCall(srf, mediaServer, options) {
       } else if (status === 404) {
         throw new Error('not_found');
       } else if (status === 503) {
+        logger.error('🚨 SIP 503: Service Unavailable');
+        logger.error('🔎 FREEPBX DIAGNOSIS: FreePBX rejected the call. Check "Asterisk Logfiles" for the real reason.');
         throw new Error('service_unavailable');
       } else if (status === 401 || status === 407) {
         throw new Error('auth_failed');

@@ -1253,6 +1253,17 @@ async function setupServer(config) {
         }
         return true;
       }
+    },
+    {
+      type: 'list',
+      name: 'gpuVendor',
+      message: 'Hardware Acceleration (GPU):',
+      default: config.server.gpuVendor || 'none',
+      choices: [
+        { name: 'None (CPU only)', value: 'none' },
+        { name: 'NVIDIA GPU (NVENC/CUDA)', value: 'nvidia' },
+        { name: 'AMD GPU (ROCm/OpenCL)', value: 'amd' }
+      ]
     }
   ]);
 
@@ -1261,6 +1272,7 @@ async function setupServer(config) {
   config.server.httpPort = parseInt(answers.httpPort, 10);
   config.server.inferencePort = parseInt(answers.inferencePort, 10);
   config.server.missionControlPort = parseInt(answers.missionControlPort, 10);
+  config.server.gpuVendor = answers.gpuVendor;
 
   return config;
 }
