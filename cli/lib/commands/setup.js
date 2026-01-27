@@ -1188,6 +1188,12 @@ async function setupServer(config) {
 
   const answers = await inquirer.prompt([
     {
+      type: 'confirm',
+      name: 'isColocated',
+      message: 'Are you installing on the same server as FreePBX?',
+      default: (config.sip && config.sip.port === 5070) || false
+    },
+    {
       type: 'input',
       name: 'externalIp',
       message: 'Server LAN IP (for RTP audio):',
@@ -1274,6 +1280,10 @@ async function setupServer(config) {
   config.server.missionControlPort = parseInt(answers.missionControlPort, 10);
   config.server.gpuVendor = answers.gpuVendor;
 
+  // Set SIP port based on colocation
+  if (!config.sip) config.sip = {};
+  config.sip.port = answers.isColocated ? 5070 : (config.sip.port || 5060);
+
   return config;
 }
 
@@ -1286,6 +1296,12 @@ async function setupPiServer(config) {
   const localIp = getLocalIP();
 
   const answers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'isColocated',
+      message: 'Are you installing on the same server as FreePBX?',
+      default: (config.sip && config.sip.port === 5070) || true
+    },
     {
       type: 'input',
       name: 'externalIp',
@@ -1330,6 +1346,10 @@ async function setupPiServer(config) {
   config.server.externalIp = answers.externalIp;
   config.server.httpPort = parseInt(answers.httpPort, 10);
   config.server.gpuVendor = answers.gpuVendor;
+
+  // Set SIP port based on colocation
+  if (!config.sip) config.sip = {};
+  config.sip.port = answers.isColocated ? 5070 : (config.sip.port || 5060);
 
   return config;
 }
