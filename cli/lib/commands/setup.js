@@ -374,8 +374,25 @@ async function setupVoiceServer(config) {
     config.deployment.mode = 'voice-server';
   }
 
-  // Step 0: Port Conflict Check
-  config = await handleSipConflict(config);
+  // Step 0: PBX Infrastructure (Colocation)
+  console.log(chalk.bold('\n🏢 PBX Infrastructure'));
+  const infraAnswers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'isColocated',
+      message: 'Are you installing Gemini Phone on the same server/LXC as FreePBX?',
+      default: config.sip?.port === 5070
+    }
+  ]);
+
+  if (!config.sip) config.sip = {};
+  config.sip.port = infraAnswers.isColocated ? 5070 : 5060;
+
+  if (infraAnswers.isColocated) {
+    console.log(chalk.cyan('   → Gemini will use port 5070 to avoid conflicts with FreePBX on 5060.'));
+  } else {
+    console.log(chalk.cyan('   → Gemini will use the standard SIP port 5060.'));
+  }
 
   // Step 1: SIP Configuration
   console.log(chalk.bold('\n☎️  SIP Configuration'));
@@ -508,8 +525,25 @@ async function setupBoth(config) {
   console.log(chalk.bold('\n📡 API Configuration'));
   config = await setupAPIKeys(config);
 
-  // Step 1.5: Port Conflict Check
-  config = await handleSipConflict(config);
+  // Step 1.2: PBX Infrastructure (Colocation)
+  console.log(chalk.bold('\n🏢 PBX Infrastructure'));
+  const infraAnswers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'isColocated',
+      message: 'Are you installing Gemini Phone on the same server/LXC as FreePBX?',
+      default: config.sip?.port === 5070
+    }
+  ]);
+
+  if (!config.sip) config.sip = {};
+  config.sip.port = infraAnswers.isColocated ? 5070 : 5060;
+
+  if (infraAnswers.isColocated) {
+    console.log(chalk.cyan('   → Gemini will use port 5070 to avoid conflicts with FreePBX on 5060.'));
+  } else {
+    console.log(chalk.cyan('   → Gemini will use the standard SIP port 5060.'));
+  }
 
   // Step 2: SIP Configuration
   console.log(chalk.bold('\n☎️  SIP Configuration'));
@@ -665,7 +699,7 @@ async function setupPi(config) {
   console.log(chalk.bold('\n📡 API Configuration'));
   config = await setupAPIKeys(config);
 
-  // Step 2: SIP Configuration (Generic, not 3CX SBC specific anymore)
+  // Step 2: SIP Configuration (Generic, not PBX-specific anymore)
   console.log(chalk.bold('\n☎️  SIP Configuration'));
   config = await setupSIP(config);
 
@@ -998,9 +1032,21 @@ async function setupSIP(config) {
       validate: (input) => {
         // Optional
         if (input && input.trim() !== '' && !validateHostname(input)) {
-          // Basic check, though validateHostname is strict on IPs too usually
-          // Let's just allow it if not empty
-          return true;
+          return 'Invalid hostname format';
+        }
+        return true;
+      }
+    },
+    {
+      type: 'input',
+      name: 'registrarPort',
+      message: 'Registrar SIP Port:',
+      default: config.sip.registrar_port || 5060,
+      when: (answers) => answers.registrar && answers.registrar.trim() !== '',
+      validate: (input) => {
+        const port = parseInt(input, 10);
+        if (isNaN(port) || port < 1 || port > 65535) {
+          return 'Invalid port number';
         }
         return true;
       }
@@ -1010,6 +1056,7 @@ async function setupSIP(config) {
   config.sip.domain = answers.domain;
   // If registrar is empty, use domain
   config.sip.registrar = answers.registrar && answers.registrar.trim() !== '' ? answers.registrar : answers.domain;
+  config.sip.registrar_port = parseInt(answers.registrarPort || 5060, 10);
 
   return config;
 }
@@ -1188,12 +1235,6 @@ async function setupServer(config) {
 
   const answers = await inquirer.prompt([
     {
-      type: 'confirm',
-      name: 'isColocated',
-      message: 'Are you installing on the same server as FreePBX?',
-      default: (config.sip && config.sip.port === 5070) || false
-    },
-    {
       type: 'input',
       name: 'externalIp',
       message: 'Server LAN IP (for RTP audio):',
@@ -1280,10 +1321,6 @@ async function setupServer(config) {
   config.server.missionControlPort = parseInt(answers.missionControlPort, 10);
   config.server.gpuVendor = answers.gpuVendor;
 
-  // Set SIP port based on colocation
-  if (!config.sip) config.sip = {};
-  config.sip.port = answers.isColocated ? 5070 : (config.sip.port || 5060);
-
   return config;
 }
 
@@ -1296,12 +1333,6 @@ async function setupPiServer(config) {
   const localIp = getLocalIP();
 
   const answers = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'isColocated',
-      message: 'Are you installing on the same server as FreePBX?',
-      default: (config.sip && config.sip.port === 5070) || true
-    },
     {
       type: 'input',
       name: 'externalIp',
@@ -1346,10 +1377,6 @@ async function setupPiServer(config) {
   config.server.externalIp = answers.externalIp;
   config.server.httpPort = parseInt(answers.httpPort, 10);
   config.server.gpuVendor = answers.gpuVendor;
-
-  // Set SIP port based on colocation
-  if (!config.sip) config.sip = {};
-  config.sip.port = answers.isColocated ? 5070 : (config.sip.port || 5060);
 
   return config;
 }

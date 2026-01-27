@@ -4,12 +4,13 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.3.5
+## What's New in v2.3.6
 
-+ 🎮 **Universal GPU Support** - Added NVIDIA (NVENC) and AMD (ROCm) hardware acceleration.
++ 🏟️ **Dual-LXC / SBC Mode** - Run Gemini and FreePBX in separate containers with zero port conflicts.
++ 🧬 **Proxmox Optimized** - Native support for LXC `vfs` storage and automated Nesting detection.
++ 🎮 **Universal GPU Support** - Enhanced NVIDIA (NVENC) and AMD (ROCm) passthrough for LXC.
 + 🔇 **Silent Build Mode** - Hidden Docker build/pull logs for a cleaner terminal.
 + 🇩🇰 **Global Redspot Denmark Fix** - Enhanced prefix and SIP routing for universal connectivity.
-+ 🛠️ **Advanced Web Orchestration** - Every .env variable now manageable via UI.
 
 + ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
 + 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
@@ -197,6 +198,41 @@ gemini-phone api-server    # Starts Gemini API wrapper on port 3333
 ```
 
 Note: On the API server machine, you don't need to run `gemini-phone setup` first - the `api-server` command works standalone.
+
+### Dual-LXC / Satellite SBC Mode
+
+Best for: High-stability Proxmox setups where FreePBX and Gemini live in separate containers.
+
+```text
+┌───────────────────────────────┐      ┌───────────────────────────────┐
+│     LXC 101 (FreePBX)         │      │     LXC 102 (Gemini Phone)    │
+│  IP: 172.16.1.83              │      │  IP: 172.16.1.81              │
+│  Standard SIP (Port 5060)     │ ◀──▶ │  Satellite SBC (Port 5060)    │
+└───────────────────────────────┘      └───────────────────────────────┘
+```
+
+**Setup on Gemini LXC:**
+
+1. Run `gemini-phone setup`.
+2. When asked **"Installing on same server as FreePBX?"**, select **No**.
+3. Enter the IP of your FreePBX LXC.
+4. Gemini will now act as a remote SBC, allowing both systems to use Port 5060 without conflict.
+
+## Proxmox & LXC Compatibility
+
+If running inside a Proxmox LXC container, ensure the following settings are enabled in the Proxmox Web UI (Options -> Features):
++ ✅ **Nesting**: Required for Docker to run inside LXC.
++ ✅ **FUSE**: Optional, but improves storage performance.
+
+### GPU Passthrough in LXC
+
+To use AMD/NVIDIA acceleration in Proxmox, add these lines to your `/etc/pve/lxc/ID.conf` on the **host**:
+
+```text
+lxc.cgroup2.devices.allow: c 226:* rwm
+lxc.mount.entry: /dev/kfd dev/kfd none bind,optional,create=file
+lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
+```
 
 ## CLI Commands
 

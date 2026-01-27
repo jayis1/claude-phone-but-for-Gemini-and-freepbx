@@ -303,6 +303,7 @@ export function generateEnvFile(config) {
     '# FreePBX / SIP Configuration',
     `SIP_DOMAIN=${config.sip.domain}`,
     `SIP_REGISTRAR=${config.sip.registrar}`,
+    `SIP_REGISTRAR_PORT=${config.sip.registrar_port || 5060}`,
     '',
     '# Default extension (primary device)',
     `SIP_EXTENSION=${config.devices[0].extension}`,

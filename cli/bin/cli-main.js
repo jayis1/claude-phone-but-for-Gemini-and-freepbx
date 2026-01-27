@@ -27,7 +27,7 @@ program
 
 program
   .command('setup')
-  .description('Interactive setup wizard for API keys, 3CX config, and devices')
+  .description('Interactive setup wizard for API keys, PBX config, and devices')
   .option('--skip-prereqs', 'Skip prerequisite checks (advanced users only)')
   .action(async (options) => {
     try {
