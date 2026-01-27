@@ -10,21 +10,16 @@ import {
 
 /**
  * Detect which docker compose command to use
- * Some systems have 'docker compose' (plugin), others have 'docker-compose' (standalone)
- * @returns {{cmd: string, args: string[]}} Command and base args for compose
  */
 function getComposeCommand() {
-  // Try 'docker compose' (plugin) first
   try {
     execSync('docker compose version', { stdio: 'pipe' });
     return { cmd: 'docker', args: ['compose'] };
   } catch (e) {
-    // Fall back to standalone docker-compose
     try {
       execSync('docker-compose --version', { stdio: 'pipe' });
       return { cmd: 'docker-compose', args: [] };
     } catch (e2) {
-      // Default to plugin style, let it fail with helpful error
       return { cmd: 'docker', args: ['compose'] };
     }
   }
@@ -32,7 +27,6 @@ function getComposeCommand() {
 
 /**
  * Generate a random secret for Docker services
- * @returns {string} Random 32-character hex string
  */
 function generateSecret() {
   return crypto.randomBytes(16).toString('hex');
@@ -40,10 +34,8 @@ function generateSecret() {
 
 /**
  * Check if Docker is installed and running
- * @returns {Promise<{installed: boolean, running: boolean, error?: string}>}
  */
 export async function checkDocker() {
-  // Check if docker command exists
   const installed = await new Promise((resolve) => {
     const check = spawn('docker', ['--version']);
     check.on('close', (code) => resolve(code === 0));
@@ -58,7 +50,6 @@ export async function checkDocker() {
     };
   }
 
-  // Check if Docker daemon is running by running a simple command
   const running = await new Promise((resolve) => {
     const check = spawn('docker', ['ps', '-q'], {
       stdio: ['pipe', 'pipe', 'pipe']
@@ -83,11 +74,8 @@ export async function checkDocker() {
 
 /**
  * Generate docker-compose.yml from config
- * @param {object} config - Configuration object
- * @returns {string} Docker compose YAML content
  */
 export function generateDockerCompose(config) {
-  // Ensure secrets exist in config
   if (!config.secrets) {
     config.secrets = {
       drachtio: 'cymru',
@@ -95,42 +83,14 @@ export function generateDockerCompose(config) {
     };
   }
 
-  // Determine drachtio port from config
   const drachtioPort = (config.sip && config.sip.port) ? config.sip.port : 5060;
-
-  // Determine platforms and images
   const isPiMode = config.deployment && config.deployment.mode === 'pi-split';
   const drachtioImage = isPiMode ? 'drachtio/drachtio-server:0.9.4' : 'drachtio/drachtio-server:latest';
   const freeswitchImage = 'drachtio/drachtio-freeswitch-mrf:latest';
   const platformLine = isPiMode ? '\n    platform: linux/arm64' : '';
 
   const installationType = config.installationType || 'both';
-  const gpuVendor = config.server.gpuVendor || 'none';
   const services = [];
-
-  // GPU Helper snippets
-  const getNvidiaSnippet = () => `
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]`;
-
-  const getAmdSnippet = () => `
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    group_add:
-      - video
-      - render`;
-
-  const getGpuSnippet = (vendor) => {
-    if (vendor === 'nvidia') return getNvidiaSnippet();
-    if (vendor === 'amd') return getAmdSnippet();
-    return '';
-  };
 
   // Voice services (drachtio, freeswitch, voice-app)
   if (installationType === 'voice-server' || installationType === 'both') {
@@ -180,26 +140,11 @@ export function generateDockerCompose(config) {
       - freeswitch`);
   }
 
-  // Brain & Hands (Inference & API Servers)
+  // API & Mission Control
   if (installationType === 'api-server' || installationType === 'both') {
     const apiPath = config.paths.geminiApiServer;
-    const inferencePath = path.resolve(apiPath, '../inference-server');
 
-    services.push(`  inference-server:
-    build: ${inferencePath}
-    container_name: inference-server
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
-    environment:
-      - PORT=${config.server.inferencePort || 4000}
-      - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort || 3333}
-      - GEMINI_API_KEY=\${GEMINI_API_KEY}
-      - GPU_VENDOR=${gpuVendor}
-${getGpuSnippet(gpuVendor)}
-
-  gemini-api-server:
+    services.push(`  gemini-api-server:
     build: ${apiPath}
     container_name: gemini-api-server
     restart: unless-stopped
@@ -221,7 +166,7 @@ ${getGpuSnippet(gpuVendor)}
     env_file:
       - .env
     volumes:
-      - ${getConfigDir()}/mission-control/data:/app/data
+      - \${getConfigDir()}/mission-control/data:/app/data
       - .env:/app/.env
     environment:
       - PORT=3030
@@ -232,22 +177,19 @@ ${getGpuSnippet(gpuVendor)}
       - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
   }
 
-  return `# CRITICAL: All containers must use network_mode: host
+  return \`# CRITICAL: All containers must use network_mode: host
 # Docker bridge networking causes FreeSWITCH to advertise internal IPs
 # in SDP, making RTP unreachable from external callers.
 
 services:
-${services.join('\n\n')}
-`;
+\${services.join('\\n\\n')}
+\`;
 }
 
 /**
  * Generate .env file from config
- * @param {object} config - Configuration object
- * @returns {string} Environment file content
  */
 export function generateEnvFile(config) {
-  // Ensure secrets exist in config
   if (!config.secrets) {
     config.secrets = {
       drachtio: generateSecret(),
@@ -255,18 +197,13 @@ export function generateEnvFile(config) {
     };
   }
 
-  // Determine Gemini API URL based on deployment mode
   let geminiApiUrl;
   if (config.deployment && config.deployment.mode === 'pi-split' && config.deployment.pi && config.deployment.pi.macIp) {
-    // Pi mode: point to remote API server
-    geminiApiUrl = `http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`;
+    geminiApiUrl = \`http://\${config.deployment.pi.macIp}:\${config.server.geminiApiPort}\`;
   } else if (config.deployment && config.deployment.mode === 'voice-server' && config.deployment.apiServerIp) {
-    // Voice server mode (non-Pi): point to remote API server
-    geminiApiUrl = `http://${config.deployment.apiServerIp}:${config.server.geminiApiPort}`;
+    geminiApiUrl = \`http://\${config.deployment.apiServerIp}:\${config.server.geminiApiPort}\`;
   } else {
-    // Both or api-server mode: local API server
-    // The voice-app talks directly to the Hands (3333)
-    geminiApiUrl = `http://localhost:${config.server.geminiApiPort || 3333}`;
+    geminiApiUrl = \`http://localhost:\${config.server.geminiApiPort || 3333}\`;
   }
 
   const lines = [
@@ -279,78 +216,74 @@ export function generateEnvFile(config) {
     '# ====================================',
     '',
     '# Network Configuration',
-    `EXTERNAL_IP=${config.server.externalIp === 'auto' ? 'auto' : config.server.externalIp}`,
+    \`EXTERNAL_IP=\${config.server.externalIp === 'auto' ? 'auto' : config.server.externalIp}\`,
     '',
     '# Drachtio Configuration',
     'DRACHTIO_HOST=127.0.0.1',
     'DRACHTIO_PORT=9022',
-    `DRACHTIO_SECRET=${config.secrets.drachtio}`,
-    // SIP port for Contact header (5070 when SIP conflict is present, 5060 otherwise)
-    `DRACHTIO_SIP_PORT=${config.sip?.port || config.deployment?.pi?.drachtioPort || 5060}`,
+    \`DRACHTIO_SECRET=\${config.secrets.drachtio}\`,
+    \`DRACHTIO_SIP_PORT=\${config.sip?.port || config.deployment?.pi?.drachtioPort || 5060}\`,
     '',
     '# FreeSWITCH Configuration',
     'FREESWITCH_HOST=127.0.0.1',
     'FREESWITCH_PORT=8021',
-    // Note: This is the default ESL password for drachtio/drachtio-freeswitch-mrf
     'FREESWITCH_SECRET=JambonzR0ck$',
     '',
     '# FreePBX / SIP Configuration',
-    `SIP_DOMAIN=${config.sip.domain}`,
-    `SIP_REGISTRAR=${config.sip.registrar}`,
-    `SIP_REGISTRAR_PORT=${config.sip.registrar_port || 5060}`,
+    \`SIP_DOMAIN=\${config.sip.domain}\`,
+    \`SIP_REGISTRAR=\${config.sip.registrar}\`,
+    \`SIP_REGISTRAR_PORT=\${config.sip.registrar_port || 5060}\`,
     '',
     '# Default extension (primary device)',
-    `SIP_EXTENSION=${config.devices[0].extension}`,
-    `SIP_AUTH_ID=${config.devices[0].authId}`,
-    `SIP_PASSWORD=${config.devices[0].password}`,
+    \`SIP_EXTENSION=\${config.devices[0].extension}\`,
+    \`SIP_AUTH_ID=\${config.devices[0].authId}\`,
+    \`SIP_PASSWORD=\${config.devices[0].password}\`,
     '',
     '# Gemini API Server',
-    `GEMINI_API_URL=${geminiApiUrl}`,
+    \`GEMINI_API_URL=\${geminiApiUrl}\`,
     '',
     '# ElevenLabs TTS',
-    `ELEVENLABS_API_KEY=${config.api.elevenlabs.apiKey}`,
-    `ELEVENLABS_VOICE_ID=${config.devices[0].voiceId}`,
+    \`ELEVENLABS_API_KEY=\${config.api.elevenlabs.apiKey}\`,
+    \`ELEVENLABS_VOICE_ID=\${config.devices[0].voiceId}\`,
     '',
     '# OpenAI (Whisper STT)',
-    `OPENAI_API_KEY=${config.api.openai.apiKey}`,
+    \`OPENAI_API_KEY=\${config.api.openai.apiKey}\`,
     '',
     '# Gemini API Key',
-    `GEMINI_API_KEY=${config.api.gemini?.apiKey || ''}`,
-    `MISSION_CONTROL_GEMINI_KEY=${config.api.gemini?.missionControlKey || ''}`,
+    \`GEMINI_API_KEY=\${config.api.gemini?.apiKey || ''}\`,
+    \`MISSION_CONTROL_GEMINI_KEY=\${config.api.gemini?.missionControlKey || ''}\`,
     '',
     '# Application Settings',
-    `HTTP_PORT=${config.server.httpPort || 3000}`,
+    \`HTTP_PORT=\${config.server.httpPort || 3000}\`,
     'WS_PORT=3001',
     'AUDIO_DIR=/app/audio',
     '',
     '# Outbound Call Settings',
-    `DEFAULT_CALLER_ID=${config.outbound?.callerId || ''}`,
-    `DIAL_PREFIX=${config.outbound?.dialPrefix || ''}`,
-    `MAX_CONVERSATION_TURNS=${config.outbound?.maxTurns || 10}`,
-    `OUTBOUND_RING_TIMEOUT=${config.outbound?.ringTimeout || 30}`,
-    `TEST_PHONE_NUMBER=${config.outbound?.testPhoneNumber || ''}`,
+    \`DEFAULT_CALLER_ID=\${config.outbound?.callerId || ''}\`,
+    \`DIAL_PREFIX=\${config.outbound?.dialPrefix || ''}\`,
+    \`MAX_CONVERSATION_TURNS=\${config.outbound?.maxTurns || 10}\`,
+    \`OUTBOUND_RING_TIMEOUT=\${config.outbound?.ringTimeout || 30}\`,
+    \`TEST_PHONE_NUMBER=\${config.outbound?.testPhoneNumber || ''}\`,
     '',
     '# FreePBX API (Automation)',
-    `FREEPBX_API_URL=${config.pbx?.apiUrl || ''}`,
-    `FREEPBX_CLIENT_ID=${config.pbx?.clientId || ''}`,
-    `FREEPBX_CLIENT_SECRET=${config.pbx?.clientSecret || ''}`,
-    `FREEPBX_TRUNK_NAME=${config.pbx?.trunkName || 'RedSpot'}`,
-    `GEMINI_APP_STACK_IP=${config.pbx?.appStackIp || ''}`,
+    \`FREEPBX_API_URL=\${config.pbx?.apiUrl || ''}\`,
+    \`FREEPBX_CLIENT_ID=\${config.pbx?.clientId || ''}\`,
+    \`FREEPBX_CLIENT_SECRET=\${config.pbx?.clientSecret || ''}\`,
+    \`FREEPBX_TRUNK_NAME=\${config.pbx?.trunkName || 'RedSpot'}\`,
+    \`GEMINI_APP_STACK_IP=\${config.pbx?.appStackIp || ''}\`,
     '',
     '# n8n Integration',
-    `N8N_WEBHOOK_URL=${(config.n8n && config.n8n.webhookUrl) || ''}`,
-    `N8N_API_KEY=${(config.n8n && config.n8n.apiKey) || ''}`,
-    `N8N_BASE_URL=${(config.n8n && config.n8n.baseUrl) || ''}`,
+    \`N8N_WEBHOOK_URL=\${(config.n8n && config.n8n.webhookUrl) || ''}\`,
+    \`N8N_API_KEY=\${(config.n8n && config.n8n.apiKey) || ''}\`,
+    \`N8N_BASE_URL=\${(config.n8n && config.n8n.baseUrl) || ''}\`,
     ''
   ];
 
-  return lines.join('\n');
+  return lines.join('\\n');
 }
 
 /**
  * Write Docker configuration files
- * @param {object} config - Configuration object
- * @returns {Promise<void>}
  */
 export async function writeDockerConfig(config) {
   const dockerComposePath = getDockerComposePath();
@@ -365,7 +298,6 @@ export async function writeDockerConfig(config) {
 
 /**
  * Build Docker containers
- * @returns {Promise<void>}
  */
 export async function buildContainers() {
   const configDir = getConfigDir();
@@ -382,31 +314,22 @@ export async function buildContainers() {
     const child = spawn(compose.cmd, composeArgs, {
       cwd: configDir,
       stdio: 'pipe',
-      env: { ...process.env, DOCKER_BUILDKIT: '0', COMPOSE_DOCKER_CLI_BUILD: '0' } // Fix provenance hang by using legacy builder
+      env: { ...process.env, DOCKER_BUILDKIT: '0', COMPOSE_DOCKER_CLI_BUILD: '0' }
     });
 
     let output = '';
-    child.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      output += data.toString();
-    });
+    child.stdout.on('data', (data) => { output += data.toString(); });
+    child.stderr.on('data', (data) => { output += data.toString(); });
 
     child.on('close', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Docker build failed (exit ${code}):\n${output}`));
-      }
+      if (code === 0) resolve();
+      else reject(new Error(\`Docker build failed (exit \${code}):\\n\${output}\`));
     });
   });
 }
 
 /**
  * Start Docker containers
- * @returns {Promise<void>}
  */
 export async function startContainers() {
   const configDir = getConfigDir();
@@ -417,7 +340,6 @@ export async function startContainers() {
   }
 
   const compose = getComposeCommand();
-  // Removed --build, now handled separately
   const composeArgs = [...compose.args, '-f', dockerComposePath, 'up', '-d', '--remove-orphans'];
 
   return new Promise((resolve, reject) => {
@@ -427,49 +349,24 @@ export async function startContainers() {
     });
 
     let output = '';
-    child.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      output += data.toString();
-    });
+    child.stdout.on('data', (data) => { output += data.toString(); });
+    child.stderr.on('data', (data) => { output += data.toString(); });
 
     child.on('close', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        // AC22: Detect ARM64 image pull failure
-        if (output.includes('no matching manifest') ||
-          output.includes('image with reference') && output.includes('arm64')) {
-          const error = new Error(
-            'ARM64 Docker image pull failed.\n\n' +
-            'Try manually pulling images:\n' +
-            '  docker pull drachtio/drachtio-server:latest\n' +
-            '  docker pull drachtio/drachtio-freeswitch-mrf:latest\n\n' +
-            'If images are not available for ARM64, you may need to build them locally.'
-          );
-          reject(error);
-        } else {
-          reject(new Error(`Docker compose failed (exit ${code}): ${output}`));
-        }
-      }
+      if (code === 0) resolve();
+      else reject(new Error(\`Docker compose failed (exit \${code}): \${output}\`));
     });
   });
 }
 
 /**
  * Stop Docker containers
- * @returns {Promise<void>}
  */
 export async function stopContainers() {
   const configDir = getConfigDir();
   const dockerComposePath = getDockerComposePath();
 
-  if (!fs.existsSync(dockerComposePath)) {
-    // No containers to stop
-    return;
-  }
+  if (!fs.existsSync(dockerComposePath)) return;
 
   const compose = getComposeCommand();
   const composeArgs = [...compose.args, '-f', dockerComposePath, 'down'];
@@ -481,35 +378,24 @@ export async function stopContainers() {
     });
 
     let output = '';
-    child.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      output += data.toString();
-    });
+    child.stdout.on('data', (data) => { output += data.toString(); });
+    child.stderr.on('data', (data) => { output += data.toString(); });
 
     child.on('close', (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Docker compose down failed (exit ${code}): ${output}`));
-      }
+      if (code === 0) resolve();
+      else reject(new Error(\`Docker compose down failed (exit \${code}): \${output}\`));
     });
   });
 }
 
 /**
  * Get status of Docker containers
- * @returns {Promise<Array<{name: string, status: string}>>}
  */
 export async function getContainerStatus() {
   const configDir = getConfigDir();
   const dockerComposePath = getDockerComposePath();
 
-  if (!fs.existsSync(dockerComposePath)) {
-    return Promise.resolve([]);
-  }
+  if (!fs.existsSync(dockerComposePath)) return [];
 
   const compose = getComposeCommand();
   const composeArgs = [...compose.args, '-f', dockerComposePath, 'ps', '--format', 'json'];
@@ -521,14 +407,12 @@ export async function getContainerStatus() {
     });
 
     let output = '';
-    child.stdout.on('data', (data) => {
-      output += data.toString();
-    });
+    child.stdout.on('data', (data) => { output += data.toString(); });
 
     child.on('close', (code) => {
       if (code === 0) {
         try {
-          const lines = output.trim().split('\n').filter(l => l);
+          const lines = output.trim().split('\\n').filter(l => l);
           const containers = lines.map(line => {
             try {
               const data = JSON.parse(line);
@@ -539,12 +423,8 @@ export async function getContainerStatus() {
             } catch (e) { return null; }
           }).filter(c => c);
           resolve(containers);
-        } catch (error) {
-          resolve([]);
-        }
-      } else {
-        resolve([]);
-      }
+        } catch (error) { resolve([]); }
+      } else resolve([]);
     });
   });
 }
