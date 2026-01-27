@@ -53,9 +53,9 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const localSdp = endpoint.local.sdp;
 
     // Format SIP URI for PBX
-    // Use the phone number as provided. For SIP URIs, we ensure it has transport=udp
-    // to match most PBX configurations.
-    const phoneNumber = to;
+    // Use the phone number as provided, but strip the '+' for compatibility with most PBX systems.
+    // For SIP URIs, we ensure it has transport=udp to match most PBX configurations.
+    const phoneNumber = to.replace(/^\+/, '');
     const sipTrunkHost = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN || '127.0.0.1';
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
     const extensionNumber = process.env.SIP_EXTENSION || '9000';
