@@ -84,7 +84,7 @@ async function stopBoth() {
       await stopServer();
       spinner.succeed('Gemini API server stopped');
     } else {
-      spinner.info('Gemini API server not running');
+      spinner.stop(); // No message if not running (likely in Docker)
     }
   } catch (error) {
     spinner.fail(`Failed to stop server: ${error.message}`);
@@ -107,7 +107,7 @@ async function stopBoth() {
   } catch (error) {
     // Ignore if not running or failed
     // Ignore if not running or failed
-    brainSpinner.info('Inference Server not running or already stopped');
+    brainSpinner.stop(); // No message if not running (likely in Docker)
   }
 
   // Stop Mission Control
