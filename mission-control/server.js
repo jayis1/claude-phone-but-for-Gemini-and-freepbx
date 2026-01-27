@@ -17,6 +17,7 @@ const generateTopPage = require('./tiptop.js');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const generateSettingsPage = require('./settings-page');
+const generateN8nPage = require('./n8n-page');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
@@ -449,6 +450,11 @@ app.get('/', (req, res) => {
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
               </button>
+              <a href="/n8n-config" style="text-decoration: none;">
+                <button style="padding: 4px 10px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                  <span>🧠</span> Logic Engine
+                </button>
+              </a>
               <a href="/top?v=3.3.1" style="text-decoration: none;">
                 <button style="padding: 4px 8px; background: #8b5cf6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;">
                   <span>📊</span> top
@@ -1789,6 +1795,12 @@ app.get('/settings', (req, res) => {
   res.send(generateSettingsPage(env));
 });
 
+// n8n Logic Engine Page
+app.get('/n8n-config', (req, res) => {
+  const env = parseEnv();
+  res.send(generateN8nPage(env));
+});
+
 // Save Settings from Web UI
 app.post('/api/settings/save', (req, res) => {
   const newEnv = req.body;
@@ -1798,7 +1810,8 @@ app.post('/api/settings/save', (req, res) => {
     'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID',
     'EXTERNAL_IP', 'HTTP_PORT', 'WS_PORT', 'SIP_DOMAIN', 'SIP_REGISTRAR',
     'SIP_EXTENSION', 'SIP_AUTH_ID', 'SIP_PASSWORD', 'DRACHTIO_SIP_PORT',
-    'DEFAULT_CALLER_ID', 'MAX_CONVERSATION_TURNS', 'OUTBOUND_RING_TIMEOUT'
+    'DEFAULT_CALLER_ID', 'MAX_CONVERSATION_TURNS', 'OUTBOUND_RING_TIMEOUT',
+    'N8N_WEBHOOK_URL', 'N8N_API_KEY', 'N8N_BASE_URL'
   ];
 
   const currentEnv = parseEnv();

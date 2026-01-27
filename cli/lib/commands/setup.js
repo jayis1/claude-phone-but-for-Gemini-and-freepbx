@@ -769,7 +769,6 @@ function createDefaultConfig() {
       gemini: { apiKey: '', validated: false }
     },
     n8n: {
-      webhookUrl: '',
       apiKey: '',
       baseUrl: ''
     },
@@ -1014,64 +1013,38 @@ async function setupAPIKeys(config) {
   }
 
   // -----------------------------------------------------------
-  // 6. n8n Webhook URL (Optional)
+  // 6. n8n API Credentials (Optional - Management Path)
   // -----------------------------------------------------------
 
-  const n8nAnswers = await inquirer.prompt([
+  const n8nApiAnswers = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'apiKey',
+      message: 'n8n API Key (Optional - for Health Audits):',
+      default: (config.n8n && config.n8n.apiKey) || '',
+    },
     {
       type: 'input',
-      name: 'webhookUrl',
-      message: 'n8n Webhook URL (Optional - leave empty to use standard inference):',
-      default: (config.n8n && config.n8n.webhookUrl) || '',
+      name: 'baseUrl',
+      message: 'n8n Base URL (e.g. http://n8n.local:5678):',
+      default: (config.n8n && config.n8n.baseUrl) || '',
+      when: (answers) => answers.apiKey && answers.apiKey.trim() !== '',
       validate: (input) => {
-        if (input && input.trim() !== '') {
-          try {
-            new URL(input);
-            return true;
-          } catch (e) {
-            return 'Please enter a valid URL (e.g. http://n8n:5678/webhook/...)';
-          }
+        try {
+          new URL(input);
+          return true;
+        } catch (e) {
+          return 'Please enter a valid URL';
         }
-        return true;
       }
     }
   ]);
 
-  if (n8nAnswers.webhookUrl && n8nAnswers.webhookUrl.trim() !== '') {
+  if (n8nApiAnswers.apiKey && n8nApiAnswers.apiKey.trim() !== '') {
     if (!config.n8n) config.n8n = {};
-    config.n8n.webhookUrl = n8nAnswers.webhookUrl.trim();
-    console.log(chalk.green('✓ n8n Webhook URL saved'));
-
-    // If webhook is set, ask for API details for management
-    const n8nApiAnswers = await inquirer.prompt([
-      {
-        type: 'password',
-        name: 'apiKey',
-        message: 'n8n API Key (Optional - used for health checks):',
-        default: config.n8n.apiKey || '',
-      },
-      {
-        type: 'input',
-        name: 'baseUrl',
-        message: 'n8n Base URL (e.g. http://n8n:5678):',
-        default: config.n8n.baseUrl || '',
-        when: (answers) => answers.apiKey && answers.apiKey.trim() !== '',
-        validate: (input) => {
-          try {
-            new URL(input);
-            return true;
-          } catch (e) {
-            return 'Please enter a valid URL';
-          }
-        }
-      }
-    ]);
-
-    if (n8nApiAnswers.apiKey) {
-      config.n8n.apiKey = n8nApiAnswers.apiKey.trim();
-      config.n8n.baseUrl = n8nApiAnswers.baseUrl ? n8nApiAnswers.baseUrl.trim() : '';
-      console.log(chalk.green('✓ n8n Logic Engine management configured'));
-    }
+    config.n8n.apiKey = n8nApiAnswers.apiKey.trim();
+    config.n8n.baseUrl = n8nApiAnswers.baseUrl ? n8nApiAnswers.baseUrl.trim() : '';
+    console.log(chalk.green('✓ n8n Management Path configured'));
   }
 
   return config;
