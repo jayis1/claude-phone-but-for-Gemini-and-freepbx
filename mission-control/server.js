@@ -648,7 +648,6 @@ app.get('/', (req, res) => {
                     <button onclick="updateModel()" style="padding: 2px 6px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Apply</button>
                   </div>
                 </div>
-              </div>
 
               <!-- GPU -->
               <div class="monitor-row">
@@ -2258,6 +2257,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.5]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.6]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
