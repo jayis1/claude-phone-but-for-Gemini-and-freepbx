@@ -131,6 +131,36 @@ async function provisionOutboundRoute(trunkName = DEFAULT_TRUNK) {
 }
 
 /**
+ * Provision PJSIP Trunk "Gemini-App-Stack"
+ * @param {string} hostIp - The IP of the Gemini App Stack
+ */
+async function provisionTrunk(hostIp) {
+    console.log(`[PBX-BRIDGE] Provisioning SIP Trunk to Gemini App Stack (${hostIp})...`);
+
+    const mutation = `
+    mutation ($host: String!) {
+      addTrunk(input: {
+        name: "Gemini-App-Stack",
+        tech: "pjsip",
+        pjsip: {
+          server_uri: $host,
+          server_port: "5060",
+          aor_contact: $host,
+          authentication: "none",
+          registration: "none",
+          context: "from-internal"
+        }
+      }) {
+        status
+        message
+      }
+    }
+  `;
+
+    return await graphql(mutation, { host: hostIp });
+}
+
+/**
  * Run full provisioning sequence
  */
 async function provisionAll() {
@@ -143,6 +173,12 @@ async function provisionAll() {
     try {
         results.extension = await provisionExtension();
         results.route = await provisionOutboundRoute();
+
+        // Optional: Provision Trunk if App Stack IP is provided
+        const appStackIp = process.env.GEMINI_APP_STACK_IP;
+        if (appStackIp) {
+            results.trunk = await provisionTrunk(appStackIp);
+        }
 
         // Apply changes (Reload)
         console.log('[PBX-BRIDGE] Applying FreePBX configuration...');
@@ -160,5 +196,6 @@ module.exports = {
     getAccessToken,
     provisionExtension,
     provisionOutboundRoute,
+    provisionTrunk,
     provisionAll
 };

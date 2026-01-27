@@ -796,7 +796,9 @@ function createDefaultConfig() {
       apiUrl: '',
       clientId: '',
       clientSecret: '',
-      trunkName: 'RedSpot'
+      trunkName: 'RedSpot',
+      automateTrunk: false,
+      appStackIp: ''
     },
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
@@ -1565,6 +1567,7 @@ function mergeEnvWithConfig(config, env) {
   if (env.FREEPBX_CLIENT_ID) newConfig.pbx.clientId = env.FREEPBX_CLIENT_ID;
   if (env.FREEPBX_CLIENT_SECRET) newConfig.pbx.clientSecret = env.FREEPBX_CLIENT_SECRET;
   if (env.FREEPBX_TRUNK_NAME) newConfig.pbx.trunkName = env.FREEPBX_TRUNK_NAME;
+  if (env.GEMINI_APP_STACK_IP) newConfig.pbx.appStackIp = env.GEMINI_APP_STACK_IP;
 
   // Mark as pre-filled for logic checks
   newConfig._fromEnv = true;
@@ -1680,6 +1683,20 @@ async function setupPbxApi(config) {
       message: 'Primary Outbound Trunk Name (e.g., RedSpot, MySIPTrunk):',
       default: config.pbx?.trunkName || 'RedSpot',
       validate: (input) => (input && input.trim() !== '') ? true : 'Trunk name is required'
+    },
+    {
+      type: 'confirm',
+      name: 'automateTrunk',
+      message: 'Do you want to automatically create a PJSIP Trunk from FreePBX to this App Stack?',
+      default: config.pbx?.automateTrunk || false
+    },
+    {
+      type: 'input',
+      name: 'appStackIp',
+      message: 'Gemini App Stack IP (Your LXC or Public IP):',
+      default: config.pbx?.appStackIp || config.server?.externalIp || '',
+      when: (answers) => answers.automateTrunk,
+      validate: (input) => (input && input.trim() !== '') ? true : 'App Stack IP is required for trunk automation'
     }
   ]);
 
@@ -1687,7 +1704,9 @@ async function setupPbxApi(config) {
     apiUrl: answers.apiUrl,
     clientId: answers.clientId,
     clientSecret: answers.clientSecret,
-    trunkName: answers.trunkName
+    trunkName: answers.trunkName,
+    automateTrunk: answers.automateTrunk,
+    appStackIp: answers.appStackIp || ''
   };
 
   return config;
