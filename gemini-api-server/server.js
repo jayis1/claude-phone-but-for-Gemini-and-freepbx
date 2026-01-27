@@ -107,106 +107,133 @@ function buildGeminiEnvironment() {
   return env;
 }
 
-// Pre-build the environment once at startup
+// Google Generative AI SDK
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Pre-build the environment just for PATH logging (legacy compat)
 const geminiEnv = buildGeminiEnvironment();
 console.log('[STARTUP] Loaded environment with', Object.keys(geminiEnv).length, 'variables');
-console.log('[STARTUP] PATH includes:', geminiEnv.PATH.split(':').slice(0, 5).join(', '), '...');
 
-// Log which API keys are available (without showing values)
-const apiKeys = Object.keys(geminiEnv).filter(k =>
-  k.includes('API_KEY') || k.includes('TOKEN') || k.includes('SECRET') || k === 'PAI_DIR'
-);
-console.log('[STARTUP] API keys loaded:', apiKeys.join(', '));
+// Initialize GenAI
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  console.error('[CRITICAL] GEMINI_API_KEY is missing from environment variables!');
+}
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // Voice App URL (for outbound calls)
-// Defaults to localhost:3000 (standard Docker networking)
 const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
 console.log(`[STARTUP] Voice App URL: ${VOICE_APP_URL}`);
 
-// Session storage: callId -> geminiSessionId
+// Session storage: callId -> geminiSessionId (ChatSession object in SDK)
+// Since ChatSession isn't serializable, we just store history separately if needed, 
+// or keep the chat object in memory.
+// For simplicity and robustness with the SDK, we'll store the ChatSession object itself.
 const sessions = new Map();
 
-// Model selection - Sonnet for balanced speed/quality
-const GEMINI_MODELS = [
-  'gemini-2.5-pro',
-  'gemini-2.0-flash',
-  'gemini-1.5-pro',
-  'gemini-1.5-flash'
-];
-let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
+// Model selection
+let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
-function parseGeminiStdout(stdout) {
-  // Gemini Code CLI may output JSONL; when it does, extract the `result` message.
-  // Otherwise, fall back to raw stdout.
-  let response = '';
-  let sessionId = null;
-
+// Helper: Parse SDK response
+function parseGeminiResponse(result) {
+  // The SDK returns a candidate object
   try {
-    const lines = String(stdout || '').trim().split('\n');
-    for (const line of lines) {
-      try {
-        const parsed = JSON.parse(line);
-        if (parsed.type === 'result' && parsed.result) {
-          response = parsed.result;
-          sessionId = parsed.session_id;
-        }
-      } catch {
-        // Not JSONL; ignore.
-      }
-    }
-
-    if (!response) response = String(stdout || '').trim();
-  } catch {
-    response = String(stdout || '').trim();
+    const text = result.response.text();
+    return { response: text };
+  } catch (e) {
+    console.error('Error parsing SDK response:', e);
+    return { response: "I encountered an error processing that response." };
   }
-
-  return { response, sessionId };
 }
 
-function runGeminiOnce({ fullPrompt, callId, timestamp }) {
+async function runGeminiOnce({ fullPrompt, callId, timestamp }) {
   const startTime = Date.now();
+  let modelName = GEMINI_MODEL;
 
-  const args = [
-    '--dangerously-skip-permissions',
-    '-p', fullPrompt,
-    '--model', GEMINI_MODEL
-  ];
+  // Map legacy model names if needed, or use directly
+  // 'gemini-2.5-pro' might not exist yet publicly, fallback to 1.5-pro or 2.0-flash
+  // We'll trust the env var but default safe.
 
-  if (callId) {
-    if (sessions.has(callId)) {
-      args.push('--resume', callId);
-      console.log(`[${timestamp}] Resuming session: ${callId}`);
+  const model = genAI.getGenerativeModel({ model: modelName });
+
+  try {
+    let result;
+    let chat;
+
+    if (callId) {
+      if (sessions.has(callId)) {
+        console.log(`[${timestamp}] Resuming session: ${callId}`);
+        chat = sessions.get(callId);
+      } else {
+        console.log(`[${timestamp}] Starting new session: ${callId}`);
+        chat = model.startChat({
+          history: [
+            {
+              role: "user",
+              parts: [{ text: "System Context: You are a helpful AI phone assistant." }],
+            },
+            {
+              role: "model",
+              parts: [{ text: "Understood. I am ready to help." }],
+            }
+          ],
+          generationConfig: {
+            maxOutputTokens: 2048,
+          },
+        });
+        sessions.set(callId, chat);
+      }
+      result = await chat.sendMessage(fullPrompt);
     } else {
-      args.push('--session-id', callId);
-      sessions.set(callId, true);
-      console.log(`[${timestamp}] Starting new session: ${callId}`);
+      // Single turn generation
+      result = await model.generateContent(fullPrompt);
     }
+
+    const duration_ms = Date.now() - startTime;
+    // SDK doesn't give a "stdout", it gives a result object. 
+    // We mock the return structure to match what the rest of the code expects somewhat,
+    // or we refactor the caller. Refactoring the caller is better, but let's conform to the existing flow 
+    // where possible to minimize breakage, but optimized for SDK.
+
+    // The existing caller expects { code, stdout, stderr, duration_ms }
+    // We will return a standardized object instead.
+
+    const responseText = result.response.text();
+
+    return {
+      code: 0,
+      stdout: JSON.stringify({ type: 'result', result: responseText }), // Mocking JSONL-ish output for compatibility if needed, or just text
+      rawText: responseText, // Direct access
+      stderr: '',
+      duration_ms
+    };
+
+  } catch (error) {
+    const duration_ms = Date.now() - startTime;
+    return {
+      code: 1,
+      stdout: '',
+      stderr: error.message,
+      duration_ms
+    };
   }
+}
 
-  return new Promise((resolve, reject) => {
-    const gemini = spawn('gemini', args, {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: false,
-      env: geminiEnv,
-      cwd: geminiEnv.HOME || process.env.HOME || '/'
-    });
+// Override parseGeminiStdout to handle our new structure
+function parseGeminiStdout(stdout) {
+  // If we passed rawText in the object (helper hack), use it. 
+  // But since the original code calls this on `stdout`, we'll try to parse JSON
+  // or just return string.
 
-    let stdout = '';
-    let stderr = '';
-
-    gemini.stdin.end();
-    gemini.stdout.on('data', (data) => { stdout += data.toString(); });
-    gemini.stderr.on('data', (data) => { stderr += data.toString(); });
-
-    gemini.on('error', (error) => {
-      reject(error);
-    });
-
-    gemini.on('close', (code) => {
-      const duration_ms = Date.now() - startTime;
-      resolve({ code, stdout, stderr, duration_ms });
-    });
-  });
+  try {
+    const parsed = JSON.parse(stdout);
+    if (parsed.type === 'result' && parsed.result) {
+      return { response: parsed.result, sessionId: 'sdk-session' }; // Session handled by map object
+    }
+  } catch (e) {
+    // ignore
+  }
+  return { response: stdout, sessionId: 'sdk-session' };
 }
 
 // Tool Definitions
@@ -631,34 +658,65 @@ app.get('/logs', (req, res) => {
  */
 app.post('/api/cli', async (req, res) => {
   const { command } = req.body;
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
   const timestamp = new Date().toISOString();
 
   if (!command) {
     return res.status(400).json({ success: false, error: 'Missing command' });
   }
 
-  console.log(`[${timestamp}] CLI EXEC: gemini ${command}`);
+  console.log(`[${timestamp}] CLI EXEC: ${command}`);
+
+  // Mock CLI behavior for Mission Control compatibility
+  let cleanCommand = command.trim();
+
+  // Strip 'gemini' prefix if present
+  if (cleanCommand.startsWith('gemini ')) {
+    cleanCommand = cleanCommand.substring(7).trim();
+  } else if (cleanCommand === 'gemini') {
+    cleanCommand = '--help';
+  }
+
+  // Handle help
+  if (cleanCommand === '--help' || cleanCommand === '-h' || cleanCommand === 'help') {
+    const helpText = `
+Gemini Phone API Server (v4.0.0)
+================================
+
+Usage: gemini [prompt] [options]
+
+This interface talks directly to the Google Gemini API.
+
+Options:
+  --help, -h     Show this help message
+  --model        Set the model (handled via config, not CLI flag here)
+
+Examples:
+  gemini "Tell me a joke"
+  gemini "What is the status of the server?"
+`;
+    return res.json({
+      success: true,
+      output: helpText,
+      command: `gemini ${command}`
+    });
+  }
 
   try {
-    const { stdout, stderr } = await execPromise(`gemini ${command}`, {
-      timeout: 30000,
-      env: geminiEnv,
-      maxBuffer: 1024 * 1024
-    });
+    // Treat it as a direct prompt
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const result = await model.generateContent(cleanCommand);
+    const output = result.response.text();
 
     res.json({
       success: true,
-      output: stdout || stderr,
+      output: output,
       command: `gemini ${command}`
     });
   } catch (error) {
     console.error(`[${timestamp}] CLI ERROR:`, error.message);
     res.json({
       success: false,
-      output: error.message,
+      output: `Error: ${error.message}`,
       command: `gemini ${command}`
     });
   }
