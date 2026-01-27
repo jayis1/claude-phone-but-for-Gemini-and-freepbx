@@ -59,7 +59,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const phoneNumber = dialPrefix + to.replace(/^\+/, '');
     const sipTrunkHost = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN || '127.0.0.1';
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
-    const headerDomain = (externalIp && externalIp !== '127.0.0.1') ? externalIp : sipTrunkHost;
+    const headerDomain = sipTrunkHost;
     const extensionNumber = process.env.SIP_EXTENSION || '9000';
     const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || extensionNumber;
 
