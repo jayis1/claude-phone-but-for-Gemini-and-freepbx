@@ -28,12 +28,14 @@ async function getAccessToken() {
     const tokenUrl = `${FREEPBX_API_URL}/admin/api/api/token`;
 
     try {
-        const response = await axios.post(tokenUrl, {
-            grant_type: 'client_credentials',
-            client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET
-        }, {
-            headers: { 'Content-Type': 'application/json' },
+        // FreePBX API expects application/x-www-form-urlencoded for the token endpoint
+        const params = new URLSearchParams();
+        params.append('grant_type', 'client_credentials');
+        params.append('client_id', CLIENT_ID);
+        params.append('client_secret', CLIENT_SECRET);
+
+        const response = await axios.post(tokenUrl, params, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             timeout: 10000
         });
 

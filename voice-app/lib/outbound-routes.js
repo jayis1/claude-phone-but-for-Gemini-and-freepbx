@@ -45,7 +45,7 @@ function validateRequest(body) {
   }
 
   if (!isValidPhoneNumber(body.to)) {
-    return { valid: false, error: 'Field "to" must be a valid phone number (e.g. +155512.4.97 or extension 5755)' };
+    return { valid: false, error: 'Field "to" must be a valid phone number (e.g. +155512.5.07 or extension 5755)' };
   }
 
   if (!body.message) {

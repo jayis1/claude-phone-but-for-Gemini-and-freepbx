@@ -108,7 +108,8 @@ console.error = function (msg, ...args) {
  * Initialize HTTP server for and Google Speech/Gemini
  */
 async function initializeHttpServer() {
-  httpServer = createHttpServer(config.http_port);
+  // FIX: Pass audioDir as first argument
+  httpServer = createHttpServer(config.audio_dir, config.http_port);
 
   // Audio fork server (WebSockets)
   audioForkServer = new AudioForkServer(config.ws_port);
@@ -227,7 +228,8 @@ srf.on("connect", function (err, hostport) {
       password: config.sip.password,
       expiry: config.sip.expiry
     });
-    registrar.start();
+    // FIX: start() -> registerAll()
+    registrar.registerAll(deviceRegistry.getAll());
   }
 
   checkReadyState();
