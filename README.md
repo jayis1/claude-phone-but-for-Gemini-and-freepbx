@@ -4,6 +4,10 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
+## What's New in v3.6.0
+
++ 🧠🔗🛰️ **The Skill Cluster: 8 Distinct Intelligence Webhooks** - Your AI just got a massive brain upgrade. You can now configure up to 8 distinct n8n webhooks in Mission Control. Use Slot 1 for general reasoning and Slots 2-8 for specialized "Skills" like calendar, IoT, or business automation.
+
 ## What's New in v3.5.1
 
 + 🧠🖱️ **Dynamic Logic: n8n Injection UI** - Introducing the dedicated "Logic Engine" page in Mission Control. Inject n8n webhook URLs and credentials in real-time while updating your stack, without ever needing to re-run the CLI setup.
@@ -153,7 +157,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.5.1/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.6.0/install.sh | bash
 ```
 
 The installer performs the following steps:

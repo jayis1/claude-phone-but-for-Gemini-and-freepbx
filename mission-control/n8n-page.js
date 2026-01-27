@@ -1,6 +1,6 @@
 // Mission Control - n8n Logic Engine Settings
 module.exports = function generateN8nPage(env) {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -111,12 +111,43 @@ module.exports = function generateN8nPage(env) {
 
           <form id="n8nForm" onsubmit="saveN8nSettings(event)">
             <div class="section">
-              <div class="section-title"><span>🔗</span> Voice Path</div>
-              <div class="form-group">
-                <label>N8N Webhook URL</label>
-                <input type="text" name="N8N_WEBHOOK_URL" value="${env.N8N_WEBHOOK_URL || ''}" placeholder="http://n8n.local:5678/webhook/...">
-                <div class="hint">The endpoint where the voice app sends prompts. Used for real-time conversation.</div>
+              <div class="section-title"><span>🔗</span> Intelligence Cluster (Up to 8 Slots)</div>
+              
+              <div class="grid-webhooks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label>PRIMARY Webhook (Slot 1)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL" value="${env.N8N_WEBHOOK_URL || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 2)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_2" value="${env.N8N_WEBHOOK_URL_2 || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 3)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_3" value="${env.N8N_WEBHOOK_URL_3 || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 4)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_4" value="${env.N8N_WEBHOOK_URL_4 || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 5)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_5" value="${env.N8N_WEBHOOK_URL_5 || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 6)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_6" value="${env.N8N_WEBHOOK_URL_6 || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 7)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_7" value="${env.N8N_WEBHOOK_URL_7 || ''}" placeholder="http://...">
+                </div>
+                <div class="form-group">
+                  <label>SKILL Webhook (Slot 8)</label>
+                  <input type="text" name="N8N_WEBHOOK_URL_8" value="${env.N8N_WEBHOOK_URL_8 || ''}" placeholder="http://...">
+                </div>
               </div>
+              <div class="hint">The Primary slot is used for general reasoning. Slots 2-8 can be used for specialized skill routing.</div>
             </div>
 
             <div class="section">
