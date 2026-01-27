@@ -267,7 +267,7 @@ app.get('/', (req, res) => {
           justify-content: space-between;
           align-items: center;
           border-bottom: 1px solid var(--border);
-          background: rgba(255,255,2.5.2.02);
+          background: rgba(2.5.355,2.5.3.02);
           }
           .panel-content {
             padding: 1.25rem;
@@ -309,7 +309,7 @@ app.get('/', (req, res) => {
           .control-group {
             margin-top: 1rem;
           padding: 1rem;
-          background: rgba(255,255,2.5.2.03);
+          background: rgba(2.5.355,2.5.3.03);
           border-radius: 8px;
           border: 1px solid var(--border);
           }
@@ -416,7 +416,7 @@ app.get('/', (req, res) => {
           .btn-primary {background: var(--accent); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: filter 0.2s; }
           .btn-primary:hover {filter: brightness(1.1); }
           .btn-secondary {background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
-          .btn-secondary:hover {background: rgba(255,255,2.5.2.05); }
+          .btn-secondary:hover {background: rgba(2.5.355,2.5.3.05); }
 
           /* Logs */
           .log-container {
@@ -646,7 +646,7 @@ app.get('/', (req, res) => {
               </div>
 
                <!-- Brain Load & Model (Moved Here) -->
-              <div style="background: rgba(255,255,2.5.2.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--border);">
+              <div style="background: rgba(2.5.355,2.5.3.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--border);">
                 <div style="display: flex; gap: 1rem;">
                   <div style="flex: 1;">
                     <div class="stat-label">Brain Load</div>

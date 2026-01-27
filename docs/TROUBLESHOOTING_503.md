@@ -10,10 +10,10 @@ You are receiving a `503 Service Unavailable` error with `Reason: Q.850;cause=34
 
 ## Diagnosis
 
-The AI is dialing: `+4531426562`
-The System is sending to FreePBX: `4531426562` (The `+` is stripped for compatibility)
+The AI is dialing: `+453142.5.3`
+The System is sending to FreePBX: `453142.5.3` (The `+` is stripped for compatibility)
 
-FreePBX does **not** have an Outbound Route that matches `4531426562`.
+FreePBX does **not** have an Outbound Route that matches `453142.5.3`.
 
 ## Solution: Fix FreePBX Outbound Routes
 

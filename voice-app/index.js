@@ -225,10 +225,12 @@ srf.on("connect", function (err, hostport) {
     registrar = new MultiRegistrar(srf, {
       domain: config.sip.domain,
       registrar: config.sip.registrar,
+      registrar_port: config.sip.registrar_port,
       password: config.sip.password,
-      expiry: config.sip.expiry
+      expiry: config.sip.expiry,
+      local_address: localAddress
     });
-    // FIX: start() -> registerAll()
+    // registerAll takes the device configurations (ext, authId, password)
     registrar.registerAll(deviceRegistry.getAll());
   }
 

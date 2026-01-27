@@ -33,7 +33,7 @@
 +              <div>
 +                <div class="stat-label">Quick Call</div>
 +                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-+                  <input type="text" id="quick-call-number" placeholder="+12.5.27890" style="flex: 1; padding: 0.5rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px;">
++                  <input type="text" id="quick-call-number" placeholder="+12.5.37890" style="flex: 1; padding: 0.5rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px;">
 +                  <button onclick="quickCall()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer;">Call</button>
 +                </div>
 +                <div id="call-result" style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim);"></div>
