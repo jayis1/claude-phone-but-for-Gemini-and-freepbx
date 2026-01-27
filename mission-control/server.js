@@ -27,7 +27,6 @@ const PORT = process.env.PORT || 3030;
 // Brain: 4000
 // API: 3333
 const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://127.0.0.1:3000';
-const INFERENCE_URL = process.env.INFERENCE_URL || process.env.INFERENCE_BRAIN_URL || 'http://127.0.0.1:4000';
 const API_SERVER_URL = process.env.API_SERVER_URL || 'http://127.0.0.1:3333';
 
 
@@ -1513,23 +1512,6 @@ app.use('/api/proxy/voice', async (req, res) => {
   }
 });
 
-// Inference Proxies
-app.use('/api/proxy/inference', async (req, res) => {
-  const targetPath = req.path === '/' ? '' : req.path;
-  const url = `${INFERENCE_URL}${targetPath}`;
-  try {
-    const opts = {
-      method: req.method, // Forward POST/GET
-      headers: { 'Content-Type': 'application/json' },
-    };
-    if (req.method !== 'GET') opts.body = JSON.stringify(req.body);
-
-    const data = await proxyRequest(url, opts);
-    res.json(data);
-  } catch (e) {
-    res.status(502).json({ error: 'Inference Brain Unreachable' });
-  }
-});
 
 // Terminal Proxy to Gemini API Server
 app.post('/api/terminal/command', async (req, res) => {
@@ -2267,12 +2249,6 @@ app.get('/api/logs', async (req, res) => {
       if (vData.logs) combinedLogs = combinedLogs.concat(vData.logs);
     } catch (e) { }
 
-    // Fetch Inference Logs
-    try {
-      const iRes = await fetch(`${INFERENCE_URL}/logs`);
-      const iData = await iRes.json();
-      if (iData.logs) combinedLogs = combinedLogs.concat(iData.logs);
-    } catch (e) { }
 
     // Fetch API Server Logs
     try {
@@ -2295,6 +2271,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.3.1]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.6.1]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

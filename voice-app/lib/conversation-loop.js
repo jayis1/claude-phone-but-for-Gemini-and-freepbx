@@ -31,39 +31,6 @@ const THINKING_PHRASES = [
   "One second..."
 ];
 
-// Dynamic DJ for Hold Music
-async function getDynamicHoldMusic(geminiBridge) {
-  try {
-    // Default fallback
-    let musicUrl = 'http://127.0.0.1:3000/static/hold-music.mp3';
-
-    // Ask Python Brain DJ
-    // We use geminiBridge's underlying fetch or just a direct fetch since we are in docker network
-    // But geminiBridge expects /ask endpoints usually. 
-    // Let's use a direct fetch to the Inference Brain (Brain is on localhost:4000 relative to host, but inside Docker...)
-    // Actually, voice-app is in a container. It needs to talk to 'host.docker.internal' or 'inference-server' if set up.
-    // However, in 'network_mode: host', 127.0.0.1:4000 works.
-
-    // We can assume port 4000 is the brain
-    const res = await fetch('http://127.0.0.1:4000/run-python', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ script: 'dj.py' })
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.status === 'success' && data.url) {
-        console.log(`[DJ] Playing: ${data.title}`);
-        musicUrl = data.url;
-      }
-    }
-    return musicUrl;
-  } catch (e) {
-    console.error('[DJ] Failed to get dynamic music:', e.message);
-    return 'http://127.0.0.1:3000/static/hold-music.mp3';
-  }
-}
 
 function getRandomThinkingPhrase() {
   return THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)];
@@ -375,7 +342,7 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
       // 2. Start hold music in background (Non-blocking)
       let musicPlaying = false;
       if (callActive) {
-        const holdMusicUrl = await getDynamicHoldMusic();
+        const holdMusicUrl = HOLD_MUSIC_URL;
         logger.info('Starting hold music', { callUuid, url: holdMusicUrl });
         // Play without await so it runs in background
         endpoint.play(holdMusicUrl).catch(e => {

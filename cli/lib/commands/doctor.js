@@ -373,20 +373,6 @@ async function runApiServerChecks(config) {
   }
   checks.push({ name: 'Gemini API server', passed: apiServerResult.running });
 
-  // Check Inference server (Brain)
-  const inferenceSpinner = ora('Checking Inference server (Brain)...').start();
-  const inferenceResult = await checkGeminiAPIServer(config.server.inferencePort || 4000, 'inference-server');
-  if (inferenceResult.running && inferenceResult.healthy) {
-    inferenceSpinner.succeed(chalk.green('Inference server running and healthy'));
-    passedCount++;
-  } else if (inferenceResult.running && !inferenceResult.healthy) {
-    inferenceSpinner.warn(chalk.yellow('Inference server running but unhealthy'));
-    console.log(chalk.gray(`  → ${inferenceResult.error}\n`));
-    passedCount++;
-  } else {
-    inferenceSpinner.fail(chalk.red(`Inference server not running: ${inferenceResult.error}`));
-  }
-  checks.push({ name: 'Inference server', passed: inferenceResult.running });
 
 
 

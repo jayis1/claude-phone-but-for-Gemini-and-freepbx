@@ -57,19 +57,6 @@ services:
       - MISSION_CONTROL_GEMINI_KEY=${MISSION_CONTROL_GEMINI_KEY}
       - GOOGLE_API_KEY=${GEMINI_API_KEY}
 
-  inference-server:
-    build: ./inference-server
-    container_name: inference-server
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
-    environment:
-      - PORT=4000
-      - GEMINI_API_URL=http://localhost:3333
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GPU_VENDOR=none
-
   gemini-api-server:
     build: ./gemini-api-server
     container_name: gemini-api-server
