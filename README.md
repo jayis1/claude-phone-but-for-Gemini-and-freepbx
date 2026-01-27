@@ -4,7 +4,7 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.5.5
+## What's New in v3.0.1
 
 + ⚡ **One-Click Universal Provisioning** - Automated Extension and Outbound Route creation via FreePBX M2M API.
 + 🧬 **Hardware Scaling** - Dedicated support for NVIDIA (NVENC) and AMD (ROCm) GPUs kept for future-proofing.
