@@ -1456,9 +1456,23 @@ const proxyRequest = async (url, options = {}) => {
 
 // Voice App Proxies
 app.use('/api/proxy/voice', async (req, res) => {
-  const targetPath = req.path === '/' ? '' : req.path; // Strip leading slash issues
+  const targetPath = req.path === '/' ? '' : req.path;
   const url = `${VOICE_APP_URL}${targetPath}`;
+
   try {
+    // Detect binary files (recordings or audio uploads)
+    const isBinary = targetPath.startsWith('/recordings/') || targetPath.startsWith('/audio-files/');
+
+    if (isBinary) {
+      const response = await fetch(url, { method: req.method });
+      const contentType = response.headers.get('content-type');
+      if (contentType) res.setHeader('Content-Type', contentType);
+
+      const buffer = await response.arrayBuffer();
+      return res.send(Buffer.from(buffer));
+    }
+
+    // Default JSON proxy
     const opts = {
       method: req.method,
       headers: { 'Content-Type': 'application/json' },
@@ -2245,6 +2259,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.3]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.4]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
