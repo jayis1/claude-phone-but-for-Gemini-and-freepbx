@@ -4,6 +4,10 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
+## What's New in v3.5.0
+
++ 🧠🔗 **The Hybrid Core: Webhooks + REST API** - Gemini Phone now supports a dual-path n8n integration. Use Webhooks for lightning-fast voice reasoning and the REST API for secure, deep health diagnostics.
+
 ## What's New in v3.4.1
 
 + 🛠️ **UX Upgrade: Interactive n8n Setup** - Added `N8N_WEBHOOK_URL` to the `gemini-phone setup` wizard. Now you can configure your n8n logic engine without touching a text editor.
@@ -145,7 +149,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.4.1/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.5.0/install.sh | bash
 ```
 
 The installer performs the following steps:

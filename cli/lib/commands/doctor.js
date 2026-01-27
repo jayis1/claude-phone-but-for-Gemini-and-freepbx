@@ -198,6 +198,35 @@ async function checkN8nWebhook(url) {
 }
 
 /**
+ * Check n8n REST API connectivity and workflow metadata
+ * @param {string} baseUrl - n8n Base URL
+ * @param {string} apiKey - n8n API Key
+ * @returns {Promise<{reachable: boolean, error?: string, workerStatus?: string}>}
+ */
+async function checkN8nApi(baseUrl, apiKey) {
+  if (!baseUrl || !apiKey) return { reachable: false, error: 'API not configured' };
+
+  try {
+    // Audit the workflows to verify API key works
+    const response = await axios.get(`${baseUrl}/api/v1/workflows`, {
+      headers: { 'X-N8N-API-KEY': apiKey },
+      params: { limit: 1 },
+      timeout: 5000
+    });
+
+    if (response.status === 200) {
+      return { reachable: true };
+    }
+    return { reachable: false, error: `Invalid status code: ${response.status}` };
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      return { reachable: false, error: 'Invalid API Key (401 Unauthorized)' };
+    }
+    return { reachable: false, error: error.message };
+  }
+}
+
+/**
  * Check storage write permissions
  * @returns {Promise<{checks: Array}>}
  */
@@ -614,18 +643,31 @@ async function runVoiceServerChecks(config, isPiSplit) {
 
   // n8n Webhook Check (if configured)
   const n8nUrl = process.env.N8N_WEBHOOK_URL || config.n8n?.webhookUrl;
+  const n8nApiKey = process.env.N8N_API_KEY || config.n8n?.apiKey;
+  const n8nBaseUrl = process.env.N8N_BASE_URL || config.n8n?.baseUrl;
+
   if (n8nUrl) {
-    const n8nSpinner = ora('Checking n8n webhook connectivity...').start();
-    const n8nResult = await checkN8nWebhook(n8nUrl);
-    if (n8nResult.reachable) {
-      n8nSpinner.succeed(chalk.green(`n8n Logic Engine connected (${n8nUrl})`));
+    const n8nSpinner = ora('Checking n8n logic engine...').start();
+    const webhookResult = await checkN8nWebhook(n8nUrl);
+
+    if (webhookResult.reachable) {
+      if (n8nApiKey && n8nBaseUrl) {
+        const apiResult = await checkN8nApi(n8nBaseUrl, n8nApiKey);
+        if (apiResult.reachable) {
+          n8nSpinner.succeed(chalk.green(`n8n Hybrid Logic connected (Webhook + API)`));
+        } else {
+          n8nSpinner.warn(chalk.yellow(`n8n Webhook OK, but API failed: ${apiResult.error}`));
+        }
+      } else {
+        n8nSpinner.succeed(chalk.green(`n8n Logic Engine connected (${n8nUrl})`));
+      }
       passedCount++;
     } else {
-      n8nSpinner.warn(chalk.yellow(`n8n Logic Engine unreachable: ${n8nResult.error}`));
+      n8nSpinner.warn(chalk.yellow(`n8n Logic Engine unreachable: ${webhookResult.error}`));
       console.log(chalk.gray('  → Check your N8N_WEBHOOK_URL in .env\n'));
       passedCount++;
     }
-    checks.push({ name: 'n8n Logic Engine', passed: n8nResult.reachable });
+    checks.push({ name: 'n8n Logic Engine', passed: webhookResult.reachable });
   }
 
   return { checks, passedCount };

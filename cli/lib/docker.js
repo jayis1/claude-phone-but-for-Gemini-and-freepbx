@@ -340,6 +340,8 @@ export function generateEnvFile(config) {
     '',
     '# n8n Integration',
     `N8N_WEBHOOK_URL=${(config.n8n && config.n8n.webhookUrl) || ''}`,
+    `N8N_API_KEY=${(config.n8n && config.n8n.apiKey) || ''}`,
+    `N8N_BASE_URL=${(config.n8n && config.n8n.baseUrl) || ''}`,
     ''
   ];
 
