@@ -97,6 +97,21 @@ app.post('/api/test-call', async (req, res) => {
   }
 });
 
+app.post('/api/pbx/provision', async (req, res) => {
+  try {
+    const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+    const response = await fetch(`${VOICE_APP_URL}/api/pbx/provision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to trigger PBX provisioning: ${error.message}` });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -209,6 +224,21 @@ app.get('/', (req, res) => {
             cursor: wait;
             opacity: 0.8;
           }
+          .provision-btn {
+            background: #27272a;
+            color: #a1a1aa;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+          .provision-btn:hover { background: #3f3f46; color: white; border-color: var(--accent); }
 
           .grid {
             flex: 1;
@@ -408,7 +438,7 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.3.2
+            MISSION CONTROL v2.4.0
           </div>
             <div style="display:flex; gap:10px; margin-left: 20px;">
               <button onclick="triggerTestCall()" id="testBtn" style="padding: 4px 10px; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
@@ -423,6 +453,9 @@ app.get('/', (req, res) => {
                   <span>📊</span> top
                 </button>
               </a>
+              <button onclick="triggerPbxProvision()" id="provisionBtn" class="provision-btn">
+                <span>⚡</span> <span>Provision PBX</span>
+              </button>
             </div>
 
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
@@ -1291,6 +1324,32 @@ app.get('/', (req, res) => {
               alert('Error: ' + err.message);
               btn.style.opacity = '1';
               btnText.innerText = 'Test AI Call';
+            }
+          }
+
+          async function triggerPbxProvision() {
+            if (!confirm('This will automatically create Extension 9000 and the Outbound Route in FreePBX using your M2M credentials. Continue?')) return;
+            
+            const btn = document.getElementById('provisionBtn');
+            const originalHtml = btn.innerHTML;
+            
+            try {
+              btn.innerHTML = '<span>⚙️</span> <span>Provisioning...</span>';
+              btn.style.opacity = '0.7';
+              
+              const response = await fetch('/api/pbx/provision', { method: 'POST' });
+              const data = await response.json();
+              
+              if (data.success) {
+                alert('Provisioning Successful! Extension 9000 and Outbound Route created.');
+                btn.innerHTML = '<span>✅</span> <span>Provisioned!</span>';
+              } else {
+                throw new Error(data.error || 'Provisioning failed');
+              }
+            } catch (err) {
+              alert('Error: ' + err.message);
+              btn.innerHTML = originalHtml;
+              btn.style.opacity = '1';
             }
           }
         </script>

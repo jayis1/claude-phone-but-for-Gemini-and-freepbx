@@ -448,6 +448,10 @@ async function setupVoiceServer(config) {
   console.log(chalk.bold('\n📞 Outbound Configuration'));
   config = await setupOutbound(config);
 
+  // Step 5.5: PBX API (Optional)
+  console.log(chalk.bold('\n📡 FreePBX API (Optional Automation)'));
+  config = await setupPbxApi(config);
+
   // Step 6: Server Configuration (IP only, no API port)
   console.log(chalk.bold('\n⚙️  Server Configuration'));
   const localIp = getLocalIP();
@@ -557,6 +561,10 @@ async function setupBoth(config) {
   // Step 4: Outbound Configuration
   console.log(chalk.bold('\n📞 Outbound Configuration'));
   config = await setupOutbound(config);
+
+  // Step 4.5: PBX API (Optional)
+  console.log(chalk.bold('\n📡 FreePBX API (Optional Automation)'));
+  config = await setupPbxApi(config);
 
   // Step 5: Server Configuration
   console.log(chalk.bold('\n⚙️  Server Configuration'));
@@ -782,6 +790,11 @@ function createDefaultConfig() {
       ringTimeout: 30,
       maxTurns: 10,
       dialPrefix: ''
+    },
+    pbx: {
+      apiUrl: '',
+      clientId: '',
+      clientSecret: ''
     },
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
@@ -1547,6 +1560,12 @@ function mergeEnvWithConfig(config, env) {
   if (env.DEFAULT_CALLER_ID) newConfig.outbound.callerId = env.DEFAULT_CALLER_ID;
   if (env.MAX_CONVERSATION_TURNS) newConfig.outbound.maxTurns = parseInt(env.MAX_CONVERSATION_TURNS, 10);
   if (env.OUTBOUND_RING_TIMEOUT) newConfig.outbound.ringTimeout = parseInt(env.OUTBOUND_RING_TIMEOUT, 10);
+  if (env.TEST_PHONE_NUMBER) newConfig.outbound.testPhoneNumber = env.TEST_PHONE_NUMBER;
+
+  // PBX API
+  if (env.FREEPBX_API_URL) newConfig.pbx.apiUrl = env.FREEPBX_API_URL;
+  if (env.FREEPBX_CLIENT_ID) newConfig.pbx.clientId = env.FREEPBX_CLIENT_ID;
+  if (env.FREEPBX_CLIENT_SECRET) newConfig.pbx.clientSecret = env.FREEPBX_CLIENT_SECRET;
 
   // Mark as pre-filled for logic checks
   newConfig._fromEnv = true;
@@ -1609,7 +1628,60 @@ async function handleSipConflict(config) {
   config.deployment.pi.sipConflict = sipConflict;
   config.deployment.pi.drachtioPort = sipConflict ? 5070 : 5060;
 
+  return config;
+}
 
+/**
+ * Setup FreePBX API orientation for M2M automation
+ * @param {object} config - Current config
+ * @returns {Promise<object>} Updated config
+ */
+async function setupPbxApi(config) {
+  const { shouldSetup } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'shouldSetup',
+      message: 'Do you want to configure the FreePBX API for automated setup?',
+      default: config.pbx?.apiUrl !== ''
+    }
+  ]);
+
+  if (!shouldSetup) {
+    return config;
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'apiUrl',
+      message: 'FreePBX API URL (e.g., http://pbx.local:83):',
+      default: config.pbx?.apiUrl || '',
+      validate: (input) => {
+        if (!input || !input.startsWith('http')) return 'Must be a valid HTTP/HTTPS URL';
+        return true;
+      }
+    },
+    {
+      type: 'input',
+      name: 'clientId',
+      message: 'M2M Client ID:',
+      default: config.pbx?.clientId || '',
+      validate: (input) => (input && input.length > 10) ? true : 'Invalid Client ID'
+    },
+    {
+      type: 'password',
+      name: 'clientSecret',
+      message: 'M2M Client Secret:',
+      default: config.pbx?.clientSecret || '',
+      validate: (input) => (input && input.length > 10) ? true : 'Invalid Client Secret'
+    }
+  ]);
+
+  config.pbx = {
+    apiUrl: answers.apiUrl,
+    clientId: answers.clientId,
+    clientSecret: answers.clientSecret
+  };
 
   return config;
 }

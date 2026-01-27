@@ -18,6 +18,7 @@ var extractCallerId = sipHandler.extractCallerId;
 var whisperClient = require("./lib/whisper-client");
 var geminiBridge = require("./lib/gemini-bridge");
 var ttsService = require("./lib/tts-service");
+var pbxBridge = require("./lib/pbx-bridge");
 
 // Multi-extension support
 var deviceRegistry = require("./lib/device-registry");
@@ -179,6 +180,28 @@ function initializeHttpServer() {
       freeswitch: freeswitchConnected,
       registrations: regState
     });
+  });
+
+  /**
+   * PBX Provisioning Endpoint
+   * Triggers automated extension and route creation
+   */
+  httpServer.app.post('/api/pbx/provision', async (req, res) => {
+    try {
+      console.log('[API] Starting PBX auto-provisioning...');
+      const result = await pbxBridge.provisionAll();
+
+      if (result.success) {
+        console.log('[API] PBX Provisioning successful');
+        res.json(result);
+      } else {
+        console.error('[API] PBX Provisioning failed:', result.error);
+        res.status(500).json(result);
+      }
+    } catch (error) {
+      console.error('[API] PBX Provisioning exception:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
   });
 
   // Log Endpoint

@@ -336,6 +336,11 @@ export function generateEnvFile(config) {
     `MAX_CONVERSATION_TURNS=${config.outbound?.maxTurns || 10}`,
     `OUTBOUND_RING_TIMEOUT=${config.outbound?.ringTimeout || 30}`,
     `TEST_PHONE_NUMBER=${config.outbound?.testPhoneNumber || ''}`,
+    '',
+    '# FreePBX API (Automation)',
+    `FREEPBX_API_URL=${config.pbx?.apiUrl || ''}`,
+    `FREEPBX_CLIENT_ID=${config.pbx?.clientId || ''}`,
+    `FREEPBX_CLIENT_SECRET=${config.pbx?.clientSecret || ''}`,
     ''
   ];
 
