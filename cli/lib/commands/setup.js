@@ -374,9 +374,13 @@ async function setupVoiceServer(config) {
     config.deployment.mode = 'voice-server';
   }
 
+  // Step 0: Port Conflict Check
+  config = await handleSipConflict(config);
+
   // Step 1: SIP Configuration
   console.log(chalk.bold('\n☎️  SIP Configuration'));
   config = await setupSIP(config);
+
 
   // Step 2: API Server Connection
   console.log(chalk.bold('\n🖥️  API Server Connection'));
@@ -492,9 +496,13 @@ async function setupBoth(config) {
   console.log(chalk.bold('\n📡 API Configuration'));
   config = await setupAPIKeys(config);
 
+  // Step 1.5: Port Conflict Check
+  config = await handleSipConflict(config);
+
   // Step 2: SIP Configuration
   console.log(chalk.bold('\n☎️  SIP Configuration'));
   config = await setupSIP(config);
+
 
   // Step 3: Device Configuration
   console.log(chalk.bold('\n🤖 Device Configuration'));
@@ -585,47 +593,8 @@ async function setupPi(config) {
     }
   }
 
-  // Detect SIP Conflict (Check if port 5060 is in use)
-  console.log(chalk.bold('\n🔍 Network Detection'));
-  const sbcSpinner = ora('Checking for SIP conflicts (process + UDP/TCP port 5060)...').start();
-
-  let sipConflict;
-  let portCheckError = false;
-
-  try {
-    sipConflict = await detectSipConflict();
-    if (sipConflict) {
-      sbcSpinner.succeed('SIP service detected on port 5060 - will use port 5070 for drachtio');
-    } else {
-      sbcSpinner.succeed('No SIP conflict detected - will use standard port 5060');
-    }
-  } catch (err) {
-    portCheckError = true;
-    sbcSpinner.warn('Port detection failed: ' + err.message);
-  }
-
-  // Manual override when port detection fails
-  if (portCheckError) {
-    console.log(chalk.yellow('\n⚠️  Could not automatically detect SIP status'));
-    const { manualSbc } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'manualSbc',
-        message: 'Is another PBX or SIP service running on port 5060?',
-        default: false
-      }
-    ]);
-    sipConflict = manualSbc;
-
-    if (sipConflict) {
-      console.log(chalk.green('✓ Will use port 5070 for drachtio (avoid conflict)\n'));
-    } else {
-      console.log(chalk.green('✓ Will use port 5060 for drachtio\n'));
-    }
-  }
-
-  config.deployment.pi.sipConflict = sipConflict;
-  config.deployment.pi.drachtioPort = sipConflict ? 5070 : 5060;
+  // Detect SIP Conflict
+  config = await handleSipConflict(config);
 
   // Ask for API server IP and port first, then check connectivity
   const apiServerAnswers = await inquirer.prompt([
@@ -1469,4 +1438,58 @@ function mergeEnvWithConfig(config, env) {
   // Mark as pre-filled for logic checks
   newConfig._fromEnv = true;
   return newConfig;
+}
+
+/**
+ * Detect and handle SIP port conflicts (port 5060)
+ * @param {object} config - Configuration object
+ * @returns {Promise<object>} Updated configuration
+ */
+async function handleSipConflict(config) {
+  console.log(chalk.bold('\n🔍 Network Detection'));
+  const sbcSpinner = ora('Checking for SIP conflicts (process + UDP/TCP port 5060)...').start();
+
+  let sipConflict;
+  let portCheckError = false;
+
+  try {
+    sipConflict = await detectSipConflict();
+    if (sipConflict) {
+      sbcSpinner.succeed('SIP service detected on port 5060 - will use port 5070 for drachtio');
+    } else {
+      sbcSpinner.succeed('No SIP conflict detected - will use standard port 5060');
+    }
+  } catch (err) {
+    portCheckError = true;
+    sbcSpinner.warn('Port detection failed: ' + err.message);
+  }
+
+  // Manual override when port detection fails
+  if (portCheckError) {
+    console.log(chalk.yellow('\n⚠️  Could not automatically detect SIP status'));
+    const { manualSbc } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'manualSbc',
+        message: 'Is another PBX or SIP service running on port 5060?',
+        default: false
+      }
+    ]);
+    sipConflict = manualSbc;
+
+    if (sipConflict) {
+      console.log(chalk.green('✓ Will use port 5070 for drachtio (avoid conflict)\n'));
+    } else {
+      console.log(chalk.green('✓ Will use port 5060 for drachtio\n'));
+    }
+  }
+
+  // Ensure deployment and pi structure exists (CLI expects it for drachtioPort logic)
+  if (!config.deployment) config.deployment = {};
+  if (!config.deployment.pi) config.deployment.pi = {};
+
+  config.deployment.pi.sipConflict = sipConflict;
+  config.deployment.pi.drachtioPort = sipConflict ? 5070 : 5060;
+
+  return config;
 }

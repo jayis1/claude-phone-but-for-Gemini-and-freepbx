@@ -635,6 +635,46 @@ app.get('/logs', (req, res) => {
 });
 
 /**
+ * POST /api/cli
+ * Executes a raw gemini command and returns output
+ * Used by Mission Control to offload CLI tasks to the host
+ */
+app.post('/api/cli', async (req, res) => {
+  const { command } = req.body;
+  const { exec } = require('child_process');
+  const util = require('util');
+  const execPromise = util.promisify(exec);
+  const timestamp = new Date().toISOString();
+
+  if (!command) {
+    return res.status(400).json({ success: false, error: 'Missing command' });
+  }
+
+  console.log(`[${timestamp}] CLI EXEC: gemini ${command}`);
+
+  try {
+    const { stdout, stderr } = await execPromise(`gemini ${command}`, {
+      timeout: 30000,
+      env: geminiEnv,
+      maxBuffer: 1024 * 1024
+    });
+
+    res.json({
+      success: true,
+      output: stdout || stderr,
+      command: `gemini ${command}`
+    });
+  } catch (error) {
+    console.error(`[${timestamp}] CLI ERROR:`, error.message);
+    res.json({
+      success: false,
+      output: error.message,
+      command: `gemini ${command}`
+    });
+  }
+});
+
+/**
  * GET /health
  * Health check endpoint
  */

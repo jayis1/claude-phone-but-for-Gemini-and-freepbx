@@ -347,7 +347,8 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.58
+            MISSION CONTROL v2.2.59
+
 
 
 
@@ -1419,39 +1420,32 @@ app.use('/api/proxy/api', async (req, res) => {
 // LOCAL API ROUTES
 
 // Gemini CLI execution endpoint
+// Gemini CLI execution endpoint
 app.post('/api/gemini-cli', async (req, res) => {
   const { command } = req.body;
-  const { exec } = require('child_process');
-  const util = require('util');
-  const execPromise = util.promisify(exec);
 
   try {
-    let finalCommand = `gemini ${command}`;
     // Only force default model if user hasn't specified one
-    if (!command.includes('--model')) {
-      finalCommand += ' --model gemini-1.5-flash-001';
+    let tweakedCommand = command;
+    if (!tweakedCommand.includes('--model')) {
+      tweakedCommand += ' --model gemini-1.5-flash-001';
     }
 
-    const { stdout, stderr } = await execPromise(finalCommand, {
-      timeout: 30000,
-      maxBuffer: 1024 * 1024, // 1MB
-      env: {
-        ...process.env,
-        GEMINI_API_KEY: process.env.MISSION_CONTROL_GEMINI_KEY || process.env.GEMINI_API_KEY,
-        GOOGLE_API_KEY: process.env.MISSION_CONTROL_GEMINI_KEY || process.env.GEMINI_API_KEY // Alias for some tools
-      }
+    // Forward the command to the API server (Hands) to execute on the host
+    // This removes the need to install gemini-cli inside the container
+    const response = await fetch(`${API_SERVER_URL}/api/cli`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: tweakedCommand })
     });
 
-    res.json({
-      success: true,
-      output: stdout || stderr,
-      command: `gemini ${command}`
-    });
+    const data = await response.json();
+    res.json(data);
   } catch (error) {
-    console.error('Gemini CLI Error:', error.message);
+    console.error('[Mission Control] Gemini CLI Proxy Error:', error.message);
     res.json({
       success: false,
-      output: error.message,
+      output: `Proxy Error: ${error.message}\nEnsure API Server is running at ${API_SERVER_URL}`,
       command: `gemini ${command}`
     });
   }

@@ -7,11 +7,6 @@ RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 COPY package.json ./
 RUN npm install
 
-
-
-# Install Gemini CLI for terminal bridge
-RUN npm install -g @google/gemini-cli@latest
-
 # Copy source
 COPY . .
 
