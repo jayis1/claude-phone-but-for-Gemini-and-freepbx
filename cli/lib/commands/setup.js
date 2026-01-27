@@ -1313,11 +1313,23 @@ async function setupPiServer(config) {
         }
         return true;
       }
+    },
+    {
+      type: 'list',
+      name: 'gpuVendor',
+      message: 'Hardware Acceleration (GPU):',
+      default: config.server.gpuVendor || 'none',
+      choices: [
+        { name: 'None (CPU only)', value: 'none' },
+        { name: 'NVIDIA GPU (NVENC/CUDA)', value: 'nvidia' },
+        { name: 'AMD GPU (ROCm/OpenCL)', value: 'amd' }
+      ]
     }
   ]);
 
   config.server.externalIp = answers.externalIp;
   config.server.httpPort = parseInt(answers.httpPort, 10);
+  config.server.gpuVendor = answers.gpuVendor;
 
   return config;
 }
