@@ -51,8 +51,9 @@ console.error = (msg, ...args) => { addLog('ERROR', msg, args); };
  * with your zsh profile fully loaded.
  */
 function buildGeminiEnvironment() {
-  const HOME = process.env.HOME || '/Users/MadLAbs';
-  const PAI_DIR = path.join(HOME, '.gemini');
+  const HOME = process.env.HOME || '/root';
+  const PAI_DIR = process.env.PAI_DIR || path.join(HOME, '.gemini');
+
 
   // Load ~/.gemini/.env (all API keys)
   const envPath = path.join(PAI_DIR, '.env');

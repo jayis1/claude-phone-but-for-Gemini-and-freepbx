@@ -160,47 +160,46 @@ async function checkVoiceApp() {
  * @param {number} port - Port to check
  * @returns {Promise<{running: boolean, pid?: number, healthy?: boolean, error?: string}>}
  */
-async function checkGeminiAPIServer(port) {
-  const running = await isServerRunning();
+async function checkGeminiAPIServer(port, containerName = 'gemini-api-server') {
+  const containers = await getContainerStatus();
+  const apiContainer = containers.find(c => c.name.includes(containerName));
 
-  if (!running) {
+  if (!apiContainer) {
     return {
       running: false,
-      error: 'Process not running'
+      error: 'Container not found'
     };
   }
 
-  const pid = getServerPid();
+  const isRunning = apiContainer.status.toLowerCase().includes('up') ||
+    apiContainer.status.toLowerCase().includes('running');
+
+  if (!isRunning) {
+    return {
+      running: false,
+      error: `Container status: ${apiContainer.status}`
+    };
+  }
 
   // Try HTTP health check
   try {
     const response = await axios.get(`http://localhost:${port}/health`, {
-      timeout: 5000
+      timeout: 2000
     });
 
-    if (response.status === 200) {
-      return {
-        running: true,
-        pid,
-        healthy: true
-      };
-    } else {
-      return {
-        running: true,
-        pid,
-        healthy: false,
-        error: `Health check returned status ${response.status}`
-      };
-    }
+    return {
+      running: true,
+      healthy: response.status === 200
+    };
   } catch (error) {
     return {
       running: true,
-      pid,
       healthy: false,
       error: 'Health endpoint not responding'
     };
   }
 }
+
 
 /**
  * Doctor command - Run health checks
@@ -306,6 +305,22 @@ async function runApiServerChecks(config) {
     console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
   }
   checks.push({ name: 'Gemini API server', passed: apiServerResult.running });
+
+  // Check Inference server (Brain)
+  const inferenceSpinner = ora('Checking Inference server (Brain)...').start();
+  const inferenceResult = await checkGeminiAPIServer(config.server.inferencePort || 4000, 'inference-server');
+  if (inferenceResult.running && inferenceResult.healthy) {
+    inferenceSpinner.succeed(chalk.green('Inference server running and healthy'));
+    passedCount++;
+  } else if (inferenceResult.running && !inferenceResult.healthy) {
+    inferenceSpinner.warn(chalk.yellow('Inference server running but unhealthy'));
+    console.log(chalk.gray(`  → ${inferenceResult.error}\n`));
+    passedCount++;
+  } else {
+    inferenceSpinner.fail(chalk.red(`Inference server not running: ${inferenceResult.error}`));
+  }
+  checks.push({ name: 'Inference server', passed: inferenceResult.running });
+
 
   return { checks, passedCount };
 }

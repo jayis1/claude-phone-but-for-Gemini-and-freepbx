@@ -163,20 +163,49 @@ export function generateDockerCompose(config) {
       - ${getEnvPath()}
     volumes:
       - ${getConfigDir()}/mission-control/data:/app/data
-      - ${getEnvPath()}:/app/.env
     environment:
       - PORT=3030
       - VOICE_APP_URL=http://localhost:${config.server.httpPort || 3000}
       - API_SERVER_URL=http://localhost:${config.server.geminiApiPort}
-      - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}
       - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}
       - GEMINI_API_KEY=\${GEMINI_API_KEY}
       - MISSION_CONTROL_GEMINI_KEY=\${MISSION_CONTROL_GEMINI_KEY}
       - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
   }
 
-  // Gemini API server is now RUN LOCALLY, not in Docker
-  // It is removed from here to ensure it's not launched by Docker Compose
+  // Brain & Hands (Inference & API Servers)
+  if (installationType === 'api-server' || installationType === 'both') {
+    const apiPath = config.paths.geminiApiServer;
+    const inferencePath = path.resolve(apiPath, '../inference-server');
+
+    services.push(`  inference-server:
+    build: ${inferencePath}
+    container_name: inference-server
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ${getEnvPath()}
+    environment:
+      - PORT=${config.server.inferencePort || 4000}
+      - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort}
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+
+  gemini-api-server:
+    build: ${apiPath}
+    container_name: gemini-api-server
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /root/.gemini:/root/.gemini
+    env_file:
+      - ${getEnvPath()}
+    environment:
+      - PORT=${config.server.geminiApiPort}
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+      - PAI_DIR=/root/.gemini`);
+  }
+
+
 
   return `# CRITICAL: All containers must use network_mode: host
 # Docker bridge networking causes FreeSWITCH to advertise internal IPs

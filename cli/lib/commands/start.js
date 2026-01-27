@@ -319,58 +319,9 @@ async function startBoth(config, isPiMode) {
   await sleep(3000);
   spinner.succeed('Containers initialized');
 
-  // Start Inference Server (Brain)
-  if (!isPiMode) {
-    const inferencePath = path.resolve(config.paths.geminiApiServer, '../inference-server');
-    if (fs.existsSync(inferencePath)) {
-      spinner.start('Starting Inference Server (Brain)...');
-      try {
-        // Point Brain to Hands (API Server on port 3333)
-        const inferencePort = config.server.inferencePort || 4000;
+  // Brain & Hands are now managed by Docker (added to startContainers flow)
+  spinner.succeed('All services managed by Docker stack');
 
-        // Ensure GEMINI_API_KEY is available
-        const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
-
-        await startInferenceServer(inferencePath, inferencePort, `http://localhost:${config.server.geminiApiPort}`, 'inference.pid', 'server.js', {
-          GEMINI_API_KEY: geminiKey
-        });
-        spinner.succeed(`Inference Server (Brain) started on port ${inferencePort}`);
-      } catch (error) {
-        if (error.message.includes('already running')) {
-          spinner.warn('Inference Server already running');
-        } else {
-          spinner.fail(`Failed to start Inference Server: ${error.message}`);
-          // Don't exit, just warn? or exit? Better to warn for now.
-        }
-      }
-    }
-  }
-
-  // Mission Control is now managed by Docker (added to startContainers flow)
-  if (!isPiMode) {
-    /* Mission Control moved to Docker */
-  }
-
-  // Start gemini-api-server last
-  if (!isPiMode) {
-    spinner.start('Starting Gemini API server...');
-    try {
-      if (await isServerRunning()) {
-        spinner.warn('Gemini API server already running');
-      } else {
-        // Ensure GEMINI_API_KEY is available
-        const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
-
-        await startServer(config.paths.geminiApiServer, config.server.geminiApiPort, null, {
-          GEMINI_API_KEY: geminiKey
-        });
-        spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
-      }
-    } catch (error) {
-      spinner.fail(`Failed to start server: ${error.message}`);
-      throw error;
-    }
-  }
 
   // Success
   console.log(chalk.bold.green('\n✓ All services running!\n'));
