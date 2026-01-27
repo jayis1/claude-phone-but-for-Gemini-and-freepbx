@@ -267,7 +267,7 @@ app.get('/', (req, res) => {
           justify-content: space-between;
           align-items: center;
           border-bottom: 1px solid var(--border);
-          background: rgba(2.5.355,2.5.3.02);
+          background: rgba(255, 255, 255, 0.02);
           }
           .panel-content {
             padding: 1.25rem;
@@ -416,7 +416,7 @@ app.get('/', (req, res) => {
           .btn-primary {background: var(--accent); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: filter 0.2s; }
           .btn-primary:hover {filter: brightness(1.1); }
           .btn-secondary {background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: background 0.2s; }
-          .btn-secondary:hover {background: rgba(2.5.355,2.5.3.05); }
+          .btn-secondary:hover {background: rgba(255, 255, 255, 0.05); }
 
           /* Logs */
           .log-container {
@@ -630,12 +630,6 @@ app.get('/', (req, res) => {
               </div>
 
                <!-- Brain Load & Model (Moved Here) -->
-              <div style="background: rgba(2.5.355,2.5.3.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--border);">
-                <div style="display: flex; gap: 1rem;">
-                  <div style="flex: 1;">
-                    <div class="stat-label">Brain Load</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                      <div class="stat-value" id="ai-load" style="font-size: 1.2rem;">0%</div>
                       <div class="progress-bar" style="margin: 0; height: 6px; flex:1;">
                         <div class="progress-fill" id="bar-ai-load" style="background: #ec4899; width: 0%;"></div>
                       </div>
@@ -1343,12 +1337,6 @@ app.get('/htop', (req, res) => {
 // TipTop APIs (Real System Data)
 // ============================================
 
-// In-memory storage for TipTop features (simple persistence)
-let tipTopNotes = [
-  { id: '1', title: 'Welcome', content: 'Welcome to TipTop! Use F6 to sort, F9 to kill.', timestamp: Date.now() }
-];
-let tipTopPlaylist = [];
-
 // 1. System Stats (CPU, MEM, Processes)
 app.get('/api/system/stats', async (req, res) => {
   try {
@@ -1449,54 +1437,7 @@ app.post('/api/process/kill', (req, res) => {
   }
 });
 
-// 3. Notes API
-app.get('/api/notes', (req, res) => res.json(tipTopNotes));
-
-app.post('/api/notes', (req, res) => {
-  const { id, title, content } = req.body;
-  if (id) {
-    // Edit
-    const note = tipTopNotes.find(n => n.id === id);
-    if (note) {
-      note.title = title;
-      note.content = content;
-      note.timestamp = Date.now();
-    }
-  } else {
-    // New
-    tipTopNotes.unshift({
-      id: Date.now().toString(),
-      title,
-      content,
-      timestamp: Date.now()
-    });
-  }
-  res.json({ success: true });
-});
-
-app.delete('/api/notes/:id', (req, res) => {
-  tipTopNotes = tipTopNotes.filter(n => n.id !== req.params.id);
-  res.json({ success: true });
-});
-
-// 4. Playlist API
-app.get('/api/playlist', (req, res) => res.json(tipTopPlaylist));
-
-app.post('/api/playlist', (req, res) => {
-  const { url, title } = req.body;
-  tipTopPlaylist.push({
-    id: Date.now().toString(),
-    url,
-    title,
-    color: '#' + Math.floor(Math.random() * 16777215).toString(16) // Random color for fun
-  });
-  res.json({ success: true });
-});
-
-app.delete('/api/playlist/:id', (req, res) => {
-  tipTopPlaylist = tipTopPlaylist.filter(p => p.id !== req.params.id);
-  res.json({ success: true });
-});
+// (Playlist and Notes API moved to end of file for consolidation)
 
 // ============================================
 // PROXY ROUTES
@@ -2304,6 +2245,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v2.4.3]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.2]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

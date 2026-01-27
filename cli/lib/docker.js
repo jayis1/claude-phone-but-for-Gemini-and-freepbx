@@ -164,6 +164,8 @@ export function generateDockerCompose(config) {
       --rtp-range-start 30000
       --rtp-range-end 30100
     # RTP ports 30000-30100 avoid conflict with standard PBX systems (e.g. 20000-20099)
+    volumes:
+      - \${getConfigDir()}/recordings:/app/recordings
     environment:
       - EXTERNAL_IP=\${EXTERNAL_IP:-127.0.0.1}
 
