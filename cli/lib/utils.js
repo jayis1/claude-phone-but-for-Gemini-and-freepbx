@@ -47,19 +47,6 @@ export function getLocalIP() {
 }
 
 /**
- * Check if Gemini CLI is installed
- * @returns {Promise<boolean>}
- */
-export async function isGeminiInstalled() {
-  return new Promise((resolve) => {
-    const check = spawn('which', ['gemini']);
-    check.on('close', (code) => {
-      resolve(code === 0);
-    });
-  });
-}
-
-/**
  * Sleep for specified milliseconds
  * @param {number} ms - Milliseconds to sleep
  * @returns {Promise<void>}

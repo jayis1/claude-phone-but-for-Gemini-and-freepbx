@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.67/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.2.68/install.sh | bash
 
 
 
@@ -308,29 +308,6 @@ main() {
       fi
     fi
   fi
-
-  # Check Gemini CLI
-  if ! command -v gemini &> /dev/null; then
-    echo "⚠️  Gemini CLI not found, installing via npm..."
-    if [ -w "$(npm root -g)" ]; then
-      npm install -g @google/gemini-cli
-    else
-      $SUDO npm install -g @google/gemini-cli
-    fi
-    
-    # Verify installation
-    if command -v gemini &> /dev/null; then
-      echo "✓ Gemini CLI installed: $(gemini --version)"
-      # Extra check for npm package as requested
-      echo "  Package check: $(npm list -g @google/gemini-cli --depth=0 2>/dev/null | grep @google/gemini-cli || echo 'Installed via other method')"
-    else
-      echo "✗ Failed to install Gemini CLI automatically"
-      echo "  Please install manually: npm install -g @google/gemini-cli"
-    fi
-  else
-    echo "✓ Gemini CLI installed"
-  fi
-
 
   # Clone or update repository
   echo ""

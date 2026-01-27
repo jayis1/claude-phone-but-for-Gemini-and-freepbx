@@ -9,87 +9,7 @@ import { validateElevenLabsKey, validateOpenAIKey } from '../validators.js';
 import { isReachable, checkGeminiApiServer as checkGeminiApiHealth } from '../network.js';
 import { checkPort } from '../port-check.js';
 
-/**
- * Check if Gemini CLI is installed
- * @returns {Promise<{installed: boolean, version?: string, error?: string}>}
- */
-async function checkGeminiCLI() {
-  return new Promise((resolve) => {
-    let resolved = false;
 
-    const safeResolve = (data) => {
-      if (!resolved) {
-        resolved = true;
-        resolve(data);
-      }
-    };
-
-    // Set a timeout to prevent hanging the doctor command
-    const timeout = setTimeout(() => {
-      if (child) child.kill();
-      safeResolve({
-        installed: false,
-        error: 'Gemini CLI check timed out after 5s'
-      });
-    }, 5000);
-
-    const child = spawn('gemini', ['--version'], {
-      stdio: ['ignore', 'pipe', 'pipe'], // Ignore stdin to prevent hang on prompts
-      shell: false
-    });
-
-    let output = '';
-    child.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      output += data.toString();
-    });
-
-    child.on('close', (code) => {
-      clearTimeout(timeout);
-      if (code === 0) {
-        // Extract version from output
-        const versionMatch = output.match(/(\d+\.\d+\.\d+)/);
-        safeResolve({
-          installed: true,
-          version: versionMatch ? versionMatch[1] : 'unknown'
-        });
-      } else {
-        // Handle specific SyntaxError for Node.js versions < 20
-        if (output.includes('Invalid regular expression flags') || output.includes('string-width')) {
-          safeResolve({
-            installed: true,
-            version: 'unsupported-node',
-            error: 'Node.js version is too old for Gemini CLI. Upgrade to Node 20+.'
-          });
-        } else if (output.includes('node_modules') || output.includes('Error')) {
-          safeResolve({
-            installed: true,
-            version: 'debug-mode',
-            error: `Gemini CLI installed but returned error: ${output.split('\n')[0]}`
-          });
-        } else {
-          safeResolve({
-            installed: false,
-            error: `Gemini CLI returned code ${code}: ${output.substring(0, 100).trim()}`
-          });
-        }
-      }
-
-
-    });
-
-    child.on('error', (err) => {
-      clearTimeout(timeout);
-      safeResolve({
-        installed: false,
-        error: `Gemini CLI not found or failed: ${err.message}`
-      });
-    });
-  });
-}
 
 /**
  * Check ElevenLabs API connectivity
@@ -267,41 +187,18 @@ async function runApiServerChecks(config) {
   const checks = [];
   let passedCount = 0;
 
-  // Check Gemini CLI
-  const geminiSpinner = ora('Checking Gemini CLI...').start();
-  const geminiResult = await checkGeminiCLI();
-  if (geminiResult.installed) {
-    if (geminiResult.version === 'unsupported-node') {
-      geminiSpinner.fail(chalk.red('Gemini CLI error: Node.js version is too old'));
-      console.log(chalk.gray('  → Gemini CLI requires Node.js 20 or higher to handle modern regex syntax.'));
-      console.log(chalk.gray('  → Current Node.js: ' + process.version));
-      console.log(chalk.gray('  → Solution: Run "nvm install 20" or "yum install nodejs-20.x"\n'));
-    } else if (geminiResult.error) {
-      geminiSpinner.warn(chalk.yellow(`Gemini CLI found but has issues: ${geminiResult.error}`));
-    } else {
-      geminiSpinner.succeed(chalk.green(`Gemini CLI installed (v${geminiResult.version})`));
-    }
-    passedCount++;
-  } else {
-
-
-    geminiSpinner.fail(chalk.red(`Gemini CLI not found: ${geminiResult.error}`));
-    console.log(chalk.gray('  → Install Gemini CLI: npx https://github.com/google-gemini/gemini-cli\n'));
-  }
-  checks.push({ name: 'Gemini CLI', passed: geminiResult.installed });
-
-  // Check local Gemini API server
+  // Check local Gemini API server container
   const apiServerSpinner = ora('Checking Gemini API server...').start();
   const apiServerResult = await checkGeminiAPIServer(config.server.geminiApiPort);
   if (apiServerResult.running && apiServerResult.healthy) {
-    apiServerSpinner.succeed(chalk.green(`Gemini API server running (PID: ${apiServerResult.pid})`));
+    apiServerSpinner.succeed(chalk.green(`Gemini API server running in Docker`));
     passedCount++;
   } else if (apiServerResult.running && !apiServerResult.healthy) {
-    apiServerSpinner.warn(chalk.yellow(`Gemini API server running but unhealthy (PID: ${apiServerResult.pid})`));
+    apiServerSpinner.warn(chalk.yellow(`Gemini API server container running but unhealthy`));
     console.log(chalk.gray(`  → ${apiServerResult.error}\n`));
     passedCount++; // Count as partial pass
   } else {
-    apiServerSpinner.fail(chalk.red(`Gemini API server not running: ${apiServerResult.error}`));
+    apiServerSpinner.fail(chalk.red(`Gemini API server container not running`));
     console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
   }
   checks.push({ name: 'Gemini API server', passed: apiServerResult.running });
@@ -320,6 +217,7 @@ async function runApiServerChecks(config) {
     inferenceSpinner.fail(chalk.red(`Inference server not running: ${inferenceResult.error}`));
   }
   checks.push({ name: 'Inference server', passed: inferenceResult.running });
+
 
 
   return { checks, passedCount };

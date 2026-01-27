@@ -5,7 +5,8 @@ import path from 'path';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { checkDocker, writeDockerConfig, startContainers } from '../docker.js';
 import { startServer, isServerRunning, startInferenceServer } from '../process-manager.js';
-import { isGeminiInstalled, sleep } from '../utils.js';
+import { sleep } from '../utils.js';
+
 import { checkGeminiApiServer } from '../network.js';
 
 import { runPrereqChecks } from '../prereqs.js';
@@ -64,11 +65,7 @@ export async function startCommand() {
  * @returns {Promise<void>}
  */
 async function startApiServer(config) {
-  // Check Gemini CLI
-  if (!(await isGeminiInstalled())) {
-    console.log(chalk.yellow('⚠️  Gemini CLI not found'));
-    console.log(chalk.gray('  Install from: https://gemini.com/download\n'));
-  }
+
 
   // Verify path exists
   if (!fs.existsSync(config.paths.geminiApiServer)) {
@@ -243,11 +240,7 @@ async function startBoth(config, isPiMode) {
     }
   }
 
-  // Check Gemini CLI only if NOT running in Docker (legacy mode or API server only)
-  if (!isPiMode && !(await isGeminiInstalled())) {
-    console.log(chalk.yellow('⚠️  Gemini CLI not found'));
-    console.log(chalk.gray('  Install from: https://gemini.com/download\n'));
-  }
+
 
   // In Pi mode, verify API server is reachable
   if (isPiMode) {
