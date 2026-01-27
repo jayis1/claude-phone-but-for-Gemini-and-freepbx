@@ -1179,20 +1179,23 @@ app.get('/api/system/stats', async (req, res) => {
       user: p.user,
       pri: p.priority,
       ni: p.nice,
-      virt: p.mem_vsz,
-      res: p.mem_rss,
+      virt: p.memVsz, // Fix: camelCase
+      res: p.memRss,  // Fix: camelCase
       s: p.state,
-      cpu: p.pcpu.toFixed(1),
-      mem: p.pmem.toFixed(1),
+      cpu: (p.cpu || 0).toFixed(1),   // Fix: .cpu not .pcpu
+      mem: (p.mem || 0).toFixed(1),   // Fix: .mem not .pmem
       time: p.started, // formatted on front end
       cmd: p.name + ' ' + p.command
     }));
+
+    // Fix: load.avgLoad is a number in current version, not an array
+    const loadStr = load.avgLoad ? load.avgLoad.toFixed(2) : "0.00";
 
     res.json({
       cpu: { currentLoad: cpu.currentLoad.toFixed(1) },
       mem: { active: mem.active, total: mem.total },
       uptime: time.uptime,
-      load: load.avgLoad ? load.avgLoad.join(' ') : "0.00 0.00 0.00", // si sometimes returns different structures
+      load: loadStr,
       tasks: { total: processes.all, running: processes.running },
       processes: processList
     });
