@@ -9,10 +9,7 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      drachtio --contact "sip:*:5060;transport=tcp,udp" --external-ip ${EXTERNAL_IP} --secret ${DRACHTIO_SECRET:-cymru} --port 9022 --loglevel info
-    # Ports (for reference - host mode doesn't need port mapping):
-    # - 5060: SIP UDP/TCP
-    # - 9022: Admin/App Port
+      drachtio --contact "sip:*:5060;transport=tcp,udp" --secret ${DRACHTIO_SECRET:-cymru} --port 9022 --loglevel info
 
   freeswitch:
     image: drachtio/drachtio-freeswitch-mrf:latest
@@ -20,15 +17,67 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      freeswitch --sip-port 5080 --rtp-range-start 30000 --rtp-range-end 30100 --ext-rtp-ip ${EXTERNAL_IP} --ext-sip-ip ${EXTERNAL_IP} --advertise-external-ip
+      freeswitch --sip-port 5080 --rtp-range-start 30000 --rtp-range-end 30100 --ext-rtp-ip ${EXTERNAL_IP:-127.0.0.1} --ext-sip-ip ${EXTERNAL_IP:-127.0.0.1} --advertise-external-ip
     environment:
-      # CRITICAL: Set this to your server's LAN IP
-      # This IP goes into SDP packets so the PBX knows where to send audio
-      # Note: drachtio-freeswitch-mrf only accepts CLI flags, not env vars
-      - EXTERNAL_IP=${EXTERNAL_IP}
-    # Ports (for reference):
-    # - 8021: ESL (Event Socket Library)
-    # - 5080: Internal SIP
-    # - 30000-30100: RTP Audio (changed from 20000-20100 to avoid conflict with standard PBX systems)
+      - EXTERNAL_IP=${EXTERNAL_IP:-127.0.0.1}
 
+  voice-app:
+    build: ./voice-app
+    container_name: voice-app
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - ./voice-app/audio:/app/audio
+      - ./voice-app/config:/app/config
+      - ./data/recordings:/app/recordings
+    depends_on:
+      - drachtio
+      - freeswitch
 
+  mission-control:
+    build: ./mission-control
+    container_name: mission-control
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - ./data/mission-control:/app/data
+      - .env:/app/.env
+    environment:
+      - PORT=3030
+      - VOICE_APP_URL=http://localhost:3000
+      - API_SERVER_URL=http://localhost:3333
+      - INFERENCE_URL=http://localhost:4000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MISSION_CONTROL_GEMINI_KEY=${MISSION_CONTROL_GEMINI_KEY}
+      - GOOGLE_API_KEY=${GEMINI_API_KEY}
+
+  inference-server:
+    build: ./inference-server
+    container_name: inference-server
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - PORT=4000
+      - GEMINI_API_URL=http://localhost:3333
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GPU_VENDOR=none
+
+  gemini-api-server:
+    build: ./gemini-api-server
+    container_name: gemini-api-server
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /root/.gemini:/root/.gemini
+    env_file:
+      - .env
+    environment:
+      - PORT=3333
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PAI_DIR=/root/.gemini

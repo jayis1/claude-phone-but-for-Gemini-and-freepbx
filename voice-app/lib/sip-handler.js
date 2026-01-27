@@ -129,6 +129,15 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
     const greetingUrl = await ttsService.generateSpeech(greeting, voiceId);
     await endpoint.play(greetingUrl);
 
+    // Start Recording 🔴
+    const recordingPath = `/app/recordings/call-${callUuid}.wav`;
+    console.log(`[${new Date().toISOString()}] RECORDING Starting to ${recordingPath}`);
+    try {
+      await endpoint.execute('record_session', recordingPath);
+    } catch (e) {
+      console.error(`[${new Date().toISOString()}] RECORDING Failed to start: ${e.message}`);
+    }
+
     // Start fork for entire call
     const wsUrl = 'ws://127.0.0.1:' + wsPort + '/' + encodeURIComponent(callUuid);
     const sessionPromise = audioForkServer.expectSession(callUuid, { timeoutMs: 10000 });

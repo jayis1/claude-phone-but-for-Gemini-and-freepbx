@@ -176,7 +176,9 @@ export function generateDockerCompose(config) {
       - ${getEnvPath()}
     volumes:
       - ${config.paths.voiceApp}/audio:/app/audio
+      - ${config.paths.voiceApp}/audio:/app/audio
       - ${config.paths.voiceApp}/config:/app/config
+      - ${getConfigDir()}/recordings:/app/recordings
     depends_on:
       - drachtio
       - freeswitch
@@ -190,7 +192,9 @@ ${getGpuSnippet(gpuVendor)}
     env_file:
       - ${getEnvPath()}
     volumes:
+    volumes:
       - ${getConfigDir()}/mission-control/data:/app/data
+      - ${getEnvPath()}:/app/.env
       - ${getEnvPath()}:/app/.env
     environment:
       - PORT=3030

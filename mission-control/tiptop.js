@@ -257,6 +257,18 @@ function generateTopPage() {
           let sortBy = 'cpu';
           let sortDesc = true;
           let selectedPid = null;
+          let currentAudio = null; // Track playing audio
+
+          function playRecording(url) {
+             if(currentAudio) {
+               currentAudio.pause();
+               currentAudio = null;
+             }
+             // Proxy through Mission Control
+             const proxyUrl = '/api/proxy/voice' + url;
+             currentAudio = new Audio(proxyUrl);
+             currentAudio.play().catch(e => alert('Playback failed: ' + e.message));
+          }
 
           function setSort(col) {
              if(sortBy === col) {
@@ -521,7 +533,11 @@ const res = await fetch('/api/proxy/voice/api/history'); // Using Mission Contro
                 const color = isInbound ? '#0ff' : '#f0f';
                 const number = isInbound ? call.from : call.to;
                 const statusClass = call.status === 'completed' ? 'status-completed' : 'status-failed';
-                
+                let actionHtml = '';
+                if(call.recordingUrl) {
+                   actionHtml = \`<button class="btn-sm" style="margin-left:auto; background:#222; border-color:#444;" onclick="event.stopPropagation(); playRecording('\${call.recordingUrl}')">▶️ Play</button>\`;
+                }
+
                 const item = document.createElement('div');
                 item.className = 'call-item';
                 item.innerHTML = \`
@@ -530,6 +546,7 @@ const res = await fetch('/api/proxy/voice/api/history'); // Using Mission Contro
                       <div class="call-number">\${number || 'Unknown'}</div>
                       <div class="call-time">\${timeAgo(call.timestamp)} • \${call.duration}s</div>
                    </div>
+                   \${actionHtml}
                    <div class="call-status \${statusClass}">\${call.status}</div>
                 \`;
                 list.appendChild(item);

@@ -65,6 +65,13 @@ function createHttpServer(audioDir, port = 3000) {
     }
   }));
 
+  // Serve RECORDINGS (Persistent)
+  app.use('/recordings', express.static('/app/recordings', {
+    setHeaders: (res, filepath) => {
+      res.setHeader('Content-Type', 'audio/wav');
+    }
+  }));
+
   // Serve STATIC audio files (beeps, hold music) - NOT subject to cleanup
   app.use('/static', express.static(path.join(__dirname, '..', 'static'), {
     setHeaders: (res, filepath) => {
@@ -667,9 +674,18 @@ function createHttpServer(audioDir, port = 3000) {
       duration: call.duration || 0
     };
 
-    callHistory.unshift(entry);
-    if (callHistory.length > MAX_HISTORY) callHistory.pop();
-    debug('Added call to history:', entry);
+    // Check for recording
+    const recordingFile = path.join('/app/recordings', `call-${entry.id}.wav`);
+    fs.access(recordingFile).then(() => {
+      entry.recordingUrl = `/recordings/call-${entry.id}.wav`;
+      debug('Recording found for call:', entry.id);
+    }).catch(() => {
+      // No recording
+    }).finally(() => {
+      callHistory.unshift(entry);
+      if (callHistory.length > MAX_HISTORY) callHistory.pop();
+      debug('Added call to history:', entry);
+    });
   }
 
   // History Endpoint

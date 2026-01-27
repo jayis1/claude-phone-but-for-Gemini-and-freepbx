@@ -4,6 +4,13 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
+## What's New in v3.2.0
+
++ 📼 **Call Recordings** - Full audio recording of every conversation (Inbound & Outbound).
++ ▶️ **Playback Support** - Play recordings directly from the Mission Control "Recent Calls" UI.
++ 💾 **Persistence** - Data volumes added so logs, recordings, and settings survive restarts.
++ 🚑 **Crash Fixes** - Fixed Mission Control `server.js` startup crash and API history 404s.
+
 ## What's New in v3.0.1
 
 + ⚡ **One-Click Universal Provisioning** - Automated Extension and Outbound Route creation via FreePBX M2M API.
@@ -76,7 +83,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.1.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.2.0/install.sh | bash
 ```
 
 The installer performs the following steps:
