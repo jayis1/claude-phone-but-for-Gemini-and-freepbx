@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-utils \
     python3 \
     python3-pip \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && npm ci --only=production
 

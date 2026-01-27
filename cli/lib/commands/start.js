@@ -341,7 +341,7 @@ async function startBoth(config, isPiMode) {
   // Success
   console.log(chalk.bold.green('\n✓ All services running!\n'));
   console.log(chalk.gray('Services:'));
-  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app`));
+  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app, mission-control, gemini-api-server, inference-server`));
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
