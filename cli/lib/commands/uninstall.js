@@ -222,9 +222,29 @@ export async function uninstallCommand() {
     }
   }
 
+  // Step 5: Remove Docker images (Optional)
+  const { confirmImages } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirmImages',
+      message: 'Remove Docker images and build cache? (Frees up space)',
+      default: false
+    }
+  ]);
+
+  if (confirmImages) {
+    const imageSpinner = ora('Removing Docker images...').start();
+    try {
+      // Remove images
+      await execAsync('docker image rm drachtio/drachtio-server:latest drachtio/drachtio-freeswitch-mrf:latest gemini-phone-voice-app gemini-phone-mission-control gemini-phone-gemini-api-server gemini-phone-inference-server || true');
+      // Prune builder cache
+      await execAsync('docker builder prune -f || true');
+      imageSpinner.succeed('Docker images and cache removed');
+    } catch (error) {
+      imageSpinner.warn(`Partial success removing images: ${error.message}`);
+    }
+  }
+
   console.log(chalk.bold.green('\n✓ Gemini Phone uninstalled\n'));
   console.log(chalk.gray('Thank you for using Gemini Phone! 👋\n'));
-  console.log(chalk.gray('Note: Docker images were not removed. To clean them up, run:'));
-  console.log(chalk.gray('  docker image rm drachtio/drachtio-server:latest'));
-  console.log(chalk.gray('  docker image rm drachtio/drachtio-freeswitch-mrf:latest\n'));
 }

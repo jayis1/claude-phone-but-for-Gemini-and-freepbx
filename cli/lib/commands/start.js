@@ -3,7 +3,7 @@ import ora from 'ora';
 import fs from 'fs';
 import path from 'path';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
-import { checkDocker, writeDockerConfig, startContainers } from '../docker.js';
+import { checkDocker, writeDockerConfig, startContainers, buildContainers } from '../docker.js';
 import { startServer, isServerRunning, startInferenceServer } from '../process-manager.js';
 import { sleep } from '../utils.js';
 
@@ -166,6 +166,17 @@ async function startVoiceServer(config, isPiMode) {
     throw error;
   }
 
+  // Build Docker containers
+  spinner.stop();
+  console.log(chalk.cyan('🔨 Building Docker containers... (this may take a while)'));
+  try {
+    await buildContainers();
+    console.log(chalk.green('✓ Docker containers built'));
+  } catch (error) {
+    console.log(chalk.red(`✗ Failed to build containers: ${error.message}`));
+    throw error;
+  }
+
   // Start Docker containers
   spinner.start('Starting Docker containers...');
   try {
@@ -281,6 +292,17 @@ async function startBoth(config, isPiMode) {
     spinner.succeed('Docker configuration generated');
   } catch (error) {
     spinner.fail(`Failed to generate config: ${error.message}`);
+    throw error;
+  }
+
+  // Build Docker containers
+  spinner.stop();
+  console.log(chalk.cyan('🔨 Building Docker containers... (this may take a while)'));
+  try {
+    await buildContainers();
+    console.log(chalk.green('✓ Docker containers built'));
+  } catch (error) {
+    console.log(chalk.red(`✗ Failed to build containers: ${error.message}`));
     throw error;
   }
 

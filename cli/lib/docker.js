@@ -327,6 +327,37 @@ export async function writeDockerConfig(config) {
 }
 
 /**
+ * Build Docker containers
+ * @returns {Promise<void>}
+ */
+export async function buildContainers() {
+  const configDir = getConfigDir();
+  const dockerComposePath = getDockerComposePath();
+
+  if (!fs.existsSync(dockerComposePath)) {
+    throw new Error('Docker configuration not found. Run "gemini-phone setup" first.');
+  }
+
+  const compose = getComposeCommand();
+  const composeArgs = [...compose.args, '-f', dockerComposePath, 'build'];
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(compose.cmd, composeArgs, {
+      cwd: configDir,
+      stdio: 'inherit' // Show build output directly to user
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Docker build failed (exit ${code})`));
+      }
+    });
+  });
+}
+
+/**
  * Start Docker containers
  * @returns {Promise<void>}
  */
@@ -339,7 +370,8 @@ export async function startContainers() {
   }
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-f', dockerComposePath, 'up', '-d', '--build'];
+  // Removed --build, now handled separately
+  const composeArgs = [...compose.args, '-f', dockerComposePath, 'up', '-d', '--remove-orphans'];
 
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
@@ -375,6 +407,8 @@ export async function startContainers() {
           reject(new Error(`Docker compose failed (exit ${code}): ${output}`));
         }
       }
+    });
+  }
     });
   });
 }
@@ -425,10 +459,11 @@ export async function stopContainers() {
  * @returns {Promise<Array<{name: string, status: string}>>}
  */
 export async function getContainerStatus() {
+  const configDir = getConfigDir();
   const dockerComposePath = getDockerComposePath();
 
   if (!fs.existsSync(dockerComposePath)) {
-    return [];
+    return Promise.resolve([]);
   }
 
   const compose = getComposeCommand();
@@ -436,6 +471,7 @@ export async function getContainerStatus() {
 
   return new Promise((resolve) => {
     const child = spawn(compose.cmd, composeArgs, {
+      cwd: configDir,
       stdio: 'pipe'
     });
 
@@ -447,15 +483,16 @@ export async function getContainerStatus() {
     child.on('close', (code) => {
       if (code === 0) {
         try {
-          // Parse JSON lines (one per container)
           const lines = output.trim().split('\n').filter(l => l);
           const containers = lines.map(line => {
-            const data = JSON.parse(line);
-            return {
-              name: data.Name || data.Service,
-              status: data.State || data.Status
-            };
-          });
+            try {
+              const data = JSON.parse(line);
+              return {
+                name: data.Name || data.Service,
+                status: data.State || data.Status
+              };
+            } catch (e) { return null; }
+          }).filter(c => c);
           resolve(containers);
         } catch (error) {
           resolve([]);
