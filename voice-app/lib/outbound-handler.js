@@ -58,8 +58,8 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const phoneNumber = to;
     const sipTrunkHost = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN || '127.0.0.1';
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
-    const fallbackCallerId = process.env.SIP_EXTENSION || '9000';
-    const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || fallbackCallerId;
+    const extensionNumber = process.env.SIP_EXTENSION || '9000';
+    const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || extensionNumber;
 
     // SIP Authentication
     const sipAuthUsername = process.env.SIP_AUTH_ID || process.env.SIP_EXTENSION;
@@ -74,9 +74,10 @@ async function initiateOutboundCall(srf, mediaServer, options) {
       hasAuth: !!(sipAuthUsername && sipAuthPassword)
     });
 
-    // Use device extension and display name if available, otherwise fall back to SIP_EXTENSION or callerId
-    const fromExtension = deviceConfig ? deviceConfig.extension : defaultCallerId.replace('+', '');
-    const displayName = deviceConfig ? deviceConfig.name : null;
+    // For authentication to succeed, the From user MUST match the extension we registered as.
+    // We send the actual Caller ID via P-Asserted-Identity or Remote-Party-ID.
+    const fromExtension = deviceConfig ? deviceConfig.extension : extensionNumber;
+    const displayName = deviceConfig ? deviceConfig.name : (defaultCallerId !== extensionNumber ? defaultCallerId : null);
     const fromHeader = displayName
       ? '"' + displayName + '" <sip:' + fromExtension + '@' + sipTrunkHost + '>'
       : '<sip:' + fromExtension + '@' + sipTrunkHost + '>';
@@ -85,6 +86,8 @@ async function initiateOutboundCall(srf, mediaServer, options) {
       localSdp: localSdp,
       headers: {
         'From': fromHeader,
+        'P-Asserted-Identity': `<sip:${defaultCallerId.replace('+', '')}@${sipTrunkHost}>`,
+        'Remote-Party-ID': `<sip:${defaultCallerId.replace('+', '')}@${sipTrunkHost}>;party=calling;screen=yes;privacy=off`,
         'User-Agent': 'NetworkChuck-VoiceServer/1.0',
         'X-Call-ID': callId
       }
