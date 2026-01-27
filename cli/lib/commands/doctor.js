@@ -187,7 +187,7 @@ async function checkStoragePermissions() {
     const absPath = path.resolve(getConfigDir(), dir.path.replace('./', ''));
     try {
       if (!fs.existsSync(absPath)) {
-        result.push({ name: dir.name, passed: false, error: 'Directory missing' });
+        result.push({ name: dir.name, passed: false, error: `Directory missing: ${absPath}` });
         continue;
       }
       fs.accessSync(absPath, fs.constants.W_OK);
@@ -233,7 +233,8 @@ async function checkNetworkConfig(configIp) {
  * @returns {Promise<void>}
  */
 export async function doctorCommand() {
-  console.log(chalk.bold.cyan('\n🔍 Gemini Phone Health Check\n'));
+  const pkg = JSON.parse(fs.readFileSync(path.join(getConfigDir(), '../package.json'), 'utf8'));
+  console.log(chalk.bold.cyan(`\n🔍 Gemini Phone Health Check v${pkg.version || 'unknown'}\n`));
 
   if (!configExists()) {
     console.log(chalk.red('✗ Not configured'));
@@ -559,7 +560,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
     for (const f of storageFailed) {
       console.log(chalk.gray(`  → ${f.name}: ${f.error}`));
     }
-    console.log(chalk.gray('  → Fix permissions with: sudo chown -R $USER:$USER data/\n'));
+    console.log(chalk.gray(`  → Fix permissions with: sudo chown -R $USER:$USER ${getConfigDir()}/data/\n`));
   }
   checks.push({ name: 'Storage Permissions', passed: storageFailed.length === 0 });
 
