@@ -2245,6 +2245,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.2]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.3]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

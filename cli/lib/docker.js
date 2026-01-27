@@ -87,25 +87,18 @@ export async function checkDocker() {
  * @returns {string} Docker compose YAML content
  */
 export function generateDockerCompose(config) {
-  const externalIp = config.server.externalIp === 'auto' ? '${EXTERNAL_IP}' : config.server.externalIp;
-
   // Ensure secrets exist in config
   if (!config.secrets) {
     config.secrets = {
-      drachtio: generateSecret(),
-      freeswitch: generateSecret()
+      drachtio: 'cymru',
+      freeswitch: 'cymru'
     };
   }
 
-  // Determine drachtio port from config (universal or legacy)
-  const drachtioPort = (config.sip && config.sip.port)
-    ? config.sip.port
-    : (config.deployment && config.deployment.pi && (config.deployment.pi.sipConflict || config.deployment.pi.drachtioPort === 5070)
-      ? 5070
-      : 5060);
+  // Determine drachtio port from config
+  const drachtioPort = (config.sip && config.sip.port) ? config.sip.port : 5060;
 
-
-  // Determine if running on Pi (ARM64) - use specific versions with platform
+  // Determine platforms and images
   const isPiMode = config.deployment && config.deployment.mode === 'pi-split';
   const drachtioImage = isPiMode ? 'drachtio/drachtio-server:0.9.4' : 'drachtio/drachtio-server:latest';
   const freeswitchImage = 'drachtio/drachtio-freeswitch-mrf:latest';
@@ -149,7 +142,7 @@ export function generateDockerCompose(config) {
     command: >
       drachtio
       --contact "sip:*:${drachtioPort};transport=tcp,udp"
-      --secret \${DRACHTIO_SECRET}
+      --secret \${DRACHTIO_SECRET:-cymru}
       --port 9022
       --loglevel info
 
@@ -163,9 +156,11 @@ export function generateDockerCompose(config) {
       --sip-port 5080
       --rtp-range-start 30000
       --rtp-range-end 30100
-    # RTP ports 30000-30100 avoid conflict with standard PBX systems (e.g. 20000-20099)
+      --ext-rtp-ip \${EXTERNAL_IP:-127.0.0.1}
+      --ext-sip-ip \${EXTERNAL_IP:-127.0.0.1}
+      --advertise-external-ip
     volumes:
-      - \${getConfigDir()}/recordings:/app/recordings
+      - ${getConfigDir()}/recordings:/app/recordings
     environment:
       - EXTERNAL_IP=\${EXTERNAL_IP:-127.0.0.1}
 
@@ -175,34 +170,14 @@ export function generateDockerCompose(config) {
     restart: unless-stopped
     network_mode: host
     env_file:
-      - ${getEnvPath()}
+      - .env
     volumes:
       - ${config.paths.voiceApp}/audio:/app/audio
       - ${config.paths.voiceApp}/config:/app/config
       - ${getConfigDir()}/recordings:/app/recordings
     depends_on:
       - drachtio
-      - freeswitch
-${getGpuSnippet(gpuVendor)}
-
-  mission-control:
-    build: ${path.resolve(config.paths.geminiApiServer, '../mission-control')}
-    container_name: mission-control
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - ${getEnvPath()}
-    volumes:
-      - ${getConfigDir()}/mission-control/data:/app/data
-      - ${getEnvPath()}:/app/.env
-    environment:
-      - PORT=3030
-      - VOICE_APP_URL=http://localhost:${config.server.httpPort || 3000}
-      - API_SERVER_URL=http://localhost:${config.server.geminiApiPort}
-      - INFERENCE_URL=http://localhost:${config.server.inferencePort || 4000}
-      - GEMINI_API_KEY=\${GEMINI_API_KEY}
-      - MISSION_CONTROL_GEMINI_KEY=\${MISSION_CONTROL_GEMINI_KEY}
-      - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
+      - freeswitch`);
   }
 
   // Brain & Hands (Inference & API Servers)
@@ -216,10 +191,10 @@ ${getGpuSnippet(gpuVendor)}
     restart: unless-stopped
     network_mode: host
     env_file:
-      - ${getEnvPath()}
+      - .env
     environment:
       - PORT=${config.server.inferencePort || 4000}
-      - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort}
+      - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort || 3333}
       - GEMINI_API_KEY=\${GEMINI_API_KEY}
       - GPU_VENDOR=${gpuVendor}
 ${getGpuSnippet(gpuVendor)}
@@ -232,14 +207,31 @@ ${getGpuSnippet(gpuVendor)}
     volumes:
       - /root/.gemini:/root/.gemini
     env_file:
-      - ${getEnvPath()}
+      - .env
     environment:
-      - PORT=${config.server.geminiApiPort}
+      - PORT=${config.server.geminiApiPort || 3333}
       - GEMINI_API_KEY=\${GEMINI_API_KEY}
-      - PAI_DIR=/root/.gemini`);
+      - PAI_DIR=/root/.gemini
+
+  mission-control:
+    build: ${path.resolve(apiPath, '../mission-control')}
+    container_name: mission-control
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - ${getConfigDir()}/mission-control/data:/app/data
+      - .env:/app/.env
+    environment:
+      - PORT=3030
+      - VOICE_APP_URL=http://localhost:3000
+      - API_SERVER_URL=http://localhost:3333
+      - INFERENCE_URL=http://localhost:4000
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+      - MISSION_CONTROL_GEMINI_KEY=\${MISSION_CONTROL_GEMINI_KEY}
+      - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
   }
-
-
 
   return `# CRITICAL: All containers must use network_mode: host
 # Docker bridge networking causes FreeSWITCH to advertise internal IPs
