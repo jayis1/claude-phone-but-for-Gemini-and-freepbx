@@ -242,7 +242,7 @@ srf.on("error", function (err) {
 function connectToFreeswitch() {
   const mrf = new Mrf(srf);
   return mrf.connect({
-    host: config.freeswitch.host,
+    address: config.freeswitch.host,
     port: config.freeswitch.port,
     secret: config.freeswitch.secret
   });

@@ -1408,7 +1408,7 @@ async function setupOutbound(config) {
     {
       type: 'input',
       name: 'callerId',
-      message: 'Default Caller ID (e.g., +155512.4.87):',
+      message: 'Default Caller ID (e.g., +155512.4.97):',
       default: config.outbound?.callerId || '',
       validate: (input) => {
         // Optional, but if provided should look like a number
