@@ -192,6 +192,15 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     // Handle specific SIP error codes
     if (error.status) {
       const status = error.status;
+
+      // Specifically check for Q.850 Cause 34 (No circuit/channel available)
+      // This is almost always an Outbound Route issue in FreePBX
+      if (error.message && error.message.includes('cause=34')) {
+        logger.error('CRITICAL SIP ERROR: No path to destination (Cause 34)');
+        logger.error('SOLUTION: Check your FreePBX "Outbound Routes". Ensure a route exists that matches this number pattern and points to a Trunk.');
+        throw new Error('no_route_to_destination');
+      }
+
       if (status === 486) {
         throw new Error('busy');
       } else if (status === 480 || status === 408) {

@@ -733,7 +733,8 @@ function createDefaultConfig() {
     outbound: {
       callerId: '',
       ringTimeout: 30,
-      maxTurns: 10
+      maxTurns: 10,
+      dialPrefix: ''
     },
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
@@ -1347,6 +1348,18 @@ async function setupOutbound(config) {
     },
     {
       type: 'input',
+      name: 'dialPrefix',
+      message: 'Dial Prefix (e.g., 00 or + for Denmark):',
+      default: config.outbound?.dialPrefix || '',
+      validate: (input) => {
+        if (input && !/^[0-9+]+$/.test(input)) {
+          return 'Invalid prefix format (only digits and + allowed)';
+        }
+        return true;
+      }
+    },
+    {
+      type: 'input',
       name: 'testPhoneNumber',
       message: 'Admin/Testing Phone Number (e.g., +45314265xx):',
       default: config.outbound?.testPhoneNumber || '',
@@ -1364,6 +1377,7 @@ async function setupOutbound(config) {
     callerId: answers.callerId,
     ringTimeout: parseInt(answers.ringTimeout, 10),
     maxTurns: parseInt(answers.maxTurns, 10),
+    dialPrefix: answers.dialPrefix,
     testPhoneNumber: answers.testPhoneNumber
   };
 

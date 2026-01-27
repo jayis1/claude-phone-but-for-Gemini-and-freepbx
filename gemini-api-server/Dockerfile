@@ -13,6 +13,7 @@ COPY package.json ./
 
 # Install express (the only dependency for the wrapper)
 # We assume npm is available since Gemini CLI is a Node.js tool
+RUN npm install -g @google/gemini-cli
 RUN npm install
 
 # Copy application code

@@ -71,20 +71,9 @@ function buildGeminiEnvironment() {
     }
   }
 
-  // Build PATH like zsh profile does
+  // Build PATH for containerized execution
   const fullPath = [
-    '/opt/homebrew/bin',
-    '/opt/homebrew/opt/python@3.12/bin',
-    '/opt/homebrew/opt/libpq/bin',
-    path.join(HOME, '.bun/bin'),
     path.join(HOME, '.local/bin'),
-    path.join(HOME, '.pyenv/bin'),
-    path.join(HOME, '.pyenv/shims'),
-    path.join(HOME, 'go/bin'),
-    '/usr/local/go/bin',
-    path.join(HOME, 'bin'),
-    path.join(HOME, '.lmstudio/bin'),
-    path.join(HOME, '.opencode/bin'),
     '/usr/local/bin',
     '/usr/bin',
     '/bin',
