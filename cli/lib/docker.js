@@ -264,7 +264,7 @@ export function generateEnvFile(config) {
     'DRACHTIO_PORT=9022',
     `DRACHTIO_SECRET=${config.secrets.drachtio}`,
     // SIP port for Contact header (5070 when SIP conflict is present, 5060 otherwise)
-    `DRACHTIO_SIP_PORT=${config.deployment?.pi?.drachtioPort || 5060}`,
+    `DRACHTIO_SIP_PORT=${config.sip?.port || config.deployment?.pi?.drachtioPort || 5060}`,
     '',
     '# FreeSWITCH Configuration',
     'FREESWITCH_HOST=127.0.0.1',
