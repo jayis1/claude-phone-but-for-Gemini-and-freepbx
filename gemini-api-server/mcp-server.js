@@ -42,7 +42,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 description: "Initiate a physical phone call via PBX system (FreePBX/Asterisk). Use this to call real phone numbers or extensions.",
                 inputSchema: zodToJSONSchema(
                     z.object({
-                        to: z.string().describe("The phone number (E.164 format, e.g. +155512.5.07) or extension (e.g. 100) to call"),
+                        to: z.string().describe("The phone number (E.164 format, e.g. +155512.5.17) or extension (e.g. 100) to call"),
                         message: z.string().describe("The first sentence the AI should say when the person answers"),
                         mode: z.enum(["conversation", "announce"]).default("conversation").describe("'conversation' for two-way AI chat, 'announce' for one-way message"),
                     })

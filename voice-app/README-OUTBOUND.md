@@ -20,7 +20,7 @@ Initiate an outbound call.
 
 ```json
 {
-  "to": "+155512.5.07",
+  "to": "+155512.5.17",
   "message": "Hello from your server",
   "mode": "announce",
   "device": "Morpheus",
@@ -61,7 +61,7 @@ Get status of a specific call.
 {
   "success": true,
   "callId": "abc123-uuid",
-  "to": "+155512.5.07",
+  "to": "+155512.5.17",
   "state": "completed",
   "mode": "announce",
   "createdAt": "2025-01-01T12:00:00.000Z",
@@ -122,7 +122,7 @@ Plays the message and hangs up:
 curl -X POST http://localhost:3000/api/outbound-call \
   -H "Content-Type: application/json" \
   -d '{
-    "to": "+155512.5.07",
+    "to": "+155512.5.17",
     "message": "Alert: Your server storage is at 95 percent."
   }'
 ```
@@ -135,7 +135,7 @@ Plays the message, then allows back-and-forth conversation:
 curl -X POST http://localhost:3000/api/outbound-call \
   -H "Content-Type: application/json" \
   -d '{
-    "to": "+155512.5.07",
+    "to": "+155512.5.17",
     "message": "Alert: Your server storage is at 95 percent. Would you like me to clean up old logs?",
     "mode": "conversation",
     "device": "Morpheus"
@@ -150,7 +150,7 @@ If `webhookUrl` is provided, POST requests are sent on state changes:
 {
   "callId": "abc123-uuid",
   "state": "completed",
-  "to": "+155512.5.07",
+  "to": "+155512.5.17",
   "duration": 15,
   "timestamp": "2025-01-01T12:00:15.678Z"
 }
@@ -193,7 +193,7 @@ When a call fails, the `reason` field indicates why:
 curl -X POST http://localhost:3000/api/outbound-call \
   -H "Content-Type: application/json" \
   -d '{
-    "to": "+155512.5.07",
+    "to": "+155512.5.17",
     "message": "Your backup job completed successfully."
   }'
 ```
@@ -204,7 +204,7 @@ curl -X POST http://localhost:3000/api/outbound-call \
 curl -X POST http://localhost:3000/api/outbound-call \
   -H "Content-Type: application/json" \
   -d '{
-    "to": "+155512.5.07",
+    "to": "+155512.5.17",
     "message": "Server alert: High CPU usage detected.",
     "webhookUrl": "https://n8n.example.com/webhook/call-status"
   }'
@@ -230,7 +230,7 @@ rest_command:
     url: "http://VOICE_SERVER:3000/api/outbound-call"
     method: POST
     content_type: "application/json"
-    payload: '{"to": "+155512.5.07", "message": "{{ message }}"}'
+    payload: '{"to": "+155512.5.17", "message": "{{ message }}"}'
 ```
 
 ### n8n Workflow: Automated Alert System
@@ -301,7 +301,7 @@ Body (JSON):
 
 ```bash
 #!/bin/bash
-PHONE="+155512.5.07"
+PHONE="+155512.5.17"
 MESSAGE="Disk space critical on server1"
 
 curl -s -X POST http://localhost:3000/api/outbound-call \
