@@ -4,10 +4,11 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.3.4
+## What's New in v2.3.5
 
-+ 🏗️ **Self-Contained AI Stack** - Gemini CLI integrated directly into API Server Docker.
-+ 🌍 **Global Redspot Denmark Fix** - Added `DIAL_PREFIX` to setup wizard for universal connectivity.
++ 🎮 **Universal GPU Support** - Added NVIDIA (NVENC) and AMD (ROCm) hardware acceleration.
++ 🔇 **Silent Build Mode** - Hidden Docker build/pull logs for a cleaner terminal.
++ 🇩🇰 **Global Redspot Denmark Fix** - Enhanced prefix and SIP routing for universal connectivity.
 + 🛠️ **Advanced Web Orchestration** - Every .env variable now manageable via UI.
 
 + ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
@@ -76,7 +77,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.4/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.5/install.sh | bash
 ```
 
 The installer performs the following steps:

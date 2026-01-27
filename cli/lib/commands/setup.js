@@ -462,11 +462,23 @@ async function setupVoiceServer(config) {
         }
         return true;
       }
+    },
+    {
+      type: 'list',
+      name: 'gpuVendor',
+      message: 'Hardware Acceleration (GPU):',
+      default: config.server.gpuVendor || 'none',
+      choices: [
+        { name: 'None (CPU only)', value: 'none' },
+        { name: 'NVIDIA GPU (NVENC/CUDA)', value: 'nvidia' },
+        { name: 'AMD GPU (ROCm/OpenCL)', value: 'amd' }
+      ]
     }
   ]);
 
   config.server.externalIp = serverAnswers.externalIp;
   config.server.httpPort = parseInt(serverAnswers.httpPort, 10);
+  config.server.gpuVendor = serverAnswers.gpuVendor;
 
   return config;
 }
@@ -723,7 +735,8 @@ function createDefaultConfig() {
       inferencePort: 4000,
       missionControlPort: 3030,
       httpPort: 3000,
-      externalIp: 'auto'
+      externalIp: 'auto',
+      gpuVendor: 'none'
     },
     secrets: {
       drachtio: generateSecret(),

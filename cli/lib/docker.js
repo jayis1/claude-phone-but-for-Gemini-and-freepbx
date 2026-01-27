@@ -112,7 +112,32 @@ export function generateDockerCompose(config) {
   const platformLine = isPiMode ? '\n    platform: linux/arm64' : '';
 
   const installationType = config.installationType || 'both';
+  const gpuVendor = config.server.gpuVendor || 'none';
   const services = [];
+
+  // GPU Helper snippets
+  const getNvidiaSnippet = () => `
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]`;
+
+  const getAmdSnippet = () => `
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render`;
+
+  const getGpuSnippet = (vendor) => {
+    if (vendor === 'nvidia') return getNvidiaSnippet();
+    if (vendor === 'amd') return getAmdSnippet();
+    return '';
+  };
 
   // Voice services (drachtio, freeswitch, voice-app)
   if (installationType === 'voice-server' || installationType === 'both') {
@@ -154,7 +179,7 @@ export function generateDockerCompose(config) {
       - ${config.paths.voiceApp}/config:/app/config
     depends_on:
       - drachtio
-      - freeswitch
+      - freeswitch${getGpuSnippet(gpuVendor)}
 
   mission-control:
     build: ${path.resolve(config.paths.geminiApiServer, '../mission-control')}
@@ -191,7 +216,7 @@ export function generateDockerCompose(config) {
     environment:
       - PORT=${config.server.inferencePort || 4000}
       - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort}
-      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}${getGpuSnippet(gpuVendor)}
 
   gemini-api-server:
     build: ${apiPath}
