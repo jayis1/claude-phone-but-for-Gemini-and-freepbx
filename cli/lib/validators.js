@@ -129,12 +129,14 @@ export function validateExtension(extension) {
  * @returns {boolean} True if valid
  */
 export function validateIP(ip) {
+  if (typeof ip !== 'string') return false;
+  const trimmedIp = ip.trim();
   const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  if (!ipv4Regex.test(ip)) {
+  if (!ipv4Regex.test(trimmedIp)) {
     return false;
   }
 
-  const parts = ip.split('.');
+  const parts = trimmedIp.split('.');
   return parts.every(part => {
     const num = parseInt(part, 10);
     return num >= 0 && num <= 255;
@@ -147,8 +149,10 @@ export function validateIP(ip) {
  * @returns {boolean} True if valid
  */
 export function validateHostname(hostname) {
+  if (typeof hostname !== 'string') return false;
+  const trimmedHostname = hostname.trim();
   const hostnameRegex = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
-  return hostnameRegex.test(hostname);
+  return hostnameRegex.test(trimmedHostname);
 }
 
 /**
