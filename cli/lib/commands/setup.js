@@ -1344,14 +1344,29 @@ async function setupOutbound(config) {
         }
         return true;
       }
+    },
+    {
+      type: 'input',
+      name: 'testPhoneNumber',
+      message: 'Admin/Testing Phone Number (e.g., +45314265xx):',
+      default: config.outbound?.testPhoneNumber || '',
+      validate: (input) => {
+        if (!input || input.trim() === '') return 'Testing number is required for the dashboard "Test Call" button';
+        if (!/^\+?[0-9]{10,15}$/.test(input)) {
+          return 'Invalid phone number format (E.164 preferred)';
+        }
+        return true;
+      }
     }
   ]);
 
   config.outbound = {
     callerId: answers.callerId,
     ringTimeout: parseInt(answers.ringTimeout, 10),
-    maxTurns: parseInt(answers.maxTurns, 10)
+    maxTurns: parseInt(answers.maxTurns, 10),
+    testPhoneNumber: answers.testPhoneNumber
   };
+
 
   return config;
 }

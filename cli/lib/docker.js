@@ -302,6 +302,7 @@ export function generateEnvFile(config) {
     `DEFAULT_CALLER_ID=${config.outbound?.callerId || ''}`,
     `MAX_CONVERSATION_TURNS=${config.outbound?.maxTurns || 10}`,
     `OUTBOUND_RING_TIMEOUT=${config.outbound?.ringTimeout || 30}`,
+    `TEST_PHONE_NUMBER=${config.outbound?.testPhoneNumber || ''}`,
     ''
   ];
 

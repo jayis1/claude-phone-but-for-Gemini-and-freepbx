@@ -5,11 +5,13 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies and Python
+RUN apk add --no-cache python3 py3-pip make g++ && \
+    npm ci --only=production
 
 # Copy application files
 COPY server.js ./
+COPY python/ ./python/
 
 # Expose port
 EXPOSE 4000

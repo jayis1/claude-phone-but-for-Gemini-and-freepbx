@@ -66,6 +66,36 @@ app.get('/top', (req, res) => {
   res.send(generateTopPage());
 });
 
+app.get('/api/config-info', (req, res) => {
+  res.json({
+    testPhoneNumber: process.env.TEST_PHONE_NUMBER || ''
+  });
+});
+
+app.post('/api/test-call', async (req, res) => {
+  const number = process.env.TEST_PHONE_NUMBER;
+  if (!number) {
+    return res.status(400).json({ error: 'No test phone number configured in .env' });
+  }
+
+  try {
+    const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+    const response = await fetch(`${VOICE_APP_URL}/api/outbound-call`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        number: number,
+        prompt: "This is a test call from Mission Control. Confirm that you can hear me and then give a status report on the current system health."
+      })
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to trigger test call: ${error.message}` });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -149,6 +179,36 @@ app.get('/', (req, res) => {
             background: var(--error);
           box-shadow: 0 0 8px var(--error);
           }
+          .test-call-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+          }
+          .test-call-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+          }
+          .test-call-btn:active {
+            transform: translateY(0);
+          }
+          .test-call-btn.calling {
+            background: #18181b;
+            border: 1px solid var(--accent);
+            cursor: wait;
+            opacity: 0.8;
+          }
+
           .grid {
             flex: 1;
           display: grid;
@@ -347,16 +407,12 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.69
-
-
-
-
-
-
-
-
+            MISSION CONTROL v2.2.70
+          </div>
             <div style="display:flex; gap:10px; margin-left: 20px;">
+              <button onclick="triggerTestCall()" id="testBtn" style="padding: 4px 10px; background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
+                <span>📞</span> <span id="testBtnText">Test AI Call</span>
+              </button>
               <button id="update-btn" onclick="checkForUpdates()" style="padding: 4px 10px; background: #3b82f6; color: white; -webkit-text-fill-color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;">
                 <span id="update-dot" style="width: 8px; height: 8px; background: #a1a1aa; border-radius: 50%; transition: all 0.3s ease;"></span>
                 <span>🔄</span> Update <span id="update-ver" style="opacity:0.7; font-size:0.75rem;">(Checking...)</span>
@@ -367,7 +423,7 @@ app.get('/', (req, res) => {
                 </button>
               </a>
             </div>
-          </div>
+
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
             <a href="/setup-freepbx" style="text-decoration:none;">
               <span style="font-size:0.8rem; color:var(--text-dim); border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#8b5cf6'; this.style.color='#fff'" onmouseout="this.style.borderColor='#3f3f46'; this.style.color='var(--text-dim)'">
@@ -1150,6 +1206,45 @@ app.get('/', (req, res) => {
           setInterval(silentUpdateCheck, 60000);
 
           updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
+
+          async function triggerTestCall() {
+            const btn = document.getElementById('testBtn');
+            const btnText = document.getElementById('testBtnText');
+            
+            if (btn.innerText.includes('Calling')) return;
+
+            try {
+              const cRes = await fetch('/api/config-info');
+              const config = await cRes.json();
+              
+              if (!config.testPhoneNumber) {
+                alert('No Admin/Testing Phone Number configured. Please run "gemini-phone setup" to add one.');
+                return;
+              }
+
+              if (!confirm('Initiate test AI call to ' + config.testPhoneNumber + '?')) return;
+
+              btn.style.opacity = '0.7';
+              btnText.innerText = 'Calling...';
+
+              const response = await fetch('/api/test-call', { method: 'POST' });
+              const data = await response.json();
+
+              if (data.success || data.callId) {
+                btnText.innerText = 'Call Triggered!';
+                setTimeout(() => {
+                  btn.style.opacity = '1';
+                  btnText.innerText = 'Test AI Call';
+                }, 3000);
+              } else {
+                throw new Error(data.error || 'Failed to trigger call');
+              }
+            } catch (err) {
+              alert('Error: ' + err.message);
+              btn.style.opacity = '1';
+              btnText.innerText = 'Test AI Call';
+            }
+          }
         </script>
       </body>
     </html>
