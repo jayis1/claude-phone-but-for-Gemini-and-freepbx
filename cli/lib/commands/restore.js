@@ -7,7 +7,7 @@ import { getConfigPath, getConfigDir } from '../config.js';
 
 /**
  * Get the backups directory path
- * @returns {string} Path to ~/.claude-phone/backups
+ * @returns {string} Path to ~/.gemini-phone/backups
  */
 function getBackupsDir() {
   return path.join(getConfigDir(), 'backups');

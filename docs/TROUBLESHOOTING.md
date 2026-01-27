@@ -349,7 +349,7 @@ cat ~/.gemini-phone/api-server.log
 
 1. **Check the video tutorial:** [youtu.be/cT22fTzotYc](https://youtu.be/cT22fTzotYc) covers common setup issues
 2. **Run full diagnostics:** `<gemini-phone doctor`
-3. **Open an issue:** [github.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/issues](https://github.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/issues)
+3. **Open an issue:** [github.com/jayis1/gemini-phone-but-for-Gemini-and-freepbx/issues](https://github.com/jayis1/gemini-phone-but-for-Gemini-and-freepbx/issues)
 
 When opening an issue, include:
 

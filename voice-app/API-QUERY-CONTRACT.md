@@ -80,7 +80,7 @@ Directly queries a device personality with a text prompt and receives a text or 
   },
   "meta": {
     "duration_ms": 1450,
-    "model": "claude-3-opus"
+    "model": "gemini-3-opus"
   }
 }
 ```

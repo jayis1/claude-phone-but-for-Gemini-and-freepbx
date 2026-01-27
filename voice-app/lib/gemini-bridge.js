@@ -62,12 +62,12 @@ async function query(prompt, options = {}) {
     // AC27: Timeout with helpful error message
     if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
       console.error(`[${timestamp}] GEMINI Timeout after ${timeout} seconds`);
-      return "I'm sorry, that request took too long. This might mean the API server is slow or there's a network issue. Try asking something simpler, or check that claude-phone api-server is running.";
+      return "I'm sorry, that request took too long. This might mean the API server is slow or there's a network issue. Try asking something simpler, or check that gemini-phone api-server is running.";
     }
 
     console.error(`[${timestamp}] GEMINI Error:`, error.message);
     // AC26: Don't crash on unknown errors, return friendly message
-    return "I encountered an unexpected error. Please check that the API server is running claude-phone api-server and is on the same network.";
+    return "I encountered an unexpected error. Please check that the API server is running gemini-phone api-server and is on the same network.";
   }
 }
 

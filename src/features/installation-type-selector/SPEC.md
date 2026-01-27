@@ -25,7 +25,7 @@ Currently, `<gemini-phone> setup` always asks all questions, which is confusing 
 | Type | What it installs | Questions to ask |
 |------|------------------|------------------|
 | **Voice Server** | Docker containers (drachtio, FreeSWITCH, voice-app) | FreePBX FQDN, API server IP, ElevenLabs key, OpenAI key, device config |
-| **API Server** | claude-api-server process | Gemini API port (default 3333), that's it |
+| **API Server** | gemini-api-server process | Gemini API port (default 3333), that's it |
 | **Both** | Everything | All questions (current behavior) |
 
 ### Prerequisite Requirements by Type
@@ -52,7 +52,7 @@ Currently, `<gemini-phone> setup` always asks all questions, which is confusing 
 - [ ] Ask: OpenAI API key
 - [ ] Ask: Device configuration (extension, voice, prompt)
 - [ ] Generate Docker config and .env
-- [ ] Don't create/manage claude-api-server
+- [ ] Don't create/manage gemini-api-server
 
 ### AC3: API Server Flow
 - [ ] Skip SIP/FreePBX configuration
@@ -163,7 +163,7 @@ Voice servers can connect to: http://YOUR_IP:3333
   "installationType": "voice-server",
   "server": {
     "httpPort": 3000,
-    "claudeApiPort": 3333,
+    "geminiApiPort": 3333,
     "externalIp": "auto"
   },
   "sip": { ... },

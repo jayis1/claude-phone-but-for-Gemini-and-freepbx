@@ -89,7 +89,7 @@
 - [x] **Implement**: Config existence check
 - [x] **Test**: start command launches Docker containers
 - [x] **Implement**: Docker startup with status output [AC-20]
-- [x] **Test**: start command launches claude-api-server
+- [x] **Test**: start command launches gemini-api-server
 - [x] **Implement**: API server startup with PID tracking
 - [x] **Test**: start command shows final status
 - [x] **Implement**: Status summary after startup [AC-19]
@@ -98,7 +98,7 @@
 
 - [x] **Test**: stop command stops Docker containers
 - [x] **Implement**: Docker shutdown
-- [x] **Test**: stop command stops claude-api-server via PID
+- [x] **Test**: stop command stops gemini-api-server via PID
 - [x] **Implement**: API server shutdown [AC-21]
 - [x] **Test**: stop command handles already-stopped state gracefully
 
@@ -262,7 +262,7 @@ All must pass before shipping.
 
 - [x] Update README.md with installation instructions
 - [x] Update README.md with CLI command reference
-- [x] Update CLAUDE.md with CLI architecture
+- [x] Update GEMINI.md with CLI architecture
 - [x] Add CHANGELOG.md entry (in commit messages)
 
 ---

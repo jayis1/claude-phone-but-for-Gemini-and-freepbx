@@ -7,7 +7,7 @@ Command-line interface for Gemini Phone. Single-command setup and management.
 ### One-Line Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.3/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.0/install.sh | bash
 ```
 
 ### Manual Install
@@ -92,7 +92,7 @@ On Raspberry Pi, the setup wizard:
 gemini-phone setup              # Interactive configuration wizard
 gemini-phone setup --skip-prereqs   # Skip prerequisite checks
 gemini-phone config show        # Display config (secrets redacted)
-gemini-phone config path        # Show config file location (~/.claude-phone/config.json)
+gemini-phone config path        # Show config file location (~/.gemini-phone/config.json)
 gemini-phone config reset       # Reset config (creates backup first)
 ```
 

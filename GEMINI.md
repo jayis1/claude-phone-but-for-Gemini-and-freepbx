@@ -6,7 +6,7 @@ Voice interface for Gemini Code via SIP/FreePBX. Call your AI, and your AI can c
 
 Gemini Phone gives your Gemini Code installation a phone number through FreePBX PBX integration:
 
-- **Inbound**: Call an extension and talk to Claude - run commands, check status, ask questions
+- **Inbound**: Call an extension and talk to Gemini - run commands, check status, ask questions
 - **Outbound**: Your server can call YOU with alerts, then have a conversation about what to do
 
 ## Tech Stack
@@ -155,7 +155,7 @@ gemini-phone/
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.6/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.0/install.sh | bash
 
 # Setup and run
 gemini-phone setup    # Interactive configuration

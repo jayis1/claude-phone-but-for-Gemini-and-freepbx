@@ -60,7 +60,7 @@ function getProjectRoot() {
 async function fetchLatestRelease() {
   try {
     const response = await fetch(
-      'https://api.github.com/repos/jayis1/claude-phone-but-for-Gemini-and-freepbx/releases/latest',
+      'https://api.github.com/repos/jayis1/gemini-phone-but-for-Gemini-and-freepbx/releases/latest',
       {
         headers: {
           'User-Agent': 'gemini-phone-cli',
@@ -161,7 +161,7 @@ function showManualInstructions(release) {
   console.log(chalk.bold('   cp ~/.gemini-phone/config.json ~/config.json.backup\n'));
 
   console.log(chalk.gray('3. Run the installer:'));
-  console.log(chalk.bold('   curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.2/install.sh | bash\n'));
+  console.log(chalk.bold('   curl -sSL https://raw.githubusercontent.com/jayis1/gemini-phone-but-for-Gemini-and-freepbx/v2.3.2/install.sh | bash\n'));
 
   console.log(chalk.gray('4. Start services:'));
   console.log(chalk.bold('   gemini-phone start\n'));
@@ -200,7 +200,7 @@ export async function updateCommand() {
       showManualInstructions(release);
     } catch (error) {
       console.log(chalk.red(`\n✗ ${error.message}\n`));
-      console.log(chalk.gray('Visit https://github.com/jayis1/claude-phone-but-for-Gemini-and-freepbx for manual update\n'));
+      console.log(chalk.gray('Visit https://github.com/jayis1/gemini-phone-but-for-Gemini-and-freepbx for manual update\n'));
     }
   }
 }

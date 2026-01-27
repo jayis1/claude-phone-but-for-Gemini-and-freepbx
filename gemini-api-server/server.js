@@ -123,7 +123,7 @@ console.log('[STARTUP] API keys loaded:', apiKeys.join(', '));
 const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
 console.log(`[STARTUP] Voice App URL: ${VOICE_APP_URL}`);
 
-// Session storage: callId -> claudeSessionId
+// Session storage: callId -> geminiSessionId
 const sessions = new Map();
 
 // Model selection - Sonnet for balanced speed/quality
@@ -136,7 +136,7 @@ const GEMINI_MODELS = [
 let GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
 
 function parseGeminiStdout(stdout) {
-  // Claude Code CLI may output JSONL; when it does, extract the `result` message.
+  // Gemini Code CLI may output JSONL; when it does, extract the `result` message.
   // Otherwise, fall back to raw stdout.
   let response = '';
   let sessionId = null;

@@ -271,7 +271,7 @@ Verify before writing any code.
 
 ### AC26: Mac unreachable during call
 
-- [ ] voice-app: Add timeout handling for claude-api-server requests
+- [ ] voice-app: Add timeout handling for gemini-api-server requests
 - [ ] Play error message to caller: "I'm having trouble connecting. Please try again later."
 - [ ] Don't crash on connection failure
 
@@ -317,7 +317,7 @@ Must complete on actual hardware.
 
 ## Documentation
 
-- [ ] CLAUDE.md updated with Pi deployment section
+- [ ] GEMINI.md updated with Pi deployment section
 - [ ] README.md updated with Pi setup instructions
 - [ ] Add `RASPBERRY-PI.md` deployment guide
 - [ ] Code comments for non-obvious logic

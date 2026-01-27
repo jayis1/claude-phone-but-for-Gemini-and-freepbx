@@ -4,7 +4,7 @@ module.exports = [
     ignores: [
       'node_modules/**',
       'voice-app/node_modules/**',
-      'claude-api-server/node_modules/**',
+      'gemini-api-server/node_modules/**',
       'cli/node_modules/**',
       'voice-app/audio/**',
       '*.md',

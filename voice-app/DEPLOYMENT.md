@@ -116,12 +116,12 @@ gemini-phone setup    # Select "Voice Server"
 gemini-phone start
 ```
 
-### API Server (Mac/Linux with Claude Code)
+### API Server (Mac/Linux with Gemini Code)
 
 Requirements:
 
 - Node.js 18+
-- Claude Code CLI installed and authenticated
+- Gemini Code CLI installed and authenticated
 - Network accessible from voice server
 
 ```bash

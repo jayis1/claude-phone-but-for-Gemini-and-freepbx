@@ -233,7 +233,7 @@ async function startBoth(config, isPiMode) {
     process.exit(1);
   }
 
-  // Only check claude-api-server path in standard mode (not Pi mode)
+  // Only check gemini-api-server path in standard mode (not Pi mode)
   if (!isPiMode && !fs.existsSync(config.paths.geminiApiServer)) {
     console.log(chalk.red(`✗ Gemini API server not found at: ${config.paths.geminiApiServer}`));
     console.log(chalk.gray('  Update paths in configuration\n'));

@@ -11,7 +11,7 @@
 
 ### Architecture Decision
 
-Build a **Node.js CLI tool** distributed via a bash install script. The CLI wraps existing functionality (voice-app Docker container, claude-api-server) with a unified command interface.
+Build a **Node.js CLI tool** distributed via a bash install script. The CLI wraps existing functionality (voice-app Docker container, gemini-api-server) with a unified command interface.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -355,7 +355,7 @@ Test commands end-to-end (can use temp directories).
 
 - Docker internals (trust docker compose)
 - Third-party APIs beyond validation (trust axios)
-- Existing voice-app/claude-api-server (already working)
+- Existing voice-app/gemini-api-server (already working)
 
 ---
 

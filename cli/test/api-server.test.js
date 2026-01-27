@@ -11,7 +11,7 @@ const projectRoot = path.resolve(__dirname, '../..');
  * Test suite for api-server command
  *
  * Note: These tests verify the command logic but don't actually start
- * the server (would require Claude CLI installed and running).
+ * the server (would require Gemini CLI installed and running).
  */
 
 describe('api-server command', () => {

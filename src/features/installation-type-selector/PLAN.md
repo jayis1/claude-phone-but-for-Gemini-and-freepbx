@@ -14,7 +14,7 @@ Add installation type selection to `<gemini-phone> setup` that customizes the se
 │  Voice Server   │    API Server     │        Both           │
 ├─────────────────┼───────────────────┼───────────────────────┤
 │ • Docker        │ • Node.js only    │ • Everything          │
-│ • drachtio      │ • claude-api-srv  │ • Docker + API server │
+│ • drachtio      │ • gemini-api-srv  │ • Docker + API server │
 │ • FreeSWITCH    │ • Port config     │ • Full setup flow     │
 │ • voice-app     │                   │                       │
 │ • SIP/FreePBX config│                   │                       │

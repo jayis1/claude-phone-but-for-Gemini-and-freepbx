@@ -79,7 +79,7 @@
   - [ ] Route based on type
 
 - [ ] **5.2** Implement type-specific start logic
-  - [ ] API Server: Start only claude-api-server
+  - [ ] API Server: Start only gemini-api-server
   - [ ] Voice Server: Check API reachability, start Docker
   - [ ] Both: Start API server, then Docker
 
@@ -96,7 +96,7 @@
   - [ ] Route based on type
 
 - [ ] **6.2** Implement type-specific stop logic
-  - [ ] API Server: Stop only claude-api-server
+  - [ ] API Server: Stop only gemini-api-server
   - [ ] Voice Server: Stop Docker containers
   - [ ] Both: Stop both
 
@@ -152,7 +152,7 @@
   - [ ] All existing functionality preserved
 
 - [ ] **10.3** Documentation
-  - [ ] Update CLAUDE.md with feature completion
+  - [ ] Update GEMINI.md with feature completion
   - [ ] Update README.md if needed
 
 ## Acceptance Criteria Mapping

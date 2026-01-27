@@ -176,8 +176,8 @@ Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 
 │  ┌─────────────┐         ┌─────────────────────┐           │
 │  │ Raspberry Pi │   ←→   │ Mac/Linux with      │           │
-│  │ (voice-app)  │  HTTP  │ Claude Code CLI     │           │
-│  └─────────────┘         │ (claude-api-server) │           │
+│  │ (voice-app)  │  HTTP  │ Gemini Code CLI     │           │
+│  └─────────────┘         │ (gemini-api-server) │           │
 │                          └─────────────────────┘           │
 └─────────────────────────────────────────────────────────────┘
 ```
