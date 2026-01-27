@@ -177,6 +177,27 @@ async function checkMissionControl(port = 3030) {
 }
 
 /**
+ * Check n8n webhook connectivity
+ * @param {string} url - n8n webhook URL
+ * @returns {Promise<{reachable: boolean, error?: string}>}
+ */
+async function checkN8nWebhook(url) {
+  if (!url) return { reachable: false, error: 'URL not set' };
+  try {
+    // Webhooks usually return 404 on GET or 401/405, but we check for reachability
+    // A timeout or connect error means unreachable.
+    await axios.get(url, { timeout: 3000 });
+    return { reachable: true };
+  } catch (error) {
+    if (error.response) {
+      // If we got a response (even 404/405), the server is reachable
+      return { reachable: true };
+    }
+    return { reachable: false, error: error.message };
+  }
+}
+
+/**
  * Check storage write permissions
  * @returns {Promise<{checks: Array}>}
  */
@@ -590,6 +611,22 @@ async function runVoiceServerChecks(config, isPiSplit) {
     passedCount++; // Warn but don't fail the whole check
   }
   checks.push({ name: 'Network Config', passed: networkResult.valid });
+
+  // n8n Webhook Check (if configured)
+  const n8nUrl = process.env.N8N_WEBHOOK_URL || config.n8n?.webhookUrl;
+  if (n8nUrl) {
+    const n8nSpinner = ora('Checking n8n webhook connectivity...').start();
+    const n8nResult = await checkN8nWebhook(n8nUrl);
+    if (n8nResult.reachable) {
+      n8nSpinner.succeed(chalk.green(`n8n Logic Engine connected (${n8nUrl})`));
+      passedCount++;
+    } else {
+      n8nSpinner.warn(chalk.yellow(`n8n Logic Engine unreachable: ${n8nResult.error}`));
+      console.log(chalk.gray('  → Check your N8N_WEBHOOK_URL in .env\n'));
+      passedCount++;
+    }
+    checks.push({ name: 'n8n Logic Engine', passed: n8nResult.reachable });
+  }
 
   return { checks, passedCount };
 }

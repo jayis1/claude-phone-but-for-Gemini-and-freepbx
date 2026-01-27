@@ -31,12 +31,16 @@ async function query(prompt, options = {}) {
   const { callId, devicePrompt, timeout = 30 } = options; // AC27: Default 30s timeout
   const timestamp = new Date().toISOString();
 
-  // Determine if we are talking to Brain (4000) or Hands (3333)
-  const isBrain = GEMINI_API_URL.includes(':4000');
-  const targetLabel = isBrain ? 'BRAIN (Inference)' : 'HANDS (API Server)';
+  const N8N_URL = process.env.N8N_WEBHOOK_URL;
+  const targetUrl = N8N_URL || `${GEMINI_API_URL}/ask`;
+
+  // Determine if we are talking to n8n, Brain, or Hands
+  const isN8n = !!N8N_URL;
+  const isBrain = !isN8n && GEMINI_API_URL.includes(':4000');
+  const targetLabel = isN8n ? 'N8N (Logic Engine)' : (isBrain ? 'BRAIN (Inference)' : 'HANDS (API Server)');
 
   try {
-    console.log(`[${timestamp}] GEMINI Querying ${targetLabel} at ${GEMINI_API_URL}...`);
+    console.log(`[${timestamp}] GEMINI Querying ${targetLabel} at ${targetUrl}...`);
     if (callId) {
       console.log(`[${timestamp}] GEMINI Session: ${callId}`);
     }
@@ -45,7 +49,7 @@ async function query(prompt, options = {}) {
     }
 
     const response = await axios.post(
-      `${GEMINI_API_URL}/ask`,
+      targetUrl,
       { prompt, callId, devicePrompt },
       {
         timeout: timeout * 1000,
@@ -53,15 +57,23 @@ async function query(prompt, options = {}) {
       }
     );
 
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Gemini API returned failure');
+    // Flexible response parsing (n8n usually uses 'text', our server uses 'response')
+    const result = response.data;
+    const finalResponse = result.response || result.text || (typeof result === 'string' ? result : null);
+
+    if (!finalResponse && result.success === false) {
+      throw new Error(result.error || 'Gemini API returned failure');
     }
 
-    console.log(`[${timestamp}] GEMINI Response received (${response.data.duration_ms}ms)`);
-    if (response.data.sessionId) {
-      console.log(`[${timestamp}] GEMINI Session ID: ${response.data.sessionId}`);
+    if (!finalResponse) {
+      throw new Error('No valid response text found in API response');
     }
-    return response.data.response;
+
+    console.log(`[${timestamp}] GEMINI Response received (${result.duration_ms || 'unknown'}ms)`);
+    if (result.sessionId) {
+      console.log(`[${timestamp}] GEMINI Session ID: ${result.sessionId}`);
+    }
+    return finalResponse;
 
   } catch (error) {
     // AC26: API server unreachable during call - don't crash, return helpful message
