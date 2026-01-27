@@ -787,6 +787,9 @@ app.get('/', (req, res) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ speed: parseFloat(val) })
+              });
+            } catch(e) { console.error('Music speed update failed:', e); }
+          }
 
 
           async function checkForUpdates() {

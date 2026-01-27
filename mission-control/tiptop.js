@@ -495,7 +495,7 @@ function generateTopPage() {
                // Let's try fetching from the voice app URL via client-side if possible, or assume proxy.
                // Voice App is usually http://localhost:3000.
                
-               const res = await fetch('/api/voice/history'); // Using Mission Control proxy
+const res = await fetch('/api/proxy/voice/api/history'); // Using Mission Control proxy
                if(!res.ok) throw new Error('API failed');
                
                const data = await res.json();
