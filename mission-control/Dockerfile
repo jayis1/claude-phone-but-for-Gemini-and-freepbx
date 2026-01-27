@@ -5,7 +5,10 @@ WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies only once
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first (better caching)
 COPY package.json ./

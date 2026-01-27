@@ -6,10 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies and Python
-RUN apt-get update && apt-get install -y python3 python3-pip make g++ && \
-    rm -rf /var/lib/apt/lists/* && \
-    npm ci --only=production
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm ci --only=production
 
 # Copy application files
 COPY server.js ./
