@@ -1313,7 +1313,7 @@ async function setupOutbound(config) {
       default: config.outbound?.callerId || '',
       validate: (input) => {
         // Optional, but if provided should look like a number
-        if (input && !/^\+?[0-9]{10,15}$/.test(input)) {
+        if (input && !/^\+?[0-9]{3,15}$/.test(input)) {
           return 'Invalid phone number format (E.164 preferred)';
         }
         return true;
@@ -1352,7 +1352,7 @@ async function setupOutbound(config) {
       default: config.outbound?.testPhoneNumber || '',
       validate: (input) => {
         if (!input || input.trim() === '') return 'Testing number is required for the dashboard "Test Call" button';
-        if (!/^\+?[0-9]{10,15}$/.test(input)) {
+        if (!/^\+?[0-9]{3,15}$/.test(input)) {
           return 'Invalid phone number format (E.164 preferred)';
         }
         return true;
