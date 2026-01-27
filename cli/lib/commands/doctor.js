@@ -15,8 +15,27 @@ import { checkPort } from '../port-check.js';
  */
 async function checkGeminiCLI() {
   return new Promise((resolve) => {
+    let resolved = false;
+
+    const safeResolve = (data) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(data);
+      }
+    };
+
+    // Set a timeout to prevent hanging the doctor command
+    const timeout = setTimeout(() => {
+      if (child) child.kill();
+      safeResolve({
+        installed: false,
+        error: 'Gemini CLI check timed out after 5s'
+      });
+    }, 5000);
+
     const child = spawn('gemini', ['--version'], {
-      stdio: 'pipe'
+      stdio: ['ignore', 'pipe', 'pipe'], // Ignore stdin to prevent hang on prompts
+      shell: false
     });
 
     let output = '';
@@ -29,25 +48,27 @@ async function checkGeminiCLI() {
     });
 
     child.on('close', (code) => {
+      clearTimeout(timeout);
       if (code === 0) {
         // Extract version from output
         const versionMatch = output.match(/(\d+\.\d+\.\d+)/);
-        resolve({
+        safeResolve({
           installed: true,
           version: versionMatch ? versionMatch[1] : 'unknown'
         });
       } else {
-        resolve({
+        safeResolve({
           installed: false,
-          error: 'Gemini CLI not found in PATH'
+          error: `Gemini CLI returned code ${code}: ${output.substring(0, 100).trim()}`
         });
       }
     });
 
-    child.on('error', () => {
-      resolve({
+    child.on('error', (err) => {
+      clearTimeout(timeout);
+      safeResolve({
         installed: false,
-        error: 'Gemini CLI not found'
+        error: `Gemini CLI not found or failed: ${err.message}`
       });
     });
   });
