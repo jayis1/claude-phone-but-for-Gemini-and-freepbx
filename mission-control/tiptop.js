@@ -260,7 +260,7 @@ function generateTopPage() {
         <script>
           /* UTILS */
           function formatBytes(bytes) { if (bytes===0) return '0K'; const k=1024, sizes=['K','M','G','T'], i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+sizes[i]; }
-          function formatTime(s) { const h=Math.floor(s/3600).toString().padStart(2,'0'), m=Math.floor((s%3600)/60).toString().padStart(2,'0'), sec=Math.floor(s%60).toString().padStart(2,'0'); return \\\`\${h}:\${m}:\${sec}\\\`; }
+          function formatTime(s) { const h=Math.floor(s/3600).toString().padStart(2,'0'), m=Math.floor((s%3600)/60).toString().padStart(2,'0'), sec=Math.floor(s%60).toString().padStart(2,'0'); return \`\${h}:\${m}:\${sec}\`; }
   
           /* TIPTOP LOGIC */
           let currentProcesses = [];
@@ -319,7 +319,7 @@ function generateTopPage() {
               // Update Bars
               const cpu = data.cpu.currentLoad;
               document.getElementById('cpu-bar').style.width = cpu + '%';
-              document.getElementById('cpu-text').innerText = cpu.toFixed(1) + '%';
+              document.getElementById('cpu-text').innerText = cpu + '%';
   
               const memVals = data.mem;
               const memPct = (memVals.active / memVals.total) * 100;
@@ -379,19 +379,19 @@ function generateTopPage() {
                 if(p.pid === selectedPid) row.className = 'selected';
                 row.onclick = () => selectRow(p.pid);
                 
-                row.innerHTML = \\\`
-                  <td class="pid">\\\${p.pid}</td>
-                  <td class="user">\\\${p.user}</td>
-                  <td>\\\${p.pri}</td>
-                  <td>\\\${p.ni}</td>
-                  <td>\\\${p.virt}</td>
-                  <td>\\\${p.res}</td>
-                  <td>\\\${p.s}</td>
-                  <td>\\\${p.cpu}%</td>
-                  <td>\\\${p.mem}%</td>
-                  <td>\\\${p.time}</td>
-                  <td class="cmd">\\\${p.cmd}</td>
-                \\\`;
+                row.innerHTML = `
+    < td class="pid" >\${ p.pid }</td >
+                  <td class="user">\${p.user}</td>
+                  <td>\${p.pri}</td>
+                  <td>\${p.ni}</td>
+                  <td>\${p.virt}</td>
+                  <td>\${p.res}</td>
+                  <td>\${p.s}</td>
+                  <td>\${p.cpu}%</td>
+                  <td>\${p.mem}%</td>
+                  <td>\${p.time}</td>
+                  <td class="cmd">\${p.cmd}</td>
+  `;
                 tbody.appendChild(row);
               });
           }
@@ -421,13 +421,13 @@ function generateTopPage() {
                const div = document.createElement('div');
                div.className = 'note-card';
                div.onclick = () => editNote(note.id);
-               div.innerHTML = \\\`
-                 <div class="note-card-title">
-                    <span>\\\${note.title || '(Untitled)'}</span>
-                    <span style="font-weight:normal; color:#666; font-size:0.8em">\\\${new Date(note.timestamp).toLocaleDateString()}</span>
-                 </div>
-                 <div class="note-card-prev">\\\${note.content || ''}</div>
-               \\\`;
+               div.innerHTML = `
+    < div class="note-card-title" >
+                    <span>\${note.title || '(Untitled)'}</span>
+                    <span style="font-weight:normal; color:#666; font-size:0.8em">\${new Date(note.timestamp).toLocaleDateString()}</span>
+                 </div >
+    <div class="note-card-prev">\${note.content || ''}</div>
+  `;
                list.appendChild(div);
             });
           }
@@ -513,14 +513,14 @@ function generateTopPage() {
             currentPlaylist.forEach(item => {
                const div = document.createElement('div');
                div.className = 'playlist-item';
-               div.innerHTML = \\\`
-                  <div class="song-thumb" style="background:\\\${item.color}"></div>
+               div.innerHTML = `
+    < div class="song-thumb" style = "background:\${item.color}" ></div >
                   <div class="song-info" style="flex:1; overflow:hidden;">
-                    <div class="song-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\\\${item.title}</div>
-                    <div class="song-meta"><a href="\\\${item.url}" target="_blank" style="color:#888; text-decoration:underline;">\\\${item.url}</a></div>
+                    <div class="song-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${item.title}</div>
+                    <div class="song-meta"><a href="\${item.url}" target="_blank" style="color:#888; text-decoration:underline;">\${item.url}</a></div>
                   </div>
-                  <button class="btn-sm" style="background:#300; border:1px solid #500; color:#f00;" onclick="removeSong('\\\${item.id}')">X</button>
-               \\\`;
+                  <button class="btn-sm" style="background:#300; border:1px solid #500; color:#f00;" onclick="removeSong('\${item.id}')">X</button>
+  `;
                list.appendChild(div);
             });
           }
