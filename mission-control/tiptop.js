@@ -379,8 +379,8 @@ function generateTopPage() {
                 if(p.pid === selectedPid) row.className = 'selected';
                 row.onclick = () => selectRow(p.pid);
                 
-                row.innerHTML = `
-    < td class="pid" >\${ p.pid }</td >
+                row.innerHTML = \`
+                  <td class="pid">\${p.pid}</td>
                   <td class="user">\${p.user}</td>
                   <td>\${p.pri}</td>
                   <td>\${p.ni}</td>
@@ -391,7 +391,7 @@ function generateTopPage() {
                   <td>\${p.mem}%</td>
                   <td>\${p.time}</td>
                   <td class="cmd">\${p.cmd}</td>
-  `;
+                \`;
                 tbody.appendChild(row);
               });
           }
@@ -421,13 +421,13 @@ function generateTopPage() {
                const div = document.createElement('div');
                div.className = 'note-card';
                div.onclick = () => editNote(note.id);
-               div.innerHTML = `
-    < div class="note-card-title" >
+               div.innerHTML = \`
+                 <div class="note-card-title">
                     <span>\${note.title || '(Untitled)'}</span>
                     <span style="font-weight:normal; color:#666; font-size:0.8em">\${new Date(note.timestamp).toLocaleDateString()}</span>
-                 </div >
-    <div class="note-card-prev">\${note.content || ''}</div>
-  `;
+                 </div>
+                 <div class="note-card-prev">\${note.content || ''}</div>
+               \`;
                list.appendChild(div);
             });
           }
@@ -513,14 +513,14 @@ function generateTopPage() {
             currentPlaylist.forEach(item => {
                const div = document.createElement('div');
                div.className = 'playlist-item';
-               div.innerHTML = `
-    < div class="song-thumb" style = "background:\${item.color}" ></div >
+               div.innerHTML = \`
+                  <div class="song-thumb" style="background:\${item.color}"></div>
                   <div class="song-info" style="flex:1; overflow:hidden;">
                     <div class="song-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${item.title}</div>
                     <div class="song-meta"><a href="\${item.url}" target="_blank" style="color:#888; text-decoration:underline;">\${item.url}</a></div>
                   </div>
                   <button class="btn-sm" style="background:#300; border:1px solid #500; color:#f00;" onclick="removeSong('\${item.id}')">X</button>
-  `;
+               \`;
                list.appendChild(div);
             });
           }
