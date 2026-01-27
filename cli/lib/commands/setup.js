@@ -238,29 +238,6 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
     }
   }
 
-  // Install dependencies for Inference Server (if it exists)
-  if (installationType === 'both' || installationType === 'api-server') {
-    const apiServerPath = config.paths?.geminiApiServer || path.join(getProjectRoot(), 'gemini-api-server');
-    const inferenceServerPath = path.resolve(apiServerPath, '../inference-server');
-
-    if (fs.existsSync(inferenceServerPath)) {
-      const nodeModulesPath = path.join(inferenceServerPath, 'node_modules');
-      if (!fs.existsSync(nodeModulesPath)) {
-        const installSpinner = ora('Installing Inference Server dependencies...').start();
-        try {
-          execSync('npm install', {
-            cwd: inferenceServerPath,
-            stdio: 'pipe'
-          });
-          installSpinner.succeed('Inference Server dependencies installed');
-        } catch (error) {
-          installSpinner.fail(`Failed to install Inference Server dependencies: ${error.message}`);
-          console.log(chalk.yellow('\nYou can install manually with:'));
-          console.log(chalk.cyan(`  cd ${inferenceServerPath} && npm install\n`));
-        }
-      }
-    }
-  }
 
   // Install dependencies for Mission Control (if it exists)
   if (installationType === 'both' || installationType === 'api-server') {

@@ -163,20 +163,6 @@ export async function uninstallCommand() {
     spinner.info('Mission Control not running or already stopped');
   }
 
-  // Step 1.6: Stop Inference Brain (Port 4000)
-  spinner = ora('Stopping Inference Brain...').start();
-  try {
-    const { stdout } = await execAsync('lsof -t -i:4000');
-    if (stdout && stdout.trim()) {
-      const pid = stdout.trim();
-      process.kill(pid, 'SIGKILL');
-      spinner.succeed('Inference Brain stopped');
-    } else {
-      spinner.info('Inference Brain not running');
-    }
-  } catch (error) {
-    spinner.info('Inference Brain not running');
-  }
 
   // Step 1.7: Ensure API Server is dead (Port 3333)
   try {
@@ -236,7 +222,7 @@ export async function uninstallCommand() {
     const imageSpinner = ora('Removing Docker images...').start();
     try {
       // Remove images
-      await execAsync('docker image rm -f drachtio/drachtio-server:latest drachtio/drachtio-freeswitch-mrf:latest gemini-phone-voice-app gemini-phone-mission-control gemini-phone-gemini-api-server gemini-phone-inference-server || true');
+      await execAsync('docker image rm -f drachtio/drachtio-server:latest drachtio/drachtio-freeswitch-mrf:latest gemini-phone-voice-app gemini-phone-mission-control gemini-phone-gemini-api-server || true');
       // Prune builder cache
       await execAsync('docker builder prune -f || true');
       imageSpinner.succeed('Docker images and cache removed');

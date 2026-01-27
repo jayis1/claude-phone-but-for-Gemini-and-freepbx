@@ -227,7 +227,6 @@ ${getGpuSnippet(gpuVendor)}
       - PORT=3030
       - VOICE_APP_URL=http://localhost:3000
       - API_SERVER_URL=http://localhost:3333
-      - INFERENCE_URL=http://localhost:4000
       - GEMINI_API_KEY=\${GEMINI_API_KEY}
       - MISSION_CONTROL_GEMINI_KEY=\${MISSION_CONTROL_GEMINI_KEY}
       - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
@@ -265,9 +264,9 @@ export function generateEnvFile(config) {
     // Voice server mode (non-Pi): point to remote API server
     geminiApiUrl = `http://${config.deployment.apiServerIp}:${config.server.geminiApiPort}`;
   } else {
-    // Both or api-server mode: local INFERENCE server (Brain)
-    // The voice-app talks to the Brain (4000), which talks to the Hands (3333)
-    geminiApiUrl = `http://localhost:4000`;
+    // Both or api-server mode: local API server
+    // The voice-app talks directly to the Hands (3333)
+    geminiApiUrl = `http://localhost:${config.server.geminiApiPort || 3333}`;
   }
 
   const lines = [
