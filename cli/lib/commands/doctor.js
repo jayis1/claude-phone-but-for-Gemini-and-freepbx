@@ -57,8 +57,14 @@ async function checkGeminiCLI() {
           version: versionMatch ? versionMatch[1] : 'unknown'
         });
       } else {
-        // If it returns an error but output contains a stack trace, it's installed but buggy
-        if (output.includes('node_modules') || output.includes('Error')) {
+        // Handle specific SyntaxError for Node.js versions < 20
+        if (output.includes('Invalid regular expression flags') || output.includes('string-width')) {
+          safeResolve({
+            installed: true,
+            version: 'unsupported-node',
+            error: 'Node.js version is too old for Gemini CLI. Upgrade to Node 20+.'
+          });
+        } else if (output.includes('node_modules') || output.includes('Error')) {
           safeResolve({
             installed: true,
             version: 'debug-mode',
@@ -71,6 +77,7 @@ async function checkGeminiCLI() {
           });
         }
       }
+
 
     });
 
@@ -265,13 +272,19 @@ async function runApiServerChecks(config) {
   const geminiSpinner = ora('Checking Gemini CLI...').start();
   const geminiResult = await checkGeminiCLI();
   if (geminiResult.installed) {
-    if (geminiResult.error) {
+    if (geminiResult.version === 'unsupported-node') {
+      geminiSpinner.fail(chalk.red('Gemini CLI error: Node.js version is too old'));
+      console.log(chalk.gray('  → Gemini CLI requires Node.js 20 or higher to handle modern regex syntax.'));
+      console.log(chalk.gray('  → Current Node.js: ' + process.version));
+      console.log(chalk.gray('  → Solution: Run "nvm install 20" or "yum install nodejs-20.x"\n'));
+    } else if (geminiResult.error) {
       geminiSpinner.warn(chalk.yellow(`Gemini CLI found but has issues: ${geminiResult.error}`));
     } else {
       geminiSpinner.succeed(chalk.green(`Gemini CLI installed (v${geminiResult.version})`));
     }
     passedCount++;
   } else {
+
 
     geminiSpinner.fail(chalk.red(`Gemini CLI not found: ${geminiResult.error}`));
     console.log(chalk.gray('  → Install Gemini CLI: npx https://github.com/google-gemini/gemini-cli\n'));
@@ -439,10 +452,12 @@ async function runVoiceServerChecks(config, isPiSplit) {
     pbxSpinner.succeed(chalk.green(`PBX server is reachable (${sipDomain}:${sipPort})`));
     passedCount++;
   } else {
-    pbxSpinner.warn(chalk.yellow(`PBX server may be unreachable (${sipDomain}:${sipPort})`));
-    console.log(chalk.gray(`  → Check your network connection to the PBX server\n`));
+    pbxSpinner.warn(chalk.yellow(`PBX reachability check is inconclusive (${sipDomain}:${sipPort})`));
+    console.log(chalk.gray('  → Note: SIP uses UDP. This check uses TCP which can fail even if SIP is working.'));
+    console.log(chalk.gray('  → If registration succeeds later, you can ignore this warning.\n'));
     passedCount++; // Count as partial pass since UDP can be tricky to check via Socket
   }
+
   checks.push({ name: 'PBX reachability', passed: pbxReachable });
 
 
