@@ -344,7 +344,8 @@ export async function buildContainers() {
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
       cwd: configDir,
-      stdio: 'inherit' // Show build output directly to user
+      stdio: 'inherit', // Show build output directly to user
+      env: { ...process.env, BUILDX_NO_DEFAULT_ATTESTATIONS: '1' } // Fix provenance hang
     });
 
     child.on('close', (code) => {
