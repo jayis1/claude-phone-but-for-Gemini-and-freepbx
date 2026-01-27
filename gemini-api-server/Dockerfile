@@ -21,4 +21,9 @@ COPY server.js structured.js ./
 EXPOSE 3333
 
 # Start the wrapper server
-CMD ["node", "server.js"]
+# Entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["gemini-phone-gemini-api-server"]
