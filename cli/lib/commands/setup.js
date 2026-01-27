@@ -1455,10 +1455,11 @@ async function handleSipConflict(config) {
   try {
     sipConflict = await detectSipConflict();
     if (sipConflict) {
-      sbcSpinner.succeed('SIP service detected on port 5060 - using port 5070 for drachtio (Recommended)');
+      sbcSpinner.succeed('SIP service detected on port 5060 - will use port 5070 for drachtio');
     } else {
-      sbcSpinner.succeed('No direct SIP conflict detected - using port 5070 for maximum compatibility');
+      sbcSpinner.succeed('No SIP conflict detected - will use standard port 5060');
     }
+
 
   } catch (err) {
     portCheckError = true;
@@ -1481,8 +1482,9 @@ async function handleSipConflict(config) {
     if (sipConflict) {
       console.log(chalk.green('✓ Will use port 5070 for drachtio (avoid conflict)\n'));
     } else {
-      console.log(chalk.green('✓ Will use port 5070 for drachtio (standard/safe port)\n'));
+      console.log(chalk.green('✓ Will use port 5060 for drachtio (standard port)\n'));
     }
+
 
   }
 
@@ -1491,7 +1493,9 @@ async function handleSipConflict(config) {
   if (!config.deployment.pi) config.deployment.pi = {};
 
   config.deployment.pi.sipConflict = sipConflict;
-  config.deployment.pi.drachtioPort = 5070; // Always use 5070 per user requirement
+  config.deployment.pi.sipConflict = sipConflict;
+  config.deployment.pi.drachtioPort = sipConflict ? 5070 : 5060;
+
 
 
   return config;
