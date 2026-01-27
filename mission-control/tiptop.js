@@ -219,10 +219,10 @@ function generateTopPage() {
 
           <!-- RIGHT: RECENT CALLS (GREEN BOX) -->
           <div id="bottom-right">
-             <div class="section-title">
-               <span>RECENT CALLS</span>
-               <button class="btn-sm" onclick="fetchCalls()" style="background:transparent; border:none; color:#0f0;">Refresh</button>
-             </div>
+              <div class="section-title">
+                <span>RECENT CALLS</span>
+                <button class="btn-sm" onclick="fetchCalls()">Refresh</button>
+              </div>
              <div id="calls-list">
                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading calls...</div>
              </div>
@@ -274,7 +274,8 @@ function generateTopPage() {
              player.load();
              player.play().catch(e => {
                 if (e.name === 'AbortError') return; // Ignore intentional interruptions
-                alert('Playback failed: ' + e.message);
+                console.error('Playback error:', e);
+                alert('Playback failed: ' + e.message + '\\nSource: ' + proxyUrl);
              });
           }
 

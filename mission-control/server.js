@@ -14,6 +14,7 @@ const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
 const generateTopPage = require('./tiptop.js');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const generateSettingsPage = require('./settings-page');
 
@@ -1438,8 +1439,13 @@ app.post('/api/process/kill', (req, res) => {
 const proxyRequest = async (url, options = {}) => {
   try {
     const response = await fetch(url, options);
-    // if (!response.ok) throw new Error(`HTTP ${response.status} `); // Don't throw, let client handle
-    return await response.json();
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error(`Proxy JSON Parse Error for ${url}:`, text.substring(0, 100));
+      return { error: 'Invalid response from service' };
+    }
   } catch (err) {
     console.error(`Proxy Error to ${url}: `, err.message);
     throw err;
@@ -1456,21 +1462,33 @@ app.use('/api/proxy/voice', async (req, res) => {
     const isBinary = targetPath.startsWith('/recordings/') || targetPath.startsWith('/audio-files/');
 
     if (isBinary) {
-      const response = await fetch(url, { method: req.method });
-      res.status(response.status);
-      const contentType = response.headers.get('content-type');
-      if (contentType) res.setHeader('Content-Type', contentType);
+      try {
+        const response = await fetch(url, { method: req.method });
+        res.status(response.status);
 
-      const contentLength = response.headers.get('content-length');
-      if (contentLength) res.setHeader('Content-Length', contentLength);
+        const contentType = response.headers.get('content-type');
+        if (contentType) res.setHeader('Content-Type', contentType);
 
-      res.setHeader('Accept-Ranges', 'bytes');
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) res.setHeader('Content-Length', contentLength);
 
-      if (response.body) {
-        const { Readable } = require('stream');
-        Readable.fromWeb(response.body).pipe(res);
-      } else {
-        res.end();
+        res.setHeader('Accept-Ranges', 'bytes');
+
+        if (response.body) {
+          if (typeof response.body.pipe === 'function') {
+            // Node-fetch v2 or other Node stream
+            response.body.pipe(res);
+          } else {
+            // Web stream (node-fetch v3 or global fetch)
+            const { Readable } = require('stream');
+            Readable.fromWeb(response.body).pipe(res);
+          }
+        } else {
+          res.end();
+        }
+      } catch (err) {
+        console.error(`Proxy Binary Error to ${url}:`, err.message);
+        res.status(502).send('Error fetching binary data');
       }
       return;
     }
@@ -2262,6 +2280,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.8]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.2.9]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
