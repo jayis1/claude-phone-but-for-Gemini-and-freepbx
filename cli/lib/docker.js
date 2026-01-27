@@ -323,7 +323,6 @@ export function generateEnvFile(config) {
     '# Gemini API Key',
     `GEMINI_API_KEY=${config.api.gemini?.apiKey || ''}`,
     `MISSION_CONTROL_GEMINI_KEY=${config.api.gemini?.missionControlKey || ''}`,
-
     '',
     '# Application Settings',
     `HTTP_PORT=${config.server.httpPort || 3000}`,
@@ -341,6 +340,7 @@ export function generateEnvFile(config) {
     `FREEPBX_API_URL=${config.pbx?.apiUrl || ''}`,
     `FREEPBX_CLIENT_ID=${config.pbx?.clientId || ''}`,
     `FREEPBX_CLIENT_SECRET=${config.pbx?.clientSecret || ''}`,
+    `FREEPBX_TRUNK_NAME=${config.pbx?.trunkName || 'RedSpot'}`,
     ''
   ];
 

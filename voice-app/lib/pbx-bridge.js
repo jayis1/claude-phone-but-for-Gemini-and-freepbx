@@ -8,6 +8,7 @@ const axios = require('axios');
 const FREEPBX_API_URL = process.env.FREEPBX_API_URL || '';
 const CLIENT_ID = process.env.FREEPBX_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.FREEPBX_CLIENT_SECRET || '';
+const DEFAULT_TRUNK = process.env.FREEPBX_TRUNK_NAME || 'RedSpot';
 
 let cachedToken = null;
 let tokenExpiry = 0;
@@ -106,15 +107,16 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
 
 /**
  * Provision Outbound Route "Gemini-to-PSTN"
+ * @param {string} trunkName - Optional trunk name to use
  */
-async function provisionOutboundRoute() {
-    console.log('[PBX-BRIDGE] Provisioning outbound route Gemini-to-PSTN...');
+async function provisionOutboundRoute(trunkName = DEFAULT_TRUNK) {
+    console.log(`[PBX-BRIDGE] Provisioning outbound route Gemini-to-PSTN using trunk ${trunkName}...`);
 
     const mutation = `
     mutation {
       addOutboundRoute(input: {
         name: "Gemini-to-PSTN",
-        trunks: ["RedSpot"],
+        trunks: ["${trunkName}"],
         patterns: [
           { match_pattern: "." }
         ]

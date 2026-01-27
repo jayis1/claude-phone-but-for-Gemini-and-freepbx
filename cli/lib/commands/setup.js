@@ -759,10 +759,7 @@ function generateSecret() {
   return crypto.randomBytes(16).toString('hex');
 }
 
-/**
- * Create default configuration
- * @returns {object} Default config
- */
+
 function createDefaultConfig() {
   return {
     version: '1.0.0',
@@ -798,7 +795,8 @@ function createDefaultConfig() {
     pbx: {
       apiUrl: '',
       clientId: '',
-      clientSecret: ''
+      clientSecret: '',
+      trunkName: 'RedSpot'
     },
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
@@ -807,11 +805,7 @@ function createDefaultConfig() {
   };
 }
 
-/**
- * Setup API keys with validation
- * @param {object} config - Current config
- * @returns {Promise<object>} Updated config
- */
+
 async function setupAPIKeys(config) {
   // -----------------------------------------------------------
   // 1. ElevenLabs API Key
@@ -1570,6 +1564,7 @@ function mergeEnvWithConfig(config, env) {
   if (env.FREEPBX_API_URL) newConfig.pbx.apiUrl = env.FREEPBX_API_URL;
   if (env.FREEPBX_CLIENT_ID) newConfig.pbx.clientId = env.FREEPBX_CLIENT_ID;
   if (env.FREEPBX_CLIENT_SECRET) newConfig.pbx.clientSecret = env.FREEPBX_CLIENT_SECRET;
+  if (env.FREEPBX_TRUNK_NAME) newConfig.pbx.trunkName = env.FREEPBX_TRUNK_NAME;
 
   // Mark as pre-filled for logic checks
   newConfig._fromEnv = true;
@@ -1678,13 +1673,21 @@ async function setupPbxApi(config) {
       message: 'M2M Client Secret:',
       default: config.pbx?.clientSecret || '',
       validate: (input) => (input && input.length > 10) ? true : 'Invalid Client Secret'
+    },
+    {
+      type: 'input',
+      name: 'trunkName',
+      message: 'Primary Outbound Trunk Name (e.g., RedSpot, MySIPTrunk):',
+      default: config.pbx?.trunkName || 'RedSpot',
+      validate: (input) => (input && input.trim() !== '') ? true : 'Trunk name is required'
     }
   ]);
 
   config.pbx = {
     apiUrl: answers.apiUrl,
     clientId: answers.clientId,
-    clientSecret: answers.clientSecret
+    clientSecret: answers.clientSecret,
+    trunkName: answers.trunkName
   };
 
   return config;

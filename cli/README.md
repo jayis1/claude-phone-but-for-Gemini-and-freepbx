@@ -7,7 +7,7 @@ Command-line interface for Gemini Phone. Single-command setup and management.
 ### One-Line Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.2/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.3/install.sh | bash
 ```
 
 ### Manual Install
