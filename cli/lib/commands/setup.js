@@ -768,6 +768,9 @@ function createDefaultConfig() {
       openai: { apiKey: '', validated: false },
       gemini: { apiKey: '', validated: false }
     },
+    n8n: {
+      webhookUrl: ''
+    },
     sip: {
       domain: '',
       registrar: '',
@@ -1006,6 +1009,36 @@ async function setupAPIKeys(config) {
   if (missionControlAnswers.missionControlKey && missionControlAnswers.missionControlKey.trim() !== '') {
     config.api.gemini.missionControlKey = missionControlAnswers.missionControlKey.trim();
     console.log(chalk.green('✓ Mission Control specific key saved'));
+  }
+
+  // -----------------------------------------------------------
+  // 6. n8n Webhook URL (Optional)
+  // -----------------------------------------------------------
+
+  const n8nAnswers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'webhookUrl',
+      message: 'n8n Webhook URL (Optional - leave empty to use standard inference):',
+      default: (config.n8n && config.n8n.webhookUrl) || '',
+      validate: (input) => {
+        if (input && input.trim() !== '') {
+          try {
+            new URL(input);
+            return true;
+          } catch (e) {
+            return 'Please enter a valid URL (e.g. http://n8n:5678/webhook/...)';
+          }
+        }
+        return true;
+      }
+    }
+  ]);
+
+  if (n8nAnswers.webhookUrl && n8nAnswers.webhookUrl.trim() !== '') {
+    if (!config.n8n) config.n8n = {};
+    config.n8n.webhookUrl = n8nAnswers.webhookUrl.trim();
+    console.log(chalk.green('✓ n8n Logic Engine configured'));
   }
 
   return config;

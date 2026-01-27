@@ -337,6 +337,9 @@ export function generateEnvFile(config) {
     `FREEPBX_CLIENT_SECRET=${config.pbx?.clientSecret || ''}`,
     `FREEPBX_TRUNK_NAME=${config.pbx?.trunkName || 'RedSpot'}`,
     `GEMINI_APP_STACK_IP=${config.pbx?.appStackIp || ''}`,
+    '',
+    '# n8n Integration',
+    `N8N_WEBHOOK_URL=${(config.n8n && config.n8n.webhookUrl) || ''}`,
     ''
   ];
 
