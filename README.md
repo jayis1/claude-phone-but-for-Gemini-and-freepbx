@@ -4,6 +4,10 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
+## What's New in v3.2.7
+
++ 🔉 **Hotfix: Playback Stability** - Optimized recording playback with streaming support and persistent audio elements to prevent browser interruptions.
+
 ## What's New in v3.2.6
 
 + 🚑 **Hotfix: Mission Control Fix** - Resolved a critical structural error in the dashboard HTML that caused the page to fail to render correctly.
@@ -105,7 +109,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.2.6/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.2.7/install.sh | bash
 ```
 
 The installer performs the following steps:

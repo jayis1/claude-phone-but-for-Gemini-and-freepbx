@@ -230,6 +230,9 @@ function generateTopPage() {
   
         </div>
   
+        <!-- Persistent Audio Element -->
+        <audio id="global-player" style="display:none"></audio>
+  
         <!-- SCRIPTS -->
         <script>
           /* UTILS */
@@ -260,14 +263,19 @@ function generateTopPage() {
           let currentAudio = null; // Track playing audio
 
           function playRecording(url) {
-             if(currentAudio) {
-               currentAudio.pause();
-               currentAudio = null;
-             }
+             const player = document.getElementById('global-player');
+             if(!player) return;
+             
              // Proxy through Mission Control
              const proxyUrl = '/api/proxy/voice' + url;
-             currentAudio = new Audio(proxyUrl);
-             currentAudio.play().catch(e => alert('Playback failed: ' + e.message));
+             
+             player.pause();
+             player.src = proxyUrl;
+             player.load();
+             player.play().catch(e => {
+                if (e.name === 'AbortError') return; // Ignore intentional interruptions
+                alert('Playback failed: ' + e.message);
+             });
           }
 
           function setSort(col) {
