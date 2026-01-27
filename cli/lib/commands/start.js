@@ -363,17 +363,14 @@ async function startBoth(config, isPiMode) {
   spinner.succeed('All services managed by Docker stack');
 
 
-  // Success
   console.log(chalk.bold.green('\n✓ All services running!\n'));
   console.log(chalk.gray('Services:'));
-  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app, mission-control, gemini-api-server, inference-server`));
+  console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app, mission-control, gemini-api-server`));
   if (isPiMode) {
     console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
     const voiceAppPort = config.server.httpPort || 3000;
-    const inferencePort = config.server.inferencePort || 4000;
     console.log(chalk.gray(`  • Voice App:         http://localhost:${voiceAppPort} (Voice Controls)`));
-    console.log(chalk.gray(`  • Inference Brain:   http://localhost:${inferencePort} (AI Reasoning)`));
     console.log(chalk.gray(`  • Mission Control:   http://localhost:3030 (Dashboard)`));
     console.log(chalk.gray(`  • API Server:        http://localhost:${config.server.geminiApiPort} (Tool Execution)`));
     console.log();

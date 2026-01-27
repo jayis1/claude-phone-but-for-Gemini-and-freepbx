@@ -102,57 +102,6 @@ export async function startServer(serverPath, port, pidPath = null, extraEnv = {
   });
 }
 
-/**
- * Start the inference-server (Brain)
- * @param {string} serverPath - Path to inference-server directory
- * @param {number} port - Port to listen on (4000)
- * @param {string} executionServerUrl - URL of execution server
- * @returns {Promise<number>} Process PID
- */
-// function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333', pidFilename = 'inference.pid', scriptName = 'server.js') {
-// We update the signature to:
-export async function startInferenceServer(serverPath, port = 4000, executionServerUrl = 'http://localhost:3333', pidFilename = 'inference.pid', scriptName = 'server.js', extraEnv = {}) {
-  const pidPath = path.join(getConfigDir(), pidFilename);
-
-  // Check if already running
-  if (await isServerRunning(pidPath)) {
-    const pid = getServerPid(pidPath);
-    throw new Error(`Service already running (PID: ${pid})`);
-  }
-
-  return new Promise((resolve, reject) => {
-    // Capture logs to ~/.gemini-phone/service-name.log
-    const logFilename = pidFilename.replace('.pid', '.log');
-    const logPath = path.join(getConfigDir(), logFilename);
-    const logStream = fs.openSync(logPath, 'a');
-
-    // Spawn detached process with logging
-    const child = spawn('node', [scriptName], {
-      cwd: serverPath,
-      detached: true,
-      stdio: ['ignore', logStream, logStream], // Redirect stdout/stderr to log file
-      env: {
-        ...process.env,
-        PORT: port,
-        EXECUTION_SERVER_URL: executionServerUrl,
-        ...extraEnv
-      }
-    });
-
-    // Don't wait for child process
-    child.unref();
-
-    // Write PID file
-    try {
-      fs.writeFileSync(pidPath, child.pid.toString(), { mode: 0o600 });
-      resolve(child.pid);
-    } catch (error) {
-      // Try to kill if write failed
-      try { process.kill(child.pid, 'SIGTERM'); } catch (e) { }
-      reject(new Error(`Failed to write PID file (${pidFilename}): ${error.message}`));
-    }
-  });
-}
 
 /**
  * Stop the gemini-api-server
@@ -204,13 +153,6 @@ export async function stopServer(pidPath = null) {
   }
 }
 
-/**
- * Stop the inference-server
- */
-export async function stopInferenceServer() {
-  const pidPath = path.join(getConfigDir(), 'inference.pid');
-  await stopServer(pidPath);
-}
 
 /**
  * Kill process by name (fallback if PID file missing)

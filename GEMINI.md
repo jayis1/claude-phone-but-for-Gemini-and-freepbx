@@ -36,17 +36,17 @@ Gemini Phone gives your Gemini Code installation a phone number through FreePBX 
 │         ↓                                                    │
 │  ┌─────────────────────────────────────────────────┐       │
 │  │           voice-app (Docker)                     │       │
-│  │  ┌─────────────────────────────────────────┐   │       │
-│  │  │ drachtio  │  FreeSWITCH  │  Node.js     │   │       │
-│  │  │ (SIP)     │  (Media)     │  (Logic)     │   │       │
-│  │  └─────────────────────────────────────────┘   │       │
-│  └────────────────────┬────────────────────────────┘       │
-│                       │ HTTP                                │
-│                       ↓                                      │
-│  ┌─────────────────────────────────────────────────┐       │
-│  │   gemini-api-server                              │       │
-│  │   Wraps Gemini CLI with session management │       │
-│  └─────────────────────────────────────────────────┘       │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌─────────┐ │       │
+│  │  │   drachtio   │  │ FreeSWITCH   │  │ Node.js │ │       │
+│  │  │    (SIP)     │  │   (Media)    │  │ (Logic) │ │       │
+│  │  └──────┬───────┘  └──────┬───────┘  └────┬────┘ │       │
+│  └─────────┼─────────────────┼───────────────┼─────┘       │
+│            │                 │               │             │
+│            ↓                 ↓               ↓             │
+│  ┌──────────────────┐  ┌───────────┐  ┌────────────────┐   │
+│  │  n8n Skill Cluster│  │  Gemini  │  │ Mission Control │   │
+│  │  (8 Webhooks)    │←─┤   API     │  │   (Dashboard)  │   │
+│  └──────────────────┘  └───────────┘  └────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -155,7 +155,7 @@ gemini-phone/
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.6.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.6.1/install.sh | bash
 
 # Setup and run
 gemini-phone setup    # Interactive configuration

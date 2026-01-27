@@ -1,8 +1,13 @@
-# Gemini Phone
+# Gemini Phone (v3.6.1) 🧠🔗🛰️
 
 ![Gemini Phone](assets/logo.png)
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
+
+## What's New in v3.6.1
+
++ 🐍💀 **Python-Free Architecture** - Completely removed the legacy `inference-server` and Python dependencies. The system is now 100% Node.js for maximum stability and speed.
++ 🔧 **Clean Stack** - Stripped all vestigial code, logs, and health checks related to the old "Brain Proxy".
 
 ## What's New in v3.6.0
 
@@ -105,34 +110,37 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 
 1. **Mission Control** (The Dashboard) - Unified generic interface.
 2. **Voice App** (The Ears & Mouth) - SIP/RTP handling & TTS/STT.
-3. **Inference Brain** (The Mind) - AI reasoning & decisions.
+3. **n8n Skill Cluster** (The Mind) - Modular AI logic & skill automation.
 4. **Gemini API Server** (The Hands) - Tool execution & CLI access.
 
 ## Architecture
 
+![Architecture Flow](assets/architecture_flow.png)
+
 ```text
-┌─────────────────────────────────────────────┐
-│  Voice App (Port 3000)                      │
-│  🎙️ Ears & Mouth - SIP/RTP handling        │
-│  + Native FreePBX / Asterisk Support 🔀      │
-
-│  + Speed Control Sliders 🎚️                 │
-└─────────────────┬───────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────┐
-│  Inference Brain (Port 4000)                │
-│  🧠 The Mind - AI reasoning & decisions     │
-│  + Python Script Execution 🐍               │
-│  + yt-dlp Audio Streaming                   │
-└─────────────────┬───────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────┐
-│  API Server (Port 3333)                     │
-│  ⚡ The Hands - Tool execution & actions    │
-│  + Interactive CLI Terminal                 │
-└─────────────────────────────────────────────┘
-
-All monitored by Mission Control (HTTPS Port 3030)
+┌─────────────────────────────────────────────────────────────┐
+│  Phone Call                                                  │
+│      │                                                       │
+│      ↓ Call extension 9000                                  │
+│  ┌─────────────┐                                            │
+│  │   FreePBX   │  ← PBX routes the call                    │
+│  └──────┬──────┘                                            │
+│         │ SIP                                               │
+│         ↓                                                    │
+│  ┌─────────────────────────────────────────────────┐       │
+│  │           voice-app (Docker)                     │       │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌─────────┐ │       │
+│  │  │   drachtio   │  │ FreeSWITCH   │  │ Node.js │ │       │
+│  │  │    (SIP)     │  │   (Media)    │  │ (Logic) │ │       │
+│  │  └──────┬───────┘  └──────┬───────┘  └────┬────┘ │       │
+│  └─────────┼─────────────────┼───────────────┼─────┘       │
+│            │                 │               │             │
+│            ↓                 ↓               ↓             │
+│  ┌──────────────────┐  ┌───────────┐  ┌────────────────┐   │
+│  │  n8n Skill Cluster│  │  Gemini  │  │ Mission Control │   │
+│  │  (8 Webhooks)    │←─┤   API     │  │   (Dashboard)  │   │
+│  └──────────────────┘  └───────────┘  └────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Prerequisites
@@ -157,7 +165,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.6.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.6.1/install.sh | bash
 ```
 
 The installer performs the following steps:
