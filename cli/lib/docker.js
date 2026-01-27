@@ -179,7 +179,8 @@ export function generateDockerCompose(config) {
       - ${config.paths.voiceApp}/config:/app/config
     depends_on:
       - drachtio
-      - freeswitch${getGpuSnippet(gpuVendor)}
+      - freeswitch
+${getGpuSnippet(gpuVendor)}
 
   mission-control:
     build: ${path.resolve(config.paths.geminiApiServer, '../mission-control')}
@@ -216,7 +217,8 @@ export function generateDockerCompose(config) {
     environment:
       - PORT=${config.server.inferencePort || 4000}
       - GEMINI_API_URL=http://localhost:${config.server.geminiApiPort}
-      - GEMINI_API_KEY=\${GEMINI_API_KEY}${getGpuSnippet(gpuVendor)}
+      - GEMINI_API_KEY=\${GEMINI_API_KEY}
+${getGpuSnippet(gpuVendor)}
 
   gemini-api-server:
     build: ${apiPath}
