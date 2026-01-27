@@ -176,7 +176,7 @@ CONTACTS = {
     "me": "YOUR_EXTENSION",
     "myself": "YOUR_EXTENSION",
     # Add your contacts here:
-    # "wife": "+15551234567",
+    # "wife": "+155512.4.77",
     # "office": "5000",
 }
 
@@ -525,7 +525,7 @@ Check contact directory, then validate as phone number:
 "me" → "YOUR_EXTENSION"
 
 # Or direct number
-"+15551234567" → "+15551234567"
+"+155512.4.77" → "+155512.4.77"
 ```
 
 ### Step 3: Generate Message
