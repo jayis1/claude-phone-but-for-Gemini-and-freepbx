@@ -117,7 +117,8 @@ function generateTopPage() {
           tr.selected td { background: #004400; color: #fff !important; }
           tr.selected .pid { color: #fff !important; }
           
-          .pid { color: #f00; } .user { color: #ff0; } .cmd { color: #fff; font-weight: bold; }
+          .pid { color: #fff; font-weight: bold; } .user { color: #ff0; } .cmd { color: #fff; font-weight: bold; }
+
   
           /* === BOTTOM SECTIONS CONTENT === */
           .section-title { font-size: 1.1rem; margin-bottom: 5px; border-bottom: 1px dashed #555; padding-bottom: 5px; color: #fff; display: flex; justify-content: space-between; align-items: center;}

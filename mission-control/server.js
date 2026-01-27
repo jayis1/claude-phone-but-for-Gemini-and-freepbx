@@ -10,7 +10,11 @@ const si = require('systeminformation');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 const generateTopPage = require('./tiptop.js');
+
 const generateSettingsPage = require('./settings-page');
 
 const app = express();
@@ -343,7 +347,8 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.54
+            MISSION CONTROL v2.2.55
+
 
 
             <div style="display:flex; gap:10px; margin-left: 20px;">
@@ -1167,38 +1172,75 @@ let tipTopPlaylist = [];
 // 1. System Stats (CPU, MEM, Processes)
 app.get('/api/system/stats', async (req, res) => {
   try {
-    const [cpu, mem, load, time, processes] = await Promise.all([
+    const [cpu, mem, time] = await Promise.all([
       si.currentLoad(),
       si.mem(),
-      si.currentLoad(), // load average included in currentLoad or separate
-      si.time(),
-      si.processes()
+      si.time()
     ]);
 
-    // Format for frontend
-    const processList = processes.list.map(p => ({
-      pid: p.pid,
-      user: p.user,
-      pri: p.priority,
-      ni: p.nice,
-      virt: p.memVsz, // Fix: camelCase
-      res: p.memRss,  // Fix: camelCase
-      s: p.state,
-      cpu: (p.cpu || 0).toFixed(1),   // Fix: .cpu not .pcpu
-      mem: (p.mem || 0).toFixed(1),   // Fix: .mem not .pmem
-      time: p.started, // formatted on front end
-      cmd: p.name + ' ' + p.command
-    }));
+    // Get processes via top command for better PID accuracy and consistency
+    let processList = [];
+    let tasksTotal = 0;
+    let tasksRunning = 0;
+    let loadStr = "0.00 0.00 0.00";
 
-    // Fix: load.avgLoad is a number in current version, not an array
-    const loadStr = load.avgLoad ? load.avgLoad.toFixed(2) : "0.00";
+    try {
+      const { stdout } = await execAsync('top -b -n 1');
+      const lines = stdout.split('\n');
+
+      // Parse Tasks line: Tasks: 133 total,   1 running, 132 sleeping,   0 stopped,   0 zombie
+      const tasksLine = lines.find(l => l.startsWith('Tasks:'));
+      if (tasksLine) {
+        const totalMatch = tasksLine.match(/(\d+) total/);
+        const runningMatch = tasksLine.match(/(\d+) running/);
+        if (totalMatch) tasksTotal = parseInt(totalMatch[1]);
+        if (runningMatch) tasksRunning = parseInt(runningMatch[1]);
+      }
+
+      // Parse Load Average line: top - 01:00:00 up 1 day, 1:00,  1 user,  load average: 0.00, 0.00, 0.00
+      const topLine = lines[0];
+      if (topLine.includes('load average:')) {
+        loadStr = topLine.split('load average:')[1].trim();
+      }
+
+      // Find where table starts
+      const headerIndex = lines.findIndex(l => l.trim().startsWith('PID '));
+      if (headerIndex !== -1) {
+        // Parse process rows
+        const rows = lines.slice(headerIndex + 1).filter(l => l.trim().length > 0);
+        processList = rows.map(row => {
+          const parts = row.trim().split(/\s+/);
+          // Standard top output: PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
+          // parts indices: 0:PID, 1:USER, 2:PR, 3:NI, 4:VIRT, 5:RES, 6:SHR, 7:S, 8:%CPU, 9:%MEM, 10:TIME+, 11+:COMMAND
+          if (parts.length >= 12) {
+            return {
+              pid: parts[0],
+              user: parts[1],
+              pri: parts[2],
+              ni: parts[3],
+              virt: parts[4],
+              res: parts[5],
+              s: parts[7],
+              cpu: parts[8],
+              mem: parts[9],
+              time: parts[10],
+              cmd: parts.slice(11).join(' ')
+            };
+          }
+          return null;
+        }).filter(p => p !== null);
+      }
+    } catch (topError) {
+      console.error('[Mission Control] top command error:', topError);
+      // Fallback to minimal SI if top fails? Or just empty list.
+    }
 
     res.json({
       cpu: { currentLoad: cpu.currentLoad.toFixed(1) },
       mem: { active: mem.active, total: mem.total },
       uptime: time.uptime,
       load: loadStr,
-      tasks: { total: processes.all, running: processes.running },
+      tasks: { total: tasksTotal, running: tasksRunning },
       processes: processList
     });
   } catch (error) {
@@ -1206,6 +1248,7 @@ app.get('/api/system/stats', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // 2. Kill Process
 app.get('/api/process/kill', (req, res) => {
