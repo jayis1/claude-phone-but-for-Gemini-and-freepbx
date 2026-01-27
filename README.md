@@ -4,13 +4,11 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.3.6
+## What's New in v2.4.0
 
-+ 🏟️ **Dual-LXC / SBC Mode** - Run Gemini and FreePBX in separate containers with zero port conflicts.
-+ 🧬 **Proxmox Optimized** - Native support for LXC `vfs` storage and automated Nesting detection.
-+ 🎮 **Universal GPU Support** - Enhanced NVIDIA (NVENC) and AMD (ROCm) passthrough for LXC.
++ ⚡ **One-Click Universal Provisioning** - Automated Extension and Outbound Route creation via FreePBX M2M API.
++ 🧬 **Hardware Scaling** - Dedicated support for NVIDIA (NVENC) and AMD (ROCm) GPUs kept for future-proofing.
 + 🔇 **Silent Build Mode** - Hidden Docker build/pull logs for a cleaner terminal.
-+ 🇩🇰 **Global Redspot Denmark Fix** - Enhanced prefix and SIP routing for universal connectivity.
 
 + ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
 + 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
@@ -78,7 +76,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.3.6/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.0/install.sh | bash
 ```
 
 The installer performs the following steps:
@@ -221,6 +219,7 @@ Best for: High-stability Proxmox setups where FreePBX and Gemini live in separat
 ## Proxmox & LXC Compatibility
 
 If running inside a Proxmox LXC container, ensure the following settings are enabled in the Proxmox Web UI (Options -> Features):
+
 + ✅ **Nesting**: Required for Docker to run inside LXC.
 + ✅ **FUSE**: Optional, but improves storage performance.
 
