@@ -347,7 +347,8 @@ app.get('/', (req, res) => {
         <div class="header">
           <div class="logo">
             <span class="status-dot"></span>
-            MISSION CONTROL v2.2.55
+            MISSION CONTROL v2.2.56
+
 
 
 
