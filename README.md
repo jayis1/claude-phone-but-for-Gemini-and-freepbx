@@ -4,7 +4,7 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v2.4.1
+## What's New in v2.4.2
 
 + ⚡ **One-Click Universal Provisioning** - Automated Extension and Outbound Route creation via FreePBX M2M API.
 + 🧬 **Hardware Scaling** - Dedicated support for NVIDIA (NVENC) and AMD (ROCm) GPUs kept for future-proofing.
@@ -76,7 +76,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.1/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v2.4.2/install.sh | bash
 ```
 
 The installer performs the following steps:

@@ -214,7 +214,7 @@
 
 ## Phase 4: Lifecycle Management ✅
 
-> Shipped in commit 2c430eb (bonus - beyond original spec)
+> Shipped in commit 2.4.2eb (bonus - beyond original spec)
 
 ### 4.1 Backup Command
 
@@ -287,7 +287,7 @@ All must pass before shipping.
 - PR #1: Phase 1 MVP (dcfae8e)
 - PR #2: Phase 2 Full Features (5d3d99a)
 - Phase 3: f68b735, ab6b911
-- Phase 4: 2c430eb
+- Phase 4: 2.4.2eb
 
 **Final Command Set:**
 ```
