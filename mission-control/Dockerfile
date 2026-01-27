@@ -1,16 +1,19 @@
+# Build stage
 FROM node:20-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies only once
 RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+
+# Install dependencies first (better caching)
 COPY package.json ./
-RUN npm install
+RUN npm install --production
 
 # Copy source
 COPY . .
 
-# Create data directory for notes
+# Create data directory
 RUN mkdir -p data
 
 # Expose port
