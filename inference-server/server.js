@@ -206,6 +206,10 @@ app.get('/logs', (req, res) => {
   res.json({ success: true, logs });
 });
 
+app.get('/health', (req, res) => {
+  res.json({ success: true, service: 'inference-brain', timestamp: new Date().toISOString() });
+});
+
 // Home Page
 app.get('/', (req, res) => {
   const models = ['gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'];
