@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import fs from 'fs';
 import path from 'path';
-import { loadConfig, configExists, getInstallationType } from '../config.js';
+import { loadConfig, configExists, getInstallationType, getConfigDir } from '../config.js';
 import { checkDocker, writeDockerConfig, startContainers, buildContainers } from '../docker.js';
 import { startServer, isServerRunning, startInferenceServer } from '../process-manager.js';
 import { sleep } from '../utils.js';
@@ -12,11 +12,36 @@ import { checkGeminiApiServer } from '../network.js';
 import { runPrereqChecks } from '../prereqs.js';
 
 /**
+ * Ensure storage directories exist
+ */
+async function ensureStorageDirectories() {
+  const configDir = getConfigDir();
+  const dirs = [
+    path.join(configDir, 'data', 'recordings'),
+    path.join(configDir, 'data', 'mission-control')
+  ];
+
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) {
+      try {
+        await fs.promises.mkdir(dir, { recursive: true, mode: 0o755 });
+      } catch (err) {
+        // Ignore if directory already exists via race condition
+        if (err.code !== 'EEXIST') throw err;
+      }
+    }
+  }
+}
+
+/**
  * Start command - Launch all services
  * @returns {Promise<void>}
  */
 export async function startCommand() {
   console.log(chalk.bold.cyan('\n🚀 Starting Gemini Phone\n'));
+
+  // Ensure storage exists before anything else
+  await ensureStorageDirectories();
 
 
   // Check if configured

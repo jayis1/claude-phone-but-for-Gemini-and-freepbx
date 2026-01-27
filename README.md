@@ -4,6 +4,10 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
+## What's New in v3.3.5
+
++ 🛠️ **Hotfix: Self-Healing Storage** - Added automatic directory creation for storage and mission control data. No more "Directory missing" errors on startup or health checks.
+
 ## What's New in v3.3.4
 
 + 🩺 **Hotfix: Doctor Stability** - Fixed a crash in the `gemini-phone doctor` command when run as the root user. Improved internal path resolution for version reporting.
@@ -133,7 +137,7 @@ All monitored by Mission Control (HTTPS Port 3030)
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.3.4/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v3.3.5/install.sh | bash
 ```
 
 The installer performs the following steps:
