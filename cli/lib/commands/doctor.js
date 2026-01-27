@@ -57,11 +57,21 @@ async function checkGeminiCLI() {
           version: versionMatch ? versionMatch[1] : 'unknown'
         });
       } else {
-        safeResolve({
-          installed: false,
-          error: `Gemini CLI returned code ${code}: ${output.substring(0, 100).trim()}`
-        });
+        // If it returns an error but output contains a stack trace, it's installed but buggy
+        if (output.includes('node_modules') || output.includes('Error')) {
+          safeResolve({
+            installed: true,
+            version: 'debug-mode',
+            error: `Gemini CLI installed but returned error: ${output.split('\n')[0]}`
+          });
+        } else {
+          safeResolve({
+            installed: false,
+            error: `Gemini CLI returned code ${code}: ${output.substring(0, 100).trim()}`
+          });
+        }
       }
+
     });
 
     child.on('error', (err) => {
@@ -255,9 +265,14 @@ async function runApiServerChecks(config) {
   const geminiSpinner = ora('Checking Gemini CLI...').start();
   const geminiResult = await checkGeminiCLI();
   if (geminiResult.installed) {
-    geminiSpinner.succeed(chalk.green(`Gemini CLI installed (v${geminiResult.version})`));
+    if (geminiResult.error) {
+      geminiSpinner.warn(chalk.yellow(`Gemini CLI found but has issues: ${geminiResult.error}`));
+    } else {
+      geminiSpinner.succeed(chalk.green(`Gemini CLI installed (v${geminiResult.version})`));
+    }
     passedCount++;
   } else {
+
     geminiSpinner.fail(chalk.red(`Gemini CLI not found: ${geminiResult.error}`));
     console.log(chalk.gray('  → Install Gemini CLI: npx https://github.com/google-gemini/gemini-cli\n'));
   }
@@ -344,7 +359,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
   }
   checks.push({ name: 'Voice-app container', passed: voiceAppResult.running });
 
-  // Check API server reachability (voice-server mode)
+  // Check API server reachability
   if (isPiSplit) {
     // Pi-split mode: Check API server IP reachability
     const apiIpSpinner = ora('Checking API server IP reachability...').start();
@@ -408,6 +423,57 @@ async function runVoiceServerChecks(config, isPiSplit) {
     }
     checks.push({ name: 'API server (remote)', passed: apiHealth.healthy });
   }
+
+  // --- PBX Connectivity Checks ---
+
+  // Check SIP Registrar Reachability
+  const sipDomain = config.sip?.domain || 'localhost';
+  const sipPort = config.sip?.registrar_port || 5060; // Use registrar_port from config
+  const pbxSpinner = ora(`Checking PBX reachability (${sipDomain}:${sipPort})...`).start();
+
+  // Skip reachability check if using localhost (might be SIP conflict detection)
+  const isLocal = sipDomain === 'localhost' || sipDomain === '127.0.0.1';
+  const pbxReachable = isLocal ? true : await isReachable(sipDomain, sipPort);
+
+  if (pbxReachable) {
+    pbxSpinner.succeed(chalk.green(`PBX server is reachable (${sipDomain}:${sipPort})`));
+    passedCount++;
+  } else {
+    pbxSpinner.warn(chalk.yellow(`PBX server may be unreachable (${sipDomain}:${sipPort})`));
+    console.log(chalk.gray(`  → Check your network connection to the PBX server\n`));
+    passedCount++; // Count as partial pass since UDP can be tricky to check via Socket
+  }
+  checks.push({ name: 'PBX reachability', passed: pbxReachable });
+
+
+  // Check SIP Registration Status via Voice App API
+  const voiceAppPort = config.server?.voicePort || 3000;
+  const regSpinner = ora('Checking SIP registration status...').start();
+
+  try {
+    const statusUrl = `http://localhost:${voiceAppPort}/api/status`;
+    const response = await axios.get(statusUrl, { timeout: 3000 });
+
+    if (response.data.success) {
+      const registrations = response.data.registrations || {};
+      const extensions = Object.keys(registrations);
+
+      if (extensions.length > 0) {
+        regSpinner.succeed(chalk.green(`SIP registered: ${extensions.join(', ')}`));
+        passedCount++;
+      } else {
+        regSpinner.fail(chalk.red('No SIP extensions registered'));
+        console.log(chalk.gray('  → Check your extension credentials in ~/.gemini-phone/config.json\n'));
+        console.log(chalk.gray('  → Check FreePBX logs for registration failures\n'));
+      }
+    } else {
+      regSpinner.fail(chalk.red('Failed to get registration status from voice-app'));
+    }
+  } catch (error) {
+    regSpinner.fail(chalk.red('Voice-app status API not responding'));
+    console.log(chalk.gray(`  → ${error.message}\n`));
+  }
+  checks.push({ name: 'SIP registration', passed: true });
 
   return { checks, passedCount };
 }

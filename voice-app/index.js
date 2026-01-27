@@ -160,6 +160,27 @@ function initializeHttpServer() {
   httpServer.app.use("/api", queryRouter);
   console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
 
+  // Status Endpoint (for gemini-phone doctor)
+  httpServer.app.get('/api/status', (req, res) => {
+    const regState = {};
+    if (registrar) {
+      registrar.registrations.forEach((reg, ext) => {
+        regState[ext] = {
+          registered: true,
+          expires: Math.round((reg.registeredAt + reg.expiry * 1000 - Date.now()) / 1000)
+        };
+      });
+    }
+
+    res.json({
+      success: true,
+      ready: isReady,
+      drachtio: drachtioConnected,
+      freeswitch: freeswitchConnected,
+      registrations: regState
+    });
+  });
+
   // Log Endpoint
   httpServer.app.get('/api/logs', (req, res) => {
     res.json({ success: true, logs: globalLogs || [] });
