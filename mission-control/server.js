@@ -482,7 +482,7 @@ app.get('/', (req, res) => {
               <span class="service-dot offline" id="dot-freepbx" title="FreePBX/Asterisk"></span>
               <span class="service-dot offline" id="dot-voice" title="Voice App (Node.js)"></span>
               <span class="service-dot offline" id="dot-brain" title="Inference Brain"></span>
-              <span class="service-dot offline" id="dot-python" title="Python Brain (Snake)"></span>
+
               <span class="service-dot offline" id="dot-api" title="API Server"></span>
               <span class="service-dot offline" id="dot-system" title="System Monitor"></span>
             </div>
@@ -520,23 +520,7 @@ app.get('/', (req, res) => {
                 </div>
               </div>
 
-              <div class="control-group">
-                <div class="stat-label">Music Speed (YouTube DJ)</div>
-                <div class="slider-container">
-                  <span style="font-size: 0.8rem">0.5x</span>
-                  <input type="range" id="music-speed" min="0.5" max="2.0" step="0.1" value="1.0" onchange="updateMusicSpeed(this.value)">
-                    <span id="music-speed-val" style="font-family: monospace; width: 40px">1.0x</span>
-                </div>
-              </div>
 
-              <div class="control-group">
-                <div class="stat-label">Music Volume</div>
-                <div class="slider-container">
-                  <span style="font-size: 0.8rem">0%</span>
-                  <input type="range" id="music-volume" min="0" max="100" step="5" value="50" onchange="updateMusicVolume(this.value)">
-                    <span id="music-volume-val" style="font-family: monospace; width: 40px">50%</span>
-                </div>
-              </div>
 
 
 
@@ -803,21 +787,7 @@ app.get('/', (req, res) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ speed: parseFloat(val) })
-              });
-            } catch(e) { console.error('Music speed update failed:', e); }
-          }
 
-          async function updateMusicVolume(val) {
-            const el = document.getElementById('music-volume-val');
-            if(el) el.innerText = val + '%';
-            try {
-              await fetch('/api/proxy/inference/music-volume', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ volume: parseInt(val) })
-              });
-            } catch(e) { console.error('Music volume update failed:', e); }
-          }
 
           async function checkForUpdates() {
             const btn = document.getElementById('update-btn');

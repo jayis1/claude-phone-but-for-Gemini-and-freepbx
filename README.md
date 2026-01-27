@@ -14,7 +14,7 @@ Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can c
 + 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
 + 💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
 + grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
-+ 🎵 **YouTube DJ Brain** - The AI plays Lofi Beats while thinking (now with speed control).
+
 + 🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
 + 📞 **FreePBX Only** - Simplified stack strictly for FreePBX/Asterisk.
 
@@ -34,7 +34,7 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 │  Voice App (Port 3000)                      │
 │  🎙️ Ears & Mouth - SIP/RTP handling        │
 │  + Native FreePBX / Asterisk Support 🔀      │
-│  + YouTube DJ Hold Music 🎵                 │
+
 │  + Speed Control Sliders 🎚️                 │
 └─────────────────┬───────────────────────────┘
                   │
@@ -126,7 +126,6 @@ gemini-phone start
 
 + **Infrastructure**:
   + **Red Dot Fix**: Solved port conflicts to ensure Mission Control always sees the Voice App.
-  + **YouTube DJ Brain**: The AI now plays Lofi Beats from YouTube while thinking or holding. 🎧
 
 ## Deployment Modes
 
