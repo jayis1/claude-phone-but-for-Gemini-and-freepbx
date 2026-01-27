@@ -110,8 +110,33 @@ function generateTopPage() {
           .section-title { font-size: 1.1rem; margin-bottom: 5px; border-bottom: 1px dashed #555; padding-bottom: 5px; color: #fff; display: flex; justify-content: space-between; align-items: center;}
           
           /* === NOTES UI (RED BOX) === */
-          .btn-sm { background: #333; color: #fff; border: 1px solid #555; padding: 2px 8px; cursor: pointer; font-size: 0.8rem; }
-          .btn-sm:hover { background: #555; }
+          .btn-sm { 
+            background: #333; 
+            color: #fff; 
+            border: 1px solid #555; 
+            padding: 5px 12px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            border-radius: 4px; 
+            z-index: 1000; 
+            position: relative; 
+            display: inline-block; 
+            vertical-align: middle;
+            transition: all 0.2s ease;
+            pointer-events: auto;
+            user-select: none;
+          }
+          .btn-sm:hover { 
+            background: #004400; 
+            border-color: #0f0; 
+            color: #fff; 
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+          }
+          .btn-sm:active { 
+            background: #0f0; 
+            color: #000;
+            transform: translateY(1px); 
+          }
           
           #notes-list-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
           #notes-list { flex: 1; overflow-y: auto; padding-right: 5px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; align-content: start; }
@@ -221,7 +246,7 @@ function generateTopPage() {
           <div id="bottom-right">
               <div class="section-title">
                 <span>RECENT CALLS</span>
-                <button class="btn-sm" onclick="fetchCalls()">Refresh</button>
+                <button class="btn-sm" id="btn-refresh" onclick="console.log('Refresh Clicked'); fetchCalls()">Refresh</button>
               </div>
              <div id="calls-list">
                 <div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Loading calls...</div>
@@ -263,18 +288,25 @@ function generateTopPage() {
           let currentAudio = null; // Track playing audio
 
           function playRecording(url) {
+             console.log('[DEBUG] playRecording called for:', url);
              const player = document.getElementById('global-player');
-             if(!player) return;
+             if(!player) {
+                console.error('[ERROR] global-player element not found');
+                return;
+             }
              
              // Proxy through Mission Control
              const proxyUrl = '/api/proxy/voice' + url;
+             console.log('[DEBUG] Playing through proxy:', proxyUrl);
              
              player.pause();
              player.src = proxyUrl;
              player.load();
-             player.play().catch(e => {
+             player.play().then(() => {
+                console.log('[DEBUG] Playback started successfully');
+             }).catch(e => {
                 if (e.name === 'AbortError') return; // Ignore intentional interruptions
-                console.error('Playback error:', e);
+                console.error('[ERROR] Playback failed:', e);
                 alert('Playback failed: ' + e.message + '\\nSource: ' + proxyUrl);
              });
           }
@@ -503,26 +535,28 @@ function generateTopPage() {
 
           /* RECENT CALLS LOGIC */
           async function fetchCalls() {
+             console.log('[DEBUG] fetchCalls triggered');
              const list = document.getElementById('calls-list');
              try {
-               // The Voice App is on port 3000, but Mission Control is on 3030.
-               // We need to proxy through Mission Control -> Voice App
-               // Assuming Mission Control has a proxy set up or we fetch directly if CORS allows.
-               // Since Mission-Control's server isn't shown here, we assume it proxies /api/voice/history 
-               // OR we assume user is hitting Voice App directly if this page is rendered by Voice App.
-               // But this file seems to be rendered by Mission Control.
-               // Let's assume there is a proxy at /api/proxy/voice/history or similar.
-               // Wait, the user said "Mission Control Page 2". 
-               // Let's try fetching from the voice app URL via client-side if possible, or assume proxy.
-               // Voice App is usually http://localhost:3000.
-               
+                // The Voice App is on port 3000, but Mission Control is on 3030.
+                // We need to proxy through Mission Control -> Voice App
+                // Assuming Mission Control has a proxy set up or we fetch directly if CORS allows.
+                // Since Mission-Control's server isn't shown here, we assume it proxies /api/voice/history 
+                // OR we assume user is hitting Voice App directly if this page is rendered by Voice App.
+                // But this file seems to be rendered by Mission Control.
+                // Let's assume there is a proxy at /api/proxy/voice/history or similar.
+                // Wait, the user said "Mission Control Page 2". 
+                // Let's try fetching from the voice app URL via client-side if possible, or assume proxy.
+                // Voice App is usually http://localhost:3000.
+                
 const res = await fetch('/api/proxy/voice/api/history'); // Using Mission Control proxy
-               if(!res.ok) throw new Error('API failed');
+               if(!res.ok) throw new Error('API failed with ' + res.status);
                
                const data = await res.json();
+               console.log('[DEBUG] Calls data received:', data.history?.length || 0, 'calls');
                if(data.history) renderCalls(data.history);
              } catch(e) {
-               console.error(e);
+               console.error('[ERROR] fetchCalls failed:', e);
                list.innerHTML = '<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">Failed to load calls.<br>Is Voice App running?</div>';
              }
           }
