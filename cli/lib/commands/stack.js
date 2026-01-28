@@ -88,6 +88,30 @@ async function deployStack(config, stackId) {
     displayStackInfo(config, stackId);
 }
 
+async function createSwitchboard() {
+    console.log(chalk.bold.blue(`\n📞  Creating AI Switchboard (Group 600)...`));
+    const spinner = ora('Provisioning Ring Group and Routes...').start();
+
+    try {
+        const res = await fetch('/api/proxy/voice/api/pbx/provision-switchboard', {
+            method: 'POST'
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            spinner.succeed('Switchboard Created!');
+            console.log(chalk.green(`   ${data.message}`));
+            alert('AI Switchboard (Group 600) Created! All extensions will now ring simultaneously.');
+        } else {
+            throw new Error(data.error || 'Unknown error');
+        }
+    } catch (err) {
+        spinner.fail(`Failed to create switchboard: ${err.message}`);
+        console.error(chalk.red(err));
+        alert('Failed: ' + err.message);
+    }
+}
+
 async function removeStack(stackId) {
     console.log(chalk.bold.yellow(`\n🗑️  Removing Stack #${stackId}...\n`));
     const spinner = ora('Stopping containers...').start();

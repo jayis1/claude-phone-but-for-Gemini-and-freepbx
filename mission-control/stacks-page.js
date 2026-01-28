@@ -257,8 +257,11 @@ function generateStacksPage() {
                    </div>
                  </div>
                   <div class="stack-actions">
-                    <button class="btn btn-danger" onclick="removeStack(\${stack.id})">Remove</button>
-                    <button class="btn btn-primary" onclick="redeployStack(\${stack.id})">Redeploy</button>
+                    <button class="btn btn-primary" onclick="addStack()">+ Add Stack</button>
+                  <button class="btn btn-secondary" onclick="createSwitchboard()" title="Create AI Switchboard (Group 600)">📞 Create Switchboard</button>
+                  <button class="btn btn-danger" onclick="stopAllStacks()">Stop All</button>
+                  <button class="btn btn-danger" onclick="removeStack(\${stack.id})">Remove</button>
+                  <button class="btn btn-primary" onclick="redeployStack(\${stack.id})">Redeploy</button>
                     \${stack.id > 1 ? \`<button class="btn" style="background:#0f0; color:#000" onclick="provisionStack(\${stack.id})">Synx PBX</button>\` : ''}
                   </div>
                </div>
