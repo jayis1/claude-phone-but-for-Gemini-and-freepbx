@@ -27,6 +27,9 @@ const PORT = process.env.PORT || 3030;
 const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
 const API_SERVER_URL = process.env.API_SERVER_URL || 'http://localhost:3333';
 
+app.use(express.json());
+app.use(cors());
+
 // System logs in memory
 const systemLogs = [];
 function addLog(level, service, message) {
