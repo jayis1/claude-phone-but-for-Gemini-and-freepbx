@@ -228,9 +228,10 @@ export function generateEnvFile(config, stackId = 1) {
   const deviceIndex = stackId - 1;
   const configDevices = config.devices || [];
   const device = configDevices[deviceIndex] || {
-    extension: '9000',
-    authId: '9000',
-    password: 'password',
+    // Auto-generate unique extension for stacks 2+ if not configured
+    extension: (9000 + deviceIndex).toString(),
+    authId: (9000 + deviceIndex).toString(),
+    password: 'password', // Default, user should configure this!
     voiceId: 'default'
   };
 
