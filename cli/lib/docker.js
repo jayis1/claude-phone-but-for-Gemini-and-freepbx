@@ -461,35 +461,41 @@ export async function startContainers(stackId = 1) {
 }
 
 /**
- * Stop Docker containers
- * @param {number} stackId - Default 1
+ * Stop Docker containers for all stacks
  */
-export async function stopContainers(stackId = 1) {
+export async function stopContainers() {
   const configDir = getConfigDir();
-  const suffix = stackId === 1 ? '' : `-${stackId}`;
-  const dockerComposePath = path.join(configDir, `docker-compose${suffix}.yml`);
-  const projectName = `gemini-phone-${stackId}`;
+  const { exec } = await import('child_process');
+  const { promisify } = await import('util');
+  const execAsync = promisify(exec);
 
-  if (!fs.existsSync(dockerComposePath)) return;
+  // Find all docker-compose files
+  const files = fs.readdirSync(configDir)
+    .filter(f => f.startsWith('docker-compose') && f.endsWith('.yml'));
 
-  const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'down'];
+  if (files.length === 0) {
+    console.log('No Docker stacks found active.');
+    return;
+  }
 
-  return new Promise((resolve, reject) => {
-    const child = spawn(compose.cmd, composeArgs, {
-      cwd: configDir,
-      stdio: 'pipe'
-    });
+  // Iterate and stop each
+  for (const file of files) {
+    const stackIdMatch = file.match(/docker-compose-(\d+)\.yml/);
+    const stackSuffix = stackIdMatch ? ` (Stack ${stackIdMatch[1]})` : ' (Main Stack)';
 
-    let output = '';
-    child.stdout.on('data', (data) => { output += data.toString(); });
-    child.stderr.on('data', (data) => { output += data.toString(); });
+    console.log(`Stopping containers${stackSuffix}...`);
 
-    child.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`Docker compose down failed (exit ${code}): ${output}`));
-    });
-  });
+    const filePath = path.join(configDir, file);
+    // Use down --remove-orphans to be clean
+    const cmd = `docker compose -f "${filePath}" down --remove-orphans`;
+
+    try {
+      await execAsync(cmd);
+    } catch (e) {
+      console.error(`Failed to stop stack ${file}: ${e.message}`);
+      // Continue stopping others even if one fails
+    }
+  }
 }
 
 /**

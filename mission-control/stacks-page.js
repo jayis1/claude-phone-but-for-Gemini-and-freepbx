@@ -256,10 +256,11 @@ function generateStacksPage() {
                       \${stack.containers.map(c => \`<span title="\${c}" style="width:8px; height:8px; background:#3f3f46; border-radius:50%; display:inline-block"></span>\`).join('')}
                    </div>
                  </div>
-                 <div class="stack-actions">
-                   <button class="btn btn-danger" onclick="removeStack(\${stack.id})">Remove</button>
-                   <button class="btn btn-primary" onclick="redeployStack(\${stack.id})">Redeploy</button>
-                 </div>
+                  <div class="stack-actions">
+                    <button class="btn btn-danger" onclick="removeStack(\${stack.id})">Remove</button>
+                    <button class="btn btn-primary" onclick="redeployStack(\${stack.id})">Redeploy</button>
+                    \${stack.id > 1 ? \`<button class="btn" style="background:#0f0; color:#000" onclick="provisionStack(\${stack.id})">Synx PBX</button>\` : ''}
+                  </div>
                </div>
              \`;
              grid.innerHTML += html;
@@ -299,6 +300,32 @@ function generateStacksPage() {
         async function redeployStack(id) {
            if(!confirm(\`Redeploy Stack #\${id}? This will rebuild and restart containers.\`)) return;
            deployStack(id);
+        }
+
+        async function provisionStack(id) {
+           const ext = 9000 + (id - 1);
+           const name = 'Gemini-Stack-' + id;
+           
+           if(!confirm(\`Auto-create Extension \${ext} (\${name}) in FreePBX?\\nThis ensures the PBX knows about this stack.\`)) return;
+
+           showToast(\`Provisioning Extension \${ext}...\`, 'info');
+           try {
+             // We use the existing voice-app API. We assume Voice App 1 (port 3000) is the controller.
+             const res = await fetch('/api/proxy/voice/api/pbx/provision-extension', {
+               method: 'POST',
+               headers: {'Content-Type': 'application/json'},
+               body: JSON.stringify({ extension: ext.toString(), name: name })
+             });
+             const data = await res.json();
+             
+             if(data.success) {
+               showToast(\`Extension \${ext} created! Reloading PBX...\`, 'success');
+             } else {
+               showToast('Provisioning failed: ' + (data.error || 'Unknown error'), 'error');
+             }
+           } catch(e) {
+             showToast('Request failed. Is Voice App 1 running?', 'error');
+           }
         }
 
         async function removeStack(id) {
