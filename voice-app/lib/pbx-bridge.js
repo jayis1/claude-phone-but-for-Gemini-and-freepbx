@@ -83,7 +83,10 @@ async function graphql(query, variables = {}) {
 
     return response.data.data;
   } catch (error) {
-    console.error('PBX-BRIDGE GraphQL Error:', error.response?.data || error.message);
+    console.error('PBX-BRIDGE GraphQL Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+    if (error.response?.data?.errors) {
+      console.error('PBX Detail:', JSON.stringify(error.response.data.errors, null, 2));
+    }
     throw error;
   }
 }
@@ -94,6 +97,23 @@ async function graphql(query, variables = {}) {
 async function provisionExtension(extension = '9000', name = 'Gemini AI') {
   console.log(`[PBX-BRIDGE] Provisioning extension ${extension}...`);
 
+  // 1. DELETE FIRST (Nuclear Sync)
+  const delMutation = `
+    mutation ($extension: ID!) {
+      deleteExtension(input: { extensionId: $extension }) {
+        status
+        message
+      }
+    }
+  `;
+  try {
+    await graphql(delMutation, { extension });
+    console.log(`[PBX-BRIDGE] Cleaned up existing extension ${extension}`);
+  } catch (e) {
+    // Ignore errors if it didn't exist
+  }
+
+  // 2. CREATE
   const mutation = `
     mutation ($extension: ID!, $name: String!) {
       addExtension(input: {
