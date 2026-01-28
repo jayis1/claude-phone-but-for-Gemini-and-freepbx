@@ -78,16 +78,7 @@ async function showApiServerStatus(config, isPiSplit) {
       console.log(chalk.green(`  ✓ Mission Control: Managed by Docker`));
     }
 
-    // 2. Inference Brain
-    const brainPidPath = path.join(configDir, 'inference.pid');
-    const brainRunning = await isServerRunning(brainPidPath);
-    if (brainRunning) {
-      console.log(chalk.green(`  ✓ Inference Brain: Running as process (Port 4000)`));
-    } else {
-      console.log(chalk.green(`  ✓ Inference Brain: Managed by Docker`));
-    }
-
-    // 3. Voice App (Local)
+    // 2. Voice App (Local)
     const voiceAppPidPath = path.join(configDir, 'voice-app.pid');
     const voiceAppRunning = await isServerRunning(voiceAppPidPath);
     if (voiceAppRunning) {
@@ -96,7 +87,7 @@ async function showApiServerStatus(config, isPiSplit) {
       console.log(chalk.red('  ✗ Voice App: Not running'));
     }
 
-    // 4. API Server
+    // 3. API Server
     const serverRunning = await isServerRunning(); // default gemini-api-server.pid
     if (serverRunning) {
       console.log(chalk.green(`  ✓ API Server: Running as process (Port ${config.server.geminiApiPort})`));

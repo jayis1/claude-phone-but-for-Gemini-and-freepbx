@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { stopContainers } from '../docker.js';
-import { stopServer, isServerRunning, stopInferenceServer } from '../process-manager.js';
+import { stopServer, isServerRunning } from '../process-manager.js';
 
 /**
  * Stop command - Shut down all services
@@ -99,17 +99,5 @@ async function stopBoth() {
     spinner.fail(`Failed to stop containers: ${error.message}`);
   }
 
-  // Stop Inference Server (Brain)
-  const brainSpinner = ora('Stopping Inference Server...').start();
-  try {
-    await stopInferenceServer();
-    brainSpinner.succeed('Inference Server stopped');
-  } catch (error) {
-    // Ignore if not running or failed
-    // Ignore if not running or failed
-    brainSpinner.stop(); // No message if not running (likely in Docker)
-  }
-
-  // Stop Mission Control
   // Mission Control is now in Docker, stopped by stopContainers()
 }
