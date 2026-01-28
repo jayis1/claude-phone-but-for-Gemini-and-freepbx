@@ -512,12 +512,12 @@ app.get('/', (req, res) => {
           </div>
           <div class="service-status">
             <div class="reboot-group">
-              <button class="btn-reboot" onclick="restartService('all')" title="Restart All Stack">🔄</button>
-              <button class="btn-reboot" onclick="restartService('drachtio')" title="Restart SIP (Drachtio)">📞</button>
-              <button class="btn-reboot" onclick="restartService('freeswitch')" title="Restart Media (FreeSWITCH)">🔈</button>
-              <button class="btn-reboot" onclick="restartService('voice-app')" title="Restart Voice App">🎙️</button>
-              <button class="btn-reboot" onclick="restartService('gemini-api-server')" title="Restart API Server">⚡</button>
-              <button class="btn-reboot" onclick="restartService('mission-control')" title="Restart Mission Control">🖥️</button>
+              <button class="btn-reboot" onclick="restartService('all', event)" title="Restart All Stack">🔄</button>
+              <button class="btn-reboot" onclick="restartService('drachtio', event)" title="Restart SIP (Drachtio)">📞</button>
+              <button class="btn-reboot" onclick="restartService('freeswitch', event)" title="Restart Media (FreeSWITCH)">🔈</button>
+              <button class="btn-reboot" onclick="restartService('voice-app', event)" title="Restart Voice App">🎙️</button>
+              <button class="btn-reboot" onclick="restartService('gemini-api-server', event)" title="Restart API Server">⚡</button>
+              <button class="btn-reboot" onclick="restartService('mission-control', event)" title="Restart Mission Control">🖥️</button>
             </div>
             <span>Services:</span>
             <div class="service-dots">
@@ -1283,7 +1283,7 @@ app.get('/', (req, res) => {
             }
           }
 
-          async function restartService(name) {
+          async function restartService(name, event) {
             const icons = {
               'all': '🔄', 'drachtio': '📞', 'freeswitch': '🔈',
               'voice-app': '🎙️', 'gemini-api-server': '⚡', 'mission-control': '🖥️'
@@ -2405,6 +2405,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v4.1.01]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v4.1.02]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
