@@ -1998,6 +1998,139 @@ app.post('/api/restart-service', (req, res) => {
   res.json({ success: true, message: `Restarting ${service}...` });
 });
 
+// ===================================
+// PBX INTEGRATION
+// ===================================
+
+async function getPbxToken() {
+  const env = parseEnv();
+  const url = env.FREEPBX_API_URL;
+  const id = env.FREEPBX_CLIENT_ID;
+  const secret = env.FREEPBX_CLIENT_SECRET;
+
+  if (!url || !id || !secret) return null;
+
+  try {
+    const auth = Buffer.from(`${id}:${secret}`).toString('base64');
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+
+    const response = await fetch(`${url}/admin/api/api/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    });
+    const data = await response.json();
+    return data.access_token;
+  } catch (e) {
+    console.error('PBX Token Error:', e.message);
+    return null;
+  }
+}
+
+app.get('/api/pbx/schema', async (req, res) => {
+  const env = parseEnv();
+  const token = await getPbxToken();
+  if (!token) return res.status(500).json({ error: 'Failed to get PBX token' });
+
+  try {
+    const query = `
+            query IntrospectionQuery {
+              __schema {
+                mutationType {
+                  fields {
+                    name
+                  }
+                }
+              }
+            }
+        `;
+    const response = await fetch(`${env.FREEPBX_API_URL}/admin/api/api/gql`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const result = await response.json();
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/pbx/provision', async (req, res) => {
+  const { extension, name } = req.body;
+  const targetExtension = extension || '9000';
+  const targetName = name || 'Gemini AI';
+
+  console.log(`[PBX] Requesting provision for Extension ${targetExtension} (${targetName})`);
+
+  const env = parseEnv();
+  const token = await getPbxToken();
+
+  if (!token) {
+    return res.status(502).json({
+      success: false,
+      error: 'Failed to authenticate with FreePBX. Check Client ID/Secret.'
+    });
+  }
+
+  try {
+    const mutation = `
+            mutation ($extension: ID!, $name: String!) {
+              addExtension(input: {
+                extensionId: $extension,
+                name: $name,
+                email: "gemini-phone@localhost",
+                tech: "pjsip",
+                vmEnable: false
+              }) {
+                status
+                message
+              }
+            }
+        `;
+
+    console.log('[PBX] Executing addExtension mutation...');
+    const response = await fetch(`${env.FREEPBX_API_URL}/admin/api/api/gql`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: mutation,
+        variables: { extension: targetExtension, name: targetName }
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error('[PBX] GraphQL Errors:', JSON.stringify(result.errors));
+      return res.status(500).json({ success: false, error: result.errors[0].message });
+    }
+
+    // Apply Config (Reload)
+    console.log('[PBX] Triggering Reload...');
+    const reloadMutation = `mutation { doreload(input: {}) { status message } }`;
+    await fetch(`${env.FREEPBX_API_URL}/admin/api/api/gql`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: reloadMutation })
+    });
+
+    res.json({
+      success: true,
+      message: `Provisioned Extension ${targetExtension}`,
+      data: result.data
+    });
+
+  } catch (e) {
+    console.error('[PBX] Provisioning Error:', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Save Settings from Web UI
 app.post('/api/settings/save', (req, res) => {
   const newEnv = req.body;
