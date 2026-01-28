@@ -86,9 +86,9 @@ export function generateDockerCompose(config, stackId = 1) {
   // PORT CALCULATION
   const idOffset = stackId - 1;
 
-  // SIP Ports (Default 5060 -> 5060, 5070, 5080)
+  // SIP Ports (Default 5060 -> 5060, 5061, 5062)
   const baseSipPort = (config.sip && config.sip.port) ? config.sip.port : 5060;
-  const sipPort = baseSipPort + (idOffset * 10);
+  const sipPort = baseSipPort + (idOffset * 1);
 
   // FreeSWITCH SIP Port (Default 5080 -> 5080, 5090, 5100)
   const fsSipPort = 5080 + (idOffset * 10);

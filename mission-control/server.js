@@ -115,7 +115,7 @@ app.get('/api/stacks/list', async (req, res) => {
 
     for (const id of uniqueStacks) {
       const offset = id - 1;
-      const sipPort = 5060 + (offset * 10);
+      const sipPort = 5060 + (offset * 1);
       const rtpStart = 30000 + (offset * 200);
       const rtpEnd = rtpStart + 100;
       const voicePort = 3000 + (offset * 2);

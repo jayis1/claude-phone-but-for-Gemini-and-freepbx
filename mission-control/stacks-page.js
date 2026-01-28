@@ -253,7 +253,7 @@ function generateStacksPage() {
                      <span class="info-val">:\${stack.voicePort}</span>
                    </div>
                    <div class="info-row status-cnt" style="margin-top:0.5rem; justify-content: flex-start; gap: 0.5rem;">
-                      \${stack.containers.map(c => \`<span title="\${c}" style="width:8px; height:8px; background:#3f3f46; border-radius:50%; display:inline-block"></span>\`).join('')}
+                      \${stack.containers.map(c => \`<span title="\${c}" style="width:8px; height:8px; background:\${isOnline ? 'var(--success)' : '#3f3f46'}; border-radius:50%; display:inline-block"></span>\`).join('')}
                    </div>
                  </div>
                   <div class="stack-actions">
