@@ -1820,7 +1820,7 @@ app.post('/api/settings/save', (req, res) => {
 app.get('/setup', (req, res) => {
   const env = parseEnv();
   const provider = env.SIP_PROVIDER || 'freepbx';
-  const providerName = provider === 'freepbx' ? 'FreePBX / Asterisk' : 'Standard PBX';
+  const providerName = provider === 'freepbx' ? 'FreePBX / Asterisk' : 'SIP Provider';
 
   res.send(`
     <!DOCTYPE html>
