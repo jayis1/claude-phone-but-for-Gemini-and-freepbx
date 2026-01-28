@@ -99,8 +99,31 @@ async function removeStack(stackId) {
         spinner.fail(`Failed to stop stack: ${err.message}`);
     }
 
-    // Optional: Clean up config files?
-    // For now we keep them safe.
+    // Clean up config files
+    const configDir = getConfigDir();
+    const dockerFile = stackId === 1 ? 'docker-compose.yml' : `docker-compose-${stackId}.yml`;
+    const envFile = stackId === 1 ? '.env' : `.env-${stackId}`;
+
+    // Don't delete main stack configs for safety, unless explicitly --force (but we don't have that yet)
+    // Actually, for Stack 1, we probably shouldn't delete the main files on a "remove" unless it's a full uninstall.
+    // But for secondary stacks (2+), we definitely want to delete.
+
+    // For now, let's just delete for Stack > 1 to match the "Orchestration" intent.
+    if (stackId > 1) {
+        try {
+            const dPath = path.join(configDir, dockerFile);
+            if (fs.existsSync(dPath)) fs.unlinkSync(dPath);
+
+            const ePath = path.join(configDir, envFile);
+            if (fs.existsSync(ePath)) fs.unlinkSync(ePath);
+
+            console.log(chalk.gray(`   Deleted ${dockerFile}`));
+        } catch (e) {
+            console.error(chalk.yellow(`   Failed to delete configs: ${e.message}`));
+        }
+    } else {
+        console.log(chalk.yellow('   Note: Main stack (Stack #1) config preserved.'));
+    }
 }
 
 async function listStacks(config) {
