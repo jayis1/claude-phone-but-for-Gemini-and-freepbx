@@ -85,7 +85,7 @@ async function showApiServerStatus(config, isPiSplit) {
     }
 
     // 3. API Server
-    const serverRunning = await isServerRunning(); // default gemini-api-server.pid
+    const serverRunning = await isServerRunning('gemini-api-server'); // default gemini-api-server.pid
     if (serverRunning) {
       console.log(chalk.green(`  ✓ API Server: Running as process (Port ${config.server.geminiApiPort})`));
     } else {

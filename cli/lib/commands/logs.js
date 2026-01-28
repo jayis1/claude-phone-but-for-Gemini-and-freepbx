@@ -157,10 +157,16 @@ function tailDockerServiceLogs(dockerComposePath, serviceName) {
  * @param {string} dockerComposePath - Path to docker-compose.yml
  * @param {object} _config - Configuration object (unused)
  */
-function tailBothServices(dockerComposePath, _config) {
-  console.log(chalk.gray('Showing Docker container logs (API server logs not available)\n'));
+/**
+ * Tail both services with interleaved output
+ * @param {string} dockerComposePath - Path to docker-compose.yml
+ * @param {object} config - Configuration object
+ */
+function tailBothServices(dockerComposePath, config) {
+  const { getConfigDir } = import('../config.js');
 
-  const child = spawn('docker', [
+  // Docker logs
+  const dockerChild = spawn('docker', [
     'compose',
     '-f',
     dockerComposePath,
@@ -171,17 +177,29 @@ function tailBothServices(dockerComposePath, _config) {
     stdio: 'inherit'
   });
 
-  // Handle Ctrl+C gracefully
-  process.on('SIGINT', () => {
-    child.kill('SIGTERM');
-    console.log(chalk.gray('\n\nStopped tailing logs.\n'));
-    process.exit(0);
+  // Local logs
+  const logFiles = ['gemini-api-server.log', 'mission-control.log'];
+  const children = [dockerChild];
+
+  // Try to tail local logs if they exist
+  // We use 'tail -f' system command for simplicity on Linux
+  import('../config.js').then(({ getConfigDir }) => {
+    const configDir = getConfigDir();
+
+    logFiles.forEach(file => {
+      const filePath = configDir + '/' + file; // simple path join
+      if (fs.existsSync(filePath)) {
+        console.log(chalk.gray(`Tailing local log: ${file}`));
+        const child = spawn('tail', ['-f', '-n', '20', filePath], { stdio: 'inherit' });
+        children.push(child);
+      }
+    });
   });
 
-  child.on('close', (code) => {
-    if (code !== 0 && code !== null) {
-      console.log(chalk.red(`\n✗ Docker logs failed with exit code ${code}\n`));
-      process.exit(code);
-    }
+  // Handle Ctrl+C gracefully
+  process.on('SIGINT', () => {
+    console.log(chalk.gray('\n\nStopped tailing logs.\n'));
+    children.forEach(c => c.kill('SIGTERM'));
+    process.exit(0);
   });
 }
