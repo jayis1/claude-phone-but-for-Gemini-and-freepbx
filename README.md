@@ -182,7 +182,7 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/muhaa-Gemini-Phone/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/main/install.sh | bash
 ```
 
 The installer performs the following steps:
