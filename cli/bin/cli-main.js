@@ -64,6 +64,21 @@ program
   });
 
 program
+  .command('restart')
+  .description('Restart all services')
+  .action(async () => {
+    try {
+      console.log(chalk.yellow('\n🔄 Restarting Gemini Phone...\n'));
+      await stopCommand();
+      console.log(chalk.gray('--------------------------------------------------'));
+      await startCommand();
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Restart failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+program
   .command('status')
   .description('Show status of all services')
   .action(async () => {
