@@ -298,17 +298,28 @@ function generateStacksPage() {
           const newBtn = document.createElement('div');
           newBtn.className = 'btn-new';
           newBtn.onclick = () => deployStack(nextId);
-          newBtn.innerHTML = \`
-             <span>+</span>
-             <div>Deploy Stack #\${nextId}</div>
-          \`;
+          newBtn.innerHTML = `
+        < span > +</span >
+            <div>Deploy Stack #${nextId}</div>
+    `;
           grid.appendChild(newBtn);
+
+          // Header Actions
+          const actionsDiv = document.getElementById('header-actions');
+          if (actionsDiv) {
+            actionsDiv.innerHTML = `
+        < button class="btn btn-secondary" onclick = "createSwitchboard()" title = "Create AI Switchboard (Group 600)" >📞 Create Switchboard</button >
+              <button class="btn btn-primary" onclick="addStack()">+ Add Stack</button>
+              <button class="btn btn-danger" onclick="stopAllStacks()">Stop All</button>
+    `;
+          }
+        }
         }
 
         async function deployStack(id) {
-           if(!confirm(\`Deploy new Stack #\${id}? This will start Drachtio, FreeSWITCH and Voice App on new ports.\`)) return;
+           if(!confirm(`Deploy new Stack #${ id }? This will start Drachtio, FreeSWITCH and Voice App on new ports.`)) return;
            
-           showToast(\`Deploying Stack #\${id}... this may take a minute\`, 'info');
+           showToast(`Deploying Stack #${ id }... this may take a minute`, 'info');
            try {
              const res = await fetch('/api/stacks/deploy', {
                method: 'POST',
