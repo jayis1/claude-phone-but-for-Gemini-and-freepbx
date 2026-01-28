@@ -51,7 +51,17 @@ async function showApiServerStatus(config, isPiSplit, installationType) {
   console.log(chalk.bold('Local Services:'));
 
   if (isPiSplit) {
-    // ... (Pi split logic unchanged)
+    // Pi-split mode: Check remote API server
+    const apiUrl = `http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`;
+    const apiHealth = await checkGeminiApiServer(apiUrl);
+
+    if (apiHealth.healthy) {
+      console.log(chalk.green(`  ✓ API Server: Connected (${config.deployment.pi.macIp}:${config.server.geminiApiPort})`));
+      console.log(chalk.gray('    Remote API server is healthy'));
+    } else {
+      console.log(chalk.red(`  ✗ API Server: Cannot reach server`));
+      console.log(chalk.gray(`    Tried: ${apiUrl}`));
+    }
   } else {
     // Standard mode: Check local services
 
