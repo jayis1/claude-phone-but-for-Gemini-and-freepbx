@@ -4,6 +4,7 @@
  */
 
 const axios = require('axios');
+const { URLSearchParams } = require('url');
 
 const FREEPBX_API_URL = process.env.FREEPBX_API_URL || '';
 const CLIENT_ID = process.env.FREEPBX_CLIENT_ID || '';
@@ -257,6 +258,7 @@ async function provisionAll() {
 
 module.exports = {
   getAccessToken,
+  graphql,
   provisionExtension,
   provisionOutboundRoute,
   provisionTrunk,
