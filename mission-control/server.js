@@ -24,6 +24,7 @@ const generateApiVaultPage = require('./settings-apis-page');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
+const VOICE_APP_URL = process.env.VOICE_APP_URL || 'http://localhost:3000';
 
 // System logs in memory
 const systemLogs = [];

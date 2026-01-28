@@ -74,8 +74,7 @@ async function showApiServerStatus(config, isPiSplit) {
       console.log(chalk.green(`  ✓ Mission Control: Running as process (Port 3030)`));
       console.log(chalk.gray(`    Dashboard: http://localhost:3030`));
     } else {
-      // In 'both' mode, we know it's in Docker
-      console.log(chalk.green(`  ✓ Mission Control: Managed by Docker`));
+      console.log(chalk.red(`  ✗ Mission Control: Not running`));
     }
 
     // 2. Voice App (Local)
