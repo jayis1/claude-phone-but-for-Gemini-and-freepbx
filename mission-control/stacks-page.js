@@ -216,6 +216,31 @@ function generateStacksPage() {
           }
         }
 
+        async function createSwitchboard() {
+          if (!confirm('This will create Ring Group 600 and route ALL incoming calls to it. Continue?')) return;
+          
+          const btn = document.querySelector('button[title*="Switchboard"]');
+          const oldText = btn.innerText;
+          btn.innerText = '⏳ Provisioning...';
+          btn.disabled = true;
+
+          try {
+            const res = await fetch('/api/proxy/voice/api/pbx/provision-switchboard', { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success) {
+              showToast('Success! ' + data.message, 'success');
+            } else {
+              throw new Error(data.error || 'Unknown error');
+            }
+          } catch (err) {
+            showToast('Failed: ' + err.message, 'error');
+          } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+          }
+        }
+
         function renderStacks(stacks) {
           const grid = document.getElementById('stacks-grid');
           grid.innerHTML = '';
