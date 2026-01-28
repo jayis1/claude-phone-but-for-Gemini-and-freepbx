@@ -54,9 +54,13 @@ async function initiateOutboundCall(srf, mediaServer, options) {
 
     // Format SIP URI for PBX
     // Use the phone number as provided, but strip the '+' for compatibility with most PBX systems.
-    // For SIP URIs, we ensure it has transport=udp to match most PBX configurations.
+    // For SIP URIs, using user=phone or just digits is safer than + prefix which many PBX reject in Request URI.
     const dialPrefix = process.env.DIAL_PREFIX || '';
-    const phoneNumber = dialPrefix + to.replace(/^\+/, '');
+    const cleanTo = to.replace(/^\+/, '');
+    // If dialPrefix is '+', we intentionally DON'T add it to the SIP URI user part to avoid 503.
+    // We only use dial prefix if it's NOT a +.
+    const safePrefix = dialPrefix === '+' ? '' : dialPrefix;
+    const phoneNumber = safePrefix + cleanTo;
     const sipTrunkHost = process.env.SIP_REGISTRAR || process.env.SIP_DOMAIN || '127.0.0.1';
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
     const headerDomain = sipTrunkHost;
