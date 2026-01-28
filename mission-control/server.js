@@ -474,7 +474,7 @@ app.get('/', (req, res) => {
               <span class="service-dot offline" id="dot-freeswitch" title="FreeSWITCH (Media)"></span>
               <span class="service-dot offline" id="dot-freepbx" title="FreePBX/Asterisk"></span>
               <span class="service-dot offline" id="dot-voice" title="Voice App (Node.js)"></span>
-              <span class="service-dot offline" id="dot-brain" title="Inference Brain"></span>
+
 
               <span class="service-dot offline" id="dot-api" title="API Server"></span>
               <span class="service-dot offline" id="dot-system" title="System Monitor"></span>
@@ -536,8 +536,7 @@ app.get('/', (req, res) => {
           <!-- INFERENCE BRAIN PANEL -->
           <div class="panel">
             <div class="panel-header">
-              <span>🧠 INFERENCE BRAIN</span>
-              <span class="status-badge" id="inference-status" style="color: var(--warning)">Checking...</span>
+              <span>📋 SYSTEM LOGS</span>
             </div>
             <div class="panel-content">
               <!-- Top Stats Grid - Removed Brain Load from here -->
@@ -811,36 +810,9 @@ app.get('/', (req, res) => {
 
           // Old autoCheckUpdate removed - now using silentUpdateCheck() instead
 
-          // Inference Brain
-          async function updateInference() {
-            try {
-              const res = await fetch('/api/proxy/inference/stats');
-              const data = await res.json();
-              if(data.success) {
-                setStatus('inference-status', true);
-                const dot = document.getElementById('dot-brain');
-                if(dot) dot.className = 'service-dot online';
-                const sess = document.getElementById('ai-sessions');
-                if(sess) sess.innerText = data.sessions;
-                const model = document.getElementById('model-select');
-                if(model) model.value = data.model;
-
-                const load = data.cpu || 0;
-                const loadVal = document.getElementById('ai-load');
-                if(loadVal) loadVal.innerText = load + '%';
-                const loadBar = document.getElementById('bar-ai-load');
-                if(loadBar) loadBar.style.width = load + '%';
-                
-                brainOnline = true;
-                updateStackStatus();
-              }
-            } catch(e) {
-              setStatus('inference-status', false);
-              brainOnline = false;
-              updateStackStatus();
-              const dot = document.getElementById('dot-brain');
-              if(dot) dot.className = 'service-dot offline';
-            }
+          // Inference Brain - LEGACY REMOVED
+          async function updateInference() { 
+             // No-op
           }
 
           async function updateModel() {
@@ -1083,25 +1055,9 @@ app.get('/', (req, res) => {
             }
           }
 
-          // Python Brain Check
+          // Python Brain Check - LEGACY REMOVED
           async function updatePython() {
-            try {
-              const res = await fetch('/api/proxy/inference/run-python', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({script: 'mock_llm.py', prompt: 'ping' })
-              });
-              const data = await res.json();
-              const dot = document.getElementById('dot-python');
-              if(res.ok && data.status === 'success') {
-                if(dot) dot.className = 'service-dot online';
-              } else {
-                throw new Error('Python script failed');
-              }
-            } catch(e) {
-              const dot = document.getElementById('dot-python');
-              if(dot) dot.className = 'service-dot offline';
-            }
+             // No-op
           }
 
           setInterval(updatePBXStatus, 5000);
@@ -1123,20 +1079,14 @@ app.get('/', (req, res) => {
             const text = document.getElementById('ai-stack-text');
             if(!el || !dot || !text) return;
 
-            if (brainOnline && handsOnline) {
+            // In v4.0+, the "Brain" and "Hands" are unified in the Gemini API Server
+            if (handsOnline) {
               el.style.background = 'rgba(16, 185, 129, 0.1)';
               el.style.borderColor = 'rgba(16, 185, 129, 0.3)';
               dot.style.background = 'var(--success)';
               dot.style.boxShadow = '0 0 8px var(--success)';
-              text.innerText = 'AI STACK: 🧠 BRAIN + ⚡ HANDS ONLINE';
+              text.innerText = 'AI STACK: ⚡ ONLINE';
               text.style.color = 'var(--success)';
-            } else if (brainOnline || handsOnline) {
-              el.style.background = 'rgba(245, 158, 11, 0.1)';
-              el.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-              dot.style.background = 'var(--warning)';
-              dot.style.boxShadow = '0 0 8px var(--warning)';
-              text.innerText = brainOnline ? 'AI STACK: 🧠 BRAIN ONLY' : 'AI STACK: ⚡ HANDS ONLY';
-              text.style.color = 'var(--warning)';
             } else {
               el.style.background = 'rgba(239, 68, 68, 0.1)';
               el.style.borderColor = 'rgba(239, 68, 68, 0.3)';
@@ -1244,7 +1194,7 @@ app.get('/', (req, res) => {
           silentUpdateCheck();
           setInterval(silentUpdateCheck, 60000);
 
-          updatePBXStatus(); updateDockerStatus(); updateVoice(); updateInference(); updatePython(); updateApiStatus(); updateSystem(); updateLogs();
+          updatePBXStatus(); updateDockerStatus(); updateVoice(); updateApiStatus(); updateSystem(); updateLogs();
 
           async function triggerTestCall() {
             const btn = document.getElementById('testBtn');
