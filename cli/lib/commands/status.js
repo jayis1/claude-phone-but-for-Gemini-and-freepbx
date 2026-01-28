@@ -68,8 +68,7 @@ async function showApiServerStatus(config, isPiSplit) {
     // Standard mode: Check local services
 
     // 1. Mission Control (Dashboard)
-    const mcPidPath = path.join(configDir, 'mission-control.pid');
-    const mcRunning = await isServerRunning(mcPidPath);
+    const mcRunning = await isServerRunning('mission-control');
     if (mcRunning) {
       console.log(chalk.green(`  ✓ Mission Control: Running as process (Port 3030)`));
       console.log(chalk.gray(`    Dashboard: http://localhost:3030`));
@@ -78,8 +77,7 @@ async function showApiServerStatus(config, isPiSplit) {
     }
 
     // 2. Voice App (Local)
-    const voiceAppPidPath = path.join(configDir, 'voice-app.pid');
-    const voiceAppRunning = await isServerRunning(voiceAppPidPath);
+    const voiceAppRunning = await isServerRunning('voice-app');
     if (voiceAppRunning) {
       console.log(chalk.green(`  ✓ Voice App: Running (Port 3434)`));
     } else {
