@@ -150,6 +150,7 @@ export function generateDockerCompose(config, stackId = 1) {
     volumes:
       - ${config.paths.voiceApp}/audio:/app/audio
       - ${config.paths.voiceApp}/config:/app/config
+      - ${getConfigDir()}/devices${stackId === 1 ? '' : '-' + stackId}.json:/app/config/devices.json
       - ${getConfigDir()}/recordings:/app/recordings
     depends_on:
       - drachtio
@@ -212,6 +213,28 @@ export function generateEnvFile(config, stackId = 1) {
     geminiApiUrl = `http://localhost:${config.server.geminiApiPort || 3333}`;
   }
 
+  // --- API KEY OVERRIDES (PER STACK) ---
+  const globalApi = config.api || {};
+  const stackApi = (config.stacks && config.stacks[stackId] && config.stacks[stackId].api)
+    ? config.stacks[stackId].api
+    : {};
+
+  const elevenLabsKey = stackApi.elevenlabs?.apiKey || globalApi.elevenlabs?.apiKey || '';
+  const openAiKey = stackApi.openai?.apiKey || globalApi.openai?.apiKey || '';
+  const geminiKey = stackApi.gemini?.apiKey || globalApi.gemini?.apiKey || '';
+  // -------------------------------------
+
+  // Current Device (1:1 Mapping)
+  const deviceIndex = stackId - 1;
+  const configDevices = config.devices || [];
+  const device = configDevices[deviceIndex] || {
+    extension: '9000',
+    authId: '9000',
+    password: 'password',
+    voiceId: 'default'
+  };
+
+
   const lines = [
     '# ====================================',
     '# WARNING: DO NOT SHARE THIS FILE',
@@ -241,23 +264,23 @@ export function generateEnvFile(config, stackId = 1) {
     `SIP_REGISTRAR_PORT=${registrarPort}`,
     '',
     '# Default extension (primary device)',
-    `SIP_EXTENSION=${config.devices[0].extension}`,
-    `SIP_AUTH_ID=${config.devices[0].authId}`,
-    `SIP_PASSWORD=${config.devices[0].password}`,
+    `SIP_EXTENSION=${device.extension}`,
+    `SIP_AUTH_ID=${device.authId || device.extension}`,
+    `SIP_PASSWORD=${device.password}`,
     '',
     '# Gemini API Server',
     `GEMINI_API_URL=${geminiApiUrl}`,
     '',
     '# ElevenLabs TTS',
-    `ELEVENLABS_API_KEY=${config.api.elevenlabs.apiKey}`,
-    `ELEVENLABS_VOICE_ID=${config.devices[0].voiceId}`,
+    `ELEVENLABS_API_KEY=${elevenLabsKey}`,
+    `ELEVENLABS_VOICE_ID=${device.voiceId}`,
     '',
     '# OpenAI (Whisper STT)',
-    `OPENAI_API_KEY=${config.api.openai.apiKey}`,
+    `OPENAI_API_KEY=${openAiKey}`,
     '',
     '# Gemini API Key',
-    `GEMINI_API_KEY=${config.api.gemini?.apiKey || ''}`,
-    `MISSION_CONTROL_GEMINI_KEY=${config.api.gemini?.missionControlKey || ''}`,
+    `GEMINI_API_KEY=${geminiKey}`,
+    `MISSION_CONTROL_GEMINI_KEY=${globalApi.gemini?.missionControlKey || ''}`,
     '',
     '# Application Settings',
     `HTTP_PORT=${httpPort}`,
@@ -303,14 +326,46 @@ export async function writeDockerConfig(config, stackId = 1) {
 
   const dockerComposeContent = generateDockerCompose(config, stackId);
   const envContent = generateEnvFile(config, stackId);
+  const deviceConfigContent = generateDeviceConfig(config, stackId);
 
   await fs.promises.writeFile(dockerComposePath, dockerComposeContent, { mode: 0o644 });
   await fs.promises.writeFile(envPath, envContent, { mode: 0o600 });
+
+  // Write devices.json for voice-app
+  const devicesPath = path.join(configDir, `devices${suffix}.json`);
+  await fs.promises.writeFile(devicesPath, deviceConfigContent, { mode: 0o644 });
 }
 
 /**
- * Build Docker containers
+ * Generate devices.json content from CLI config
+ * @param {object} config 
+ * @param {number} stackId - 1-based stack ID
  */
+export function generateDeviceConfig(config, stackId = 1) {
+  const devices = {};
+
+  if (config.devices && Array.isArray(config.devices)) {
+    // Strategy: Map Stack N to Device N (0-indexed array)
+    // Stack 1 -> Device 0
+    // Stack 2 -> Device 1
+    const deviceIndex = stackId - 1;
+    const device = config.devices[deviceIndex];
+
+    if (device && device.extension) {
+      devices[device.extension] = {
+        name: device.name || 'Gemini',
+        extension: device.extension,
+        authId: device.authId || device.extension,
+        password: device.password || '',
+        voiceId: device.voiceId || config.api.elevenlabs.defaultVoiceId,
+        prompt: device.prompt || 'You are a helpful AI assistant.'
+      };
+    }
+  }
+
+  return JSON.stringify(devices, null, 2);
+}
+
 /**
  * Build Docker containers
  * @param {number} stackId - Default 1
@@ -319,13 +374,14 @@ export async function buildContainers(stackId = 1) {
   const configDir = getConfigDir();
   const suffix = stackId === 1 ? '' : `-${stackId}`;
   const dockerComposePath = path.join(configDir, `docker-compose${suffix}.yml`);
+  const projectName = `gemini-phone-${stackId}`;
 
   if (!fs.existsSync(dockerComposePath)) {
     throw new Error(`Docker configuration not found for stack ${stackId}. Run "gemini-phone stack deploy ${stackId}" first.`);
   }
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-f', dockerComposePath, 'build'];
+  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'build'];
 
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
@@ -347,22 +403,20 @@ export async function buildContainers(stackId = 1) {
 
 /**
  * Start Docker containers
- */
-/**
- * Start Docker containers
  * @param {number} stackId - Default 1
  */
 export async function startContainers(stackId = 1) {
   const configDir = getConfigDir();
   const suffix = stackId === 1 ? '' : `-${stackId}`;
   const dockerComposePath = path.join(configDir, `docker-compose${suffix}.yml`);
+  const projectName = `gemini-phone-${stackId}`;
 
   if (!fs.existsSync(dockerComposePath)) {
     throw new Error(`Docker configuration not found for stack ${stackId}. Run "gemini-phone stack deploy ${stackId}" first.`);
   }
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-f', dockerComposePath, 'up', '-d', '--remove-orphans'];
+  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'up', '-d', '--remove-orphans'];
 
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
@@ -383,20 +437,18 @@ export async function startContainers(stackId = 1) {
 
 /**
  * Stop Docker containers
- */
-/**
- * Stop Docker containers
  * @param {number} stackId - Default 1
  */
 export async function stopContainers(stackId = 1) {
   const configDir = getConfigDir();
   const suffix = stackId === 1 ? '' : `-${stackId}`;
   const dockerComposePath = path.join(configDir, `docker-compose${suffix}.yml`);
+  const projectName = `gemini-phone-${stackId}`;
 
   if (!fs.existsSync(dockerComposePath)) return;
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-f', dockerComposePath, 'down'];
+  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'down'];
 
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {
@@ -417,20 +469,18 @@ export async function stopContainers(stackId = 1) {
 
 /**
  * Get status of Docker containers
- */
-/**
- * Get status of Docker containers
  * @param {number} stackId - Default 1
  */
 export async function getContainerStatus(stackId = 1) {
   const configDir = getConfigDir();
   const suffix = stackId === 1 ? '' : `-${stackId}`;
   const dockerComposePath = path.join(configDir, `docker-compose${suffix}.yml`);
+  const projectName = `gemini-phone-${stackId}`;
 
   if (!fs.existsSync(dockerComposePath)) return [];
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-f', dockerComposePath, 'ps', '--format', 'json'];
+  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'ps', '--format', 'json'];
 
   return new Promise((resolve) => {
     const child = spawn(compose.cmd, composeArgs, {

@@ -102,28 +102,19 @@ module.exports = function generateSettingsPage(env) {
               <div class="col">
                 <div class="section">
                   <div class="section-title"><span>🧠</span> AI Intelligence</div>
-                  <div class="form-group">
-                    <label>Gemini API Key</label>
-                    <input type="password" name="GEMINI_API_KEY" value="${env.GEMINI_API_KEY || ''}" placeholder="AIzaSy...">
-                    <div class="hint">Primary brain for reasoning</div>
+                  
+                  <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="color: #f59e0b; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem;">🔐 SECURE VAULT</div>
+                    <p style="font-size: 0.8rem; color: #a1a1aa; margin-bottom: 1rem;">API keys are now managed in the dedicated Vault for enhanced security.</p>
+                    <a href="/settings/apis" style="text-decoration: none;">
+                      <button type="button" style="width: 100%; padding: 10px; background: #f59e0b; color: #000; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>🗝️</span> Open API Vault
+                      </button>
+                    </a>
                   </div>
-                  <div class="form-group">
-                    <label>Mission Control Gemini Key</label>
-                    <input type="password" name="MISSION_CONTROL_GEMINI_KEY" value="${env.MISSION_CONTROL_GEMINI_KEY || ''}" placeholder="AIzaSy...">
-                    <div class="hint">Secondary key used specifically for the dashboard</div>
-                  </div>
-                  <div class="form-group">
-                    <label>OpenAI API Key</label>
-                    <input type="password" name="OPENAI_API_KEY" value="${env.OPENAI_API_KEY || ''}" placeholder="sk-...">
-                    <div class="hint">Used for Whisper STT (Speech-to-Text)</div>
-                  </div>
-                  <div class="form-group">
-                    <label>ElevenLabs API Key</label>
-                    <input type="password" name="ELEVENLABS_API_KEY" value="${env.ELEVENLABS_API_KEY || ''}" placeholder="...">
-                    <div class="hint">Used for TTS (Text-to-Speech)</div>
-                  </div>
+
                    <div class="form-group">
-                    <label>Default Voice ID</label>
+                    <label>Default Voice ID (Legacy)</label>
                     <input type="text" name="ELEVENLABS_VOICE_ID" value="${env.ELEVENLABS_VOICE_ID || ''}" placeholder="pNInz6ov...">
                   </div>
                 </div>
