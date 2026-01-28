@@ -1,4 +1,4 @@
-# Gemini Phone (v4.2.0) 🧠🔗🛰️
+# Gemini Phone (v42.0) 🧠🔗🛰️
 
 ![Gemini Phone](assets/logo.png)
 
