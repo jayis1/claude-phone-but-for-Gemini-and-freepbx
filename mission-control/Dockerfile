@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-utils \
     procps \
+    docker.io \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first (better caching)

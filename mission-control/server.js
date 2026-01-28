@@ -18,6 +18,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 
 const generateSettingsPage = require('./settings-page');
 const generateN8nPage = require('./n8n-page');
+const generateDevicesPage = require('./devices-page');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
@@ -182,6 +183,43 @@ app.get('/', (req, res) => {
           .service-dot.offline {
             background: var(--error);
           box-shadow: 0 0 8px var(--error);
+          }
+          .reboot-group {
+            display: flex;
+            gap: 4px;
+            margin-right: 12px;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+          }
+          .btn-reboot {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 22px;
+            height: 22px;
+          }
+          .btn-reboot:hover {
+            color: var(--accent);
+            background: rgba(139, 92, 246, 0.2);
+            transform: scale(1.2);
+          }
+          .btn-reboot.restarting {
+            animation: spin 1s linear infinite;
+            color: var(--warning);
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
           .test-call-btn {
             background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
@@ -449,6 +487,11 @@ app.get('/', (req, res) => {
               <button onclick="triggerPbxProvision()" id="provisionBtn" class="provision-btn">
                 <span>⚡</span> <span>Provision PBX</span>
               </button>
+              <a href="/devices" style="text-decoration: none;">
+                <button style="padding: 4px 10px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.3); color: var(--accent); border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                  <span>📱</span> Devices
+                </button>
+              </a>
             </div>
 
           <div style="display:flex; align-items:center; gap:10px; margin-right: 20px;">
@@ -468,6 +511,14 @@ app.get('/', (req, res) => {
              </div>
           </div>
           <div class="service-status">
+            <div class="reboot-group">
+              <button class="btn-reboot" onclick="restartService('all')" title="Restart All Stack">🔄</button>
+              <button class="btn-reboot" onclick="restartService('drachtio')" title="Restart SIP (Drachtio)">📞</button>
+              <button class="btn-reboot" onclick="restartService('freeswitch')" title="Restart Media (FreeSWITCH)">🔈</button>
+              <button class="btn-reboot" onclick="restartService('voice-app')" title="Restart Voice App">🎙️</button>
+              <button class="btn-reboot" onclick="restartService('gemini-api-server')" title="Restart API Server">⚡</button>
+              <button class="btn-reboot" onclick="restartService('mission-control')" title="Restart Mission Control">🖥️</button>
+            </div>
             <span>Services:</span>
             <div class="service-dots">
               <span class="service-dot offline" id="dot-drachtio" title="Drachtio (SIP)"></span>
@@ -1231,6 +1282,40 @@ app.get('/', (req, res) => {
               btn.style.opacity = '1';
             }
           }
+
+          async function restartService(name) {
+            const icons = {
+              'all': '🔄', 'drachtio': '📞', 'freeswitch': '🔈',
+              'voice-app': '🎙️', 'gemini-api-server': '⚡', 'mission-control': '🖥️'
+            };
+            
+            if (!confirm('Restart ' + name + ' service?')) return;
+
+            try {
+              const res = await fetch('/api/restart-service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ service: name })
+              });
+              
+              if (res.ok) {
+                console.log('Restart triggered for ' + name);
+                // Temporary visual feedback
+                const btn = event.currentTarget;
+                const originalText = btn.innerText;
+                btn.innerText = '⌛';
+                btn.classList.add('restarting');
+                setTimeout(() => {
+                  btn.innerText = originalText;
+                  btn.classList.remove('restarting');
+                }, 3000);
+              } else {
+                alert('Failed to trigger restart');
+              }
+            } catch (err) {
+              alert('Error: ' + err.message);
+            }
+          }
         </script>
       </body>
     </html>
@@ -1287,6 +1372,8 @@ app.get('/api/system/stats', async (req, res) => {
           // Standard top output: PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
           // parts indices: 0:PID, 1:USER, 2:PR, 3:NI, 4:VIRT, 5:RES, 6:SHR, 7:S, 8:%CPU, 9:%MEM, 10:TIME+, 11+:COMMAND
           if (parts.length >= 12) {
+            const cmd = parts.slice(11).join(' ');
+            const isAi = /drachtio|freeswitch|voice-app|gemini-api-server|mission-control/i.test(cmd);
             return {
               pid: parts[0],
               user: parts[1],
@@ -1298,7 +1385,8 @@ app.get('/api/system/stats', async (req, res) => {
               cpu: parts[8],
               mem: parts[9],
               time: parts[10],
-              cmd: parts.slice(11).join(' ')
+              cmd: cmd,
+              isAi: isAi
             };
           }
           return null;
@@ -1602,6 +1690,15 @@ let ENV_FILE = LOCAL_ENV;
 if (fs.existsSync(CONTAINER_ENV)) ENV_FILE = CONTAINER_ENV;
 else if (fs.existsSync(HOME_ENV)) ENV_FILE = HOME_ENV;
 
+// Device Management Paths (Synced with CLI)
+const HOME_DEVICES = path.join(os.homedir(), '.gemini-phone', 'devices.json');
+const LOCAL_DEVICES = path.join(__dirname, '../voice-app/config/devices.json');
+const CONTAINER_DEVICES = '/app/voice-app/config/devices.json';
+
+let DEVICES_FILE = LOCAL_DEVICES;
+if (fs.existsSync(CONTAINER_DEVICES)) DEVICES_FILE = CONTAINER_DEVICES;
+else if (fs.existsSync(HOME_DEVICES)) DEVICES_FILE = HOME_DEVICES;
+
 // Helper: Read .env into object
 function parseEnv() {
   try {
@@ -1689,6 +1786,135 @@ app.get('/settings', (req, res) => {
 app.get('/n8n-config', (req, res) => {
   const env = parseEnv();
   res.send(generateN8nPage(env));
+});
+
+app.get('/devices', (req, res) => {
+  try {
+    let devices = {};
+    if (fs.existsSync(DEVICES_FILE)) {
+      devices = JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf8'));
+    }
+    res.send(generateDevicesPage(devices));
+  } catch (err) {
+    console.error('[DEVICES] Error serving devices page:', err.message);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// --- Device Management APIs ---
+
+// 1. Get List of Devices
+app.get('/api/devices', (req, res) => {
+  try {
+    if (!fs.existsSync(DEVICES_FILE)) {
+      return res.json({ success: true, devices: {} });
+    }
+    const data = fs.readFileSync(DEVICES_FILE, 'utf8');
+    const devices = JSON.parse(data);
+    res.json({ success: true, devices });
+  } catch (err) {
+    console.error('[DEVICES] Error reading devices:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to read devices' });
+  }
+});
+
+// 2. Save Devices (Update devices.json)
+app.post('/api/devices/save', (req, res) => {
+  try {
+    const devices = req.body;
+    if (typeof devices !== 'object') {
+      return res.status(400).json({ success: false, error: 'Invalid device data' });
+    }
+
+    // Ensure directory exists if using HOME path
+    const dir = path.dirname(DEVICES_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    }
+
+    fs.writeFileSync(DEVICES_FILE, JSON.stringify(devices, null, 2));
+
+    console.log('[DEVICES] Devices updated via web view. Restarting Voice App...');
+
+    // Trigger Background Restart
+    const { exec } = require('child_process');
+    exec('pkill -f "voice-app" || true');
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[DEVICES] Error saving devices:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to save devices' });
+  }
+});
+
+// 3. Delete Device
+app.post('/api/devices/delete', (req, res) => {
+  try {
+    const { extension } = req.body;
+    if (!extension) return res.status(400).json({ success: false, error: 'Extension required' });
+
+    if (!fs.existsSync(DEVICES_FILE)) {
+      return res.status(404).json({ success: false, error: 'No devices found' });
+    }
+
+    const data = fs.readFileSync(DEVICES_FILE, 'utf8');
+    const devices = JSON.parse(data);
+
+    if (devices[extension]) {
+      delete devices[extension];
+      fs.writeFileSync(DEVICES_FILE, JSON.stringify(devices, null, 2));
+
+      console.log(`[DEVICES] Device ${extension} removed. Restarting Voice App...`);
+      const { exec } = require('child_process');
+      exec('pkill -f "voice-app" || true');
+
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ success: false, error: 'Device not found' });
+    }
+  } catch (err) {
+    console.error('[DEVICES] Error deleting device:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to delete device' });
+  }
+});
+
+// 4. Restart Service (Docker Container)
+app.post('/api/restart-service', (req, res) => {
+  const { service } = req.body;
+  if (!service) return res.status(400).json({ success: false, error: 'Service name required' });
+
+  // Map user-friendly names to container names if necessary
+  // Based on docker ps: voice-app, freeswitch, gemini-api-server, mission-control, drachtio
+  const containerMap = {
+    'drachtio': 'drachtio',
+    'freeswitch': 'freeswitch',
+    'voice-app': 'voice-app',
+    'gemini-api-server': 'gemini-api-server',
+    'mission-control': 'mission-control',
+    'all': 'all'
+  };
+
+  const container = containerMap[service];
+  if (!container) return res.status(400).json({ success: false, error: 'Invalid service' });
+
+  console.log(`[DOCKER] Restarting service: ${service}...`);
+
+  const { exec } = require('child_process');
+
+  if (container === 'all') {
+    // Restart entire stack
+    exec('docker compose restart', (err) => {
+      if (err) console.error('[DOCKER] Restart all failed:', err.message);
+    });
+  } else {
+    // Restart single container
+    exec(`docker restart ${container}`, (err) => {
+      if (err) console.error(`[DOCKER] Restart ${container} failed:`, err.message);
+    });
+  }
+
+  // Respond immediately, restart happens in background
+  res.json({ success: true, message: `Restarting ${service}...` });
 });
 
 // Save Settings from Web UI
@@ -2179,6 +2405,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v4.0.17]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v4.0.18]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });

@@ -175,7 +175,8 @@ function generateTopPage() {
                <button class="control-btn kill" onclick="killSelected()">F9 KILL</button>
             </div>
             <div class="header-badge">TipTop Task Manager</div>
-            <div id="clock">00:00:00</div>
+            <div id="ai-pid-summary" style="color: #0f0; font-size: 11px; font-weight: bold; margin-left: 20px;">AI STACK PIDs: Loading...</div>
+            <div id="clock" style="margin-left: auto;">00:00:00</div>
           </div>
   
           <div class="stats-container">
@@ -331,12 +332,24 @@ function generateTopPage() {
 
           async function killSelected() {
              if(!selectedPid) return alert('Select a process first!');
-             if(!confirm('KILL process ' + selectedPid + '?')) return;
+             const p = currentProcesses.find(proc => proc.pid === selectedPid);
+             const name = p ? p.cmd : selectedPid;
+             if(!confirm('KILL process ' + name + ' (PID: ' + selectedPid + ')?')) return;
              
              try {
-                // Legacy Python Execution Removed
-                alert('Python execution is no longer supported in v4.0+ (Native Gemini SDK used instead)');
-             } catch(e) { alert('Request failed'); }
+                const res = await fetch('/api/process/kill', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ pid: selectedPid })
+                });
+                const data = await res.json();
+                if (data.success) {
+                  alert('Kill signal sent to ' + selectedPid);
+                  selectedPid = null;
+                } else {
+                  alert('Kill failed: ' + data.error);
+                }
+             } catch(e) { alert('Request failed: ' + e.message); }
           }
 
           async function updateStats() {
@@ -396,9 +409,10 @@ function generateTopPage() {
               // Update Headers (Arrow)
               document.querySelectorAll('th').forEach(th => {
                   th.className = '';
-                  if(th.innerText.toLowerCase().includes(sortBy) || 
-                    (sortBy === 'time' && th.innerText.includes('TIME')) ||
-                    (sortBy === 'virt' && th.innerText.includes('VIRT'))) {
+                  const thText = th.innerText.toLowerCase();
+                  if(thText.includes(sortBy) || 
+                    (sortBy === 'time' && thText.includes('time')) ||
+                    (sortBy === 'virt' && thText.includes('virt'))) {
                      th.className = sortDesc ? 'sorted-desc' : 'sorted-asc';
                   }
               });
@@ -408,21 +422,33 @@ function generateTopPage() {
                 if(p.pid === selectedPid) row.className = 'selected';
                 row.onclick = () => selectRow(p.pid);
                 
+                const dotStyle = p.isAi ? 'color: #0f0; font-weight: bold;' : '';
+                
                 row.innerHTML = \`
-                  <td class="pid">\${p.pid}</td>
-                  <td class="user">\${p.user}</td>
-                  <td>\${p.pri}</td>
-                  <td>\${p.ni}</td>
-                  <td>\${p.virt}</td>
-                  <td>\${p.res}</td>
-                  <td>\${p.s}</td>
-                  <td>\${p.cpu}%</td>
-                  <td>\${p.mem}%</td>
-                  <td>\${p.time}</td>
-                  <td class="cmd">\${p.cmd}</td>
+                  <td class="pid" style="\${dotStyle}">\${p.pid}</td>
+                  <td class="user" style="\${dotStyle}">\${p.user}</td>
+                  <td style="\${dotStyle}">\${p.pri}</td>
+                  <td style="\${dotStyle}">\${p.ni}</td>
+                  <td style="\${dotStyle}">\${p.virt}</td>
+                  <td style="\${dotStyle}">\${p.res}</td>
+                  <td style="\${dotStyle}">\${p.s}</td>
+                  <td style="\${dotStyle}">\${p.cpu}%</td>
+                  <td style="\${dotStyle}">\${p.mem}%</td>
+                  <td style="\${dotStyle}">\${p.time}</td>
+                  <td class="cmd" style="\${dotStyle}">\${p.cmd}</td>
                 \`;
                 tbody.appendChild(row);
               });
+
+              // Update AI Summary
+              const aiProcesses = currentProcesses.filter(p => p.isAi);
+              const summaryText = aiProcesses.map(p => {
+                const parts = p.cmd.split(/\\s+/);
+                const name = parts[0].split('/').pop();
+                return name + ':' + p.pid;
+              }).join(' | ');
+              const summaryEl = document.getElementById('ai-pid-summary');
+              if (summaryEl) summaryEl.innerText = 'AI STACK PIDs: ' + (summaryText || 'None detected');
           }
 
           setInterval(updateStats, 2000);
@@ -457,13 +483,13 @@ function generateTopPage() {
                const div = document.createElement('div');
                div.className = 'note-card';
                div.onclick = () => editNote(note.id);
-               div.innerHTML = \`
+               div.innerHTML = \\\`
                  <div class="note-card-title">
-                    <span>\${note.title || '(Untitled)'}</span>
-                    <span style="font-weight:normal; color:#666; font-size:0.8em">\${new Date(note.timestamp).toLocaleDateString()}</span>
+                    <span>\\\\\\\${note.title || '(Untitled)'}</span>
+                    <span style="font-weight:normal; color:#666; font-size:0.8em">\\\\\\\${new Date(note.timestamp).toLocaleDateString()}</span>
                  </div>
-                 <div class="note-card-prev">\${note.content || ''}</div>
-               \`;
+                 <div class="note-card-prev">\\\\\\\${note.content || ''}</div>
+               \\\`;
                list.appendChild(div);
             });
           }
@@ -566,20 +592,20 @@ const res = await fetch('/api/proxy/voice/api/history'); // Using Mission Contro
                 const statusClass = call.status === 'completed' ? 'status-completed' : 'status-failed';
                 let actionHtml = '';
                 if(call.recordingUrl) {
-                   actionHtml = \`<button class="btn-sm" style="margin-left:auto; background:#222; border-color:#444;" onclick="event.stopPropagation(); playRecording('\${call.recordingUrl}')">▶️ Play</button>\`;
+                   actionHtml = \\\`<button class="btn-sm" style="margin-left:auto; background:#222; border-color:#444;" onclick="event.stopPropagation(); playRecording('\\\\\\\${call.recordingUrl}')">▶️ Play</button>\\\`;
                 }
 
                 const item = document.createElement('div');
                 item.className = 'call-item';
-                item.innerHTML = \`
-                   <div class="call-icon" style="color:\${color}">\${icon}</div>
+                item.innerHTML = \\\`
+                   <div class="call-icon" style="color:\\\\\\\${color}">\\\\\\\${icon}</div>
                    <div class="call-details">
-                      <div class="call-number">\${number || 'Unknown'}</div>
-                      <div class="call-time">\${timeAgo(call.timestamp)} • \${call.duration}s</div>
+                      <div class="call-number">\\\\\\\${number || 'Unknown'}</div>
+                      <div class="call-time">\\\\\\\${timeAgo(call.timestamp)} • \\\\\\\${call.duration}s</div>
                    </div>
-                   \${actionHtml}
-                   <div class="call-status \${statusClass}">\${call.status}</div>
-                \`;
+                   \\\\\\\${actionHtml}
+                   <div class="call-status \\\\\\\${statusClass}">\\\\\\\${call.status}</div>
+                \\\`;
                 list.appendChild(item);
              });
           }

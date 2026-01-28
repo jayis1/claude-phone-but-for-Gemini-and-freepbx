@@ -43,11 +43,13 @@ services:
     container_name: mission-control
     restart: unless-stopped
     network_mode: host
+    pid: host
     env_file:
       - .env
     volumes:
       - ./data/mission-control:/app/data
       - .env:/app/.env
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - PORT=3030
       - VOICE_APP_URL=http://localhost:3000
