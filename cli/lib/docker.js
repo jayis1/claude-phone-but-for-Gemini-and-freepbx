@@ -346,6 +346,25 @@ export async function writeDockerConfig(config, stackId = 1) {
  * @param {object} config 
  * @param {number} stackId - 1-based stack ID
  */
+/**
+ * Generate FreeSWITCH event_socket.conf.xml
+ * @param {number} stackId 
+ */
+export function generateFreeSwitchConfig(stackId = 1) {
+  const idOffset = stackId - 1;
+  const fsPort = 8021 + idOffset;
+
+  return `<configuration name="event_socket.conf" description="Socket Client">
+  <settings>
+    <param name="nat-map" value="false"/>
+    <param name="listen-ip" value="0.0.0.0"/>
+    <param name="listen-port" value="${fsPort}"/>
+    <param name="password" value="ClueCon"/>
+    <param name="apply-inbound-acl" value="lan"/>
+  </settings>
+</configuration>`;
+}
+
 export function generateDeviceConfig(config, stackId = 1) {
   const devices = {};
 
