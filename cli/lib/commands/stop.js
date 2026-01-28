@@ -47,14 +47,14 @@ export async function stopCommand() {
 async function stopApiServer() {
   const spinner = ora('Stopping Gemini API server...').start();
   try {
-    if (await isServerRunning()) {
-      await stopServer();
+    if (await isServerRunning('gemini-api-server')) {
+      await stopServer('gemini-api-server');
       spinner.succeed('Gemini API server stopped');
     } else {
-      spinner.info('Gemini API server not running');
+      spinner.info('Gemini API server not running (host)');
     }
   } catch (error) {
-    spinner.fail(`Failed to stop server: ${error.message}`);
+    spinner.fail(`Failed to stop API server: ${error.message}`);
   }
 }
 
@@ -78,26 +78,37 @@ async function stopVoiceServer() {
  */
 async function stopBoth() {
   // Stop gemini-api-server
-  const spinner = ora('Stopping Gemini API server...').start();
+  let spinner = ora('Stopping Gemini API server...').start();
   try {
-    if (await isServerRunning()) {
-      await stopServer();
+    if (await isServerRunning('gemini-api-server')) {
+      await stopServer('gemini-api-server');
       spinner.succeed('Gemini API server stopped');
     } else {
-      spinner.stop(); // No message if not running (likely in Docker)
+      spinner.stop();
     }
   } catch (error) {
-    spinner.fail(`Failed to stop server: ${error.message}`);
+    spinner.fail(`Failed to stop API server: ${error.message}`);
+  }
+
+  // Stop Mission Control
+  spinner = ora('Stopping Mission Control...').start();
+  try {
+    if (await isServerRunning('mission-control')) {
+      await stopServer('mission-control');
+      spinner.succeed('Mission Control stopped');
+    } else {
+      spinner.stop();
+    }
+  } catch (error) {
+    spinner.fail(`Failed to stop Mission Control: ${error.message}`);
   }
 
   // Stop Docker containers
-  spinner.start('Stopping Docker containers...');
+  spinner.start('Stopping Docker stack...');
   try {
     await stopContainers();
     spinner.succeed('Docker containers stopped');
   } catch (error) {
-    spinner.fail(`Failed to stop containers: ${error.message}`);
+    spinner.fail(`Failed to stop Docker stack: ${error.message}`);
   }
-
-  // Mission Control is now in Docker, stopped by stopContainers()
 }

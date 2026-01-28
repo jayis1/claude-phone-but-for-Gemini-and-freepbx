@@ -19,6 +19,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const generateSettingsPage = require('./settings-page');
 const generateN8nPage = require('./n8n-page');
 const generateDevicesPage = require('./devices-page');
+const generateStacksPage = require('./stacks-page');
 
 const app = express();
 const PORT = process.env.PORT || 3030;
@@ -68,6 +69,10 @@ app.get('/top', (req, res) => {
   res.send(generateTopPage());
 });
 
+app.get('/stacks', (req, res) => {
+  res.send(generateStacksPage());
+});
+
 app.get('/api/config-info', (req, res) => {
   res.json({
     testPhoneNumber: process.env.TEST_PHONE_NUMBER || ''
@@ -96,6 +101,97 @@ app.post('/api/test-call', async (req, res) => {
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: `Failed to trigger test call: ${error.message}` });
+  }
+});
+
+// === STACK MANAGEMENT API ===
+
+app.get('/api/stacks/list', async (req, res) => {
+  try {
+    // We re-implement the discovery logic here for speed instead of shelling out
+    // Or we can shell out to `gemini-phone stack list` but parsing CLI output is brittle.
+    // Let's look for docker-compose-*.yml files in config dir.
+    const config = require('../cli/lib/config.js'); // Reuse CLI config logic
+    const docker = require('../cli/lib/docker.js'); // Reuse CLI Docker logic
+    const configDir = config.getConfigDir();
+
+    const stacks = [];
+    const files = fs.readdirSync(configDir);
+
+    // Stack 1
+    if (fs.existsSync(path.join(configDir, 'docker-compose.yml'))) {
+      stacks.push(1);
+    }
+    // Others
+    files.forEach(f => {
+      const match = f.match(/^docker-compose-(\d+)\.yml$/);
+      if (match) stacks.push(parseInt(match[1], 10));
+    });
+
+    const uniqueStacks = [...new Set(stacks)].sort((a, b) => a - b);
+    const result = [];
+
+    for (const id of uniqueStacks) {
+      const offset = id - 1;
+      const sipPort = 5060 + (offset * 10);
+      const rtpStart = 30000 + (offset * 200);
+      const rtpEnd = rtpStart + 100;
+      const voicePort = 3000 + (offset * 2);
+
+      // Check running status
+      const status = await docker.getContainerStatus(id);
+      const isOnline = status.length > 0 && status.some(c => c.status.includes('Up') || c.status.toLowerCase().includes('running'));
+
+      result.push({
+        id,
+        sipPort,
+        rtpRange: `${rtpStart}-${rtpEnd}`,
+        voicePort,
+        status: isOnline ? 'online' : 'offline',
+        containers: status.map(c => c.name)
+      });
+    }
+
+    res.json({ stacks: result });
+  } catch (error) {
+    console.error('Stack list error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/stacks/deploy', async (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+
+  try {
+    const cliPath = path.resolve(__dirname, '../cli/bin/gemini-phone.js');
+    const cmd = `node "${cliPath}" stack deploy ${id}`;
+    console.log('[Stack API] Executing:', cmd);
+
+    // Long running operation
+    const { stdout, stderr } = await execAsync(cmd);
+    console.log('[Stack API] Output:', stdout);
+    if (stderr) console.error('[Stack API] Stderr:', stderr);
+
+    res.json({ success: true, logs: stdout });
+  } catch (error) {
+    console.error('Stack deploy error:', error);
+    res.status(500).json({ error: error.message, details: error.stdout });
+  }
+});
+
+app.post('/api/stacks/remove', async (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+
+  try {
+    const cliPath = path.resolve(__dirname, '../cli/bin/gemini-phone.js');
+    const cmd = `node "${cliPath}" stack remove ${id}`;
+
+    await execAsync(cmd);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -490,6 +586,11 @@ app.get('/', (req, res) => {
               <a href="/devices" style="text-decoration: none;">
                 <button style="padding: 4px 10px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.3); color: var(--accent); border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                   <span>📱</span> Devices
+                </button>
+              </a>
+              <a href="/stacks" style="text-decoration: none;">
+                <button style="padding: 4px 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                  <span>🏗️</span> Stacks
                 </button>
               </a>
             </div>
@@ -1373,7 +1474,7 @@ app.get('/api/system/stats', async (req, res) => {
           // parts indices: 0:PID, 1:USER, 2:PR, 3:NI, 4:VIRT, 5:RES, 6:SHR, 7:S, 8:%CPU, 9:%MEM, 10:TIME+, 11+:COMMAND
           if (parts.length >= 12) {
             const cmd = parts.slice(11).join(' ');
-            const isAi = /drachtio|freeswitch|voice-app|gemini-api-server|mission-control/i.test(cmd);
+            const isAi = /drachtio|freeswitch|voice-app|gemini-api-server|mission-control|gemini-phone/i.test(cmd);
             return {
               pid: parts[0],
               user: parts[1],

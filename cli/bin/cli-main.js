@@ -17,6 +17,7 @@ import { updateCommand } from '../lib/commands/update.js';
 import { backupCommand } from '../lib/commands/backup.js';
 import { restoreCommand } from '../lib/commands/restore.js';
 import { uninstallCommand } from '../lib/commands/uninstall.js';
+import { stackCommand } from '../lib/commands/stack.js';
 
 const program = new Command();
 
@@ -141,6 +142,48 @@ device
       await deviceRemoveCommand(name);
     } catch (error) {
       console.error(chalk.red(`\n✗ Device remove failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+
+// Stack management subcommands
+const stack = program
+  .command('stack')
+  .description('Manage multi-stack orchestration');
+
+stack
+  .command('deploy <id>')
+  .description('Deploy or update a telephony stack')
+  .action(async (id) => {
+    try {
+      await stackCommand(['deploy', id]);
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Stack deploy failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+stack
+  .command('remove <id>')
+  .description('Remove a telephony stack')
+  .action(async (id) => {
+    try {
+      await stackCommand(['remove', id]);
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Stack remove failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+stack
+  .command('list')
+  .description('List active stacks')
+  .action(async () => {
+    try {
+      await stackCommand(['list']);
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Stack list failed: ${error.message}\n`));
       process.exit(1);
     }
   });

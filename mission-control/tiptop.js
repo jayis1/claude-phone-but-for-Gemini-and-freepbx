@@ -591,21 +591,22 @@ const res = await fetch('/api/proxy/voice/api/history'); // Using Mission Contro
                 const number = isInbound ? call.from : call.to;
                 const statusClass = call.status === 'completed' ? 'status-completed' : 'status-failed';
                 let actionHtml = '';
-                if(call.recordingUrl) {
-                   actionHtml = \\\`<button class="btn-sm" style="margin-left:auto; background:#222; border-color:#444;" onclick="event.stopPropagation(); playRecording('\\\\\\\${call.recordingUrl}')">▶️ Play</button>\\\`;
-                }
+                 if(call.recordingUrl) {
+                    // Use single quotes for inner HTML to avoid nested backtick hell
+                    actionHtml = '<button class="btn-sm" style="margin-left:auto; background:#222; border-color:#444;" onclick="event.stopPropagation(); playRecording(\\'' + call.recordingUrl + '\\')">▶️ Play</button>';
+                 }
 
                 const item = document.createElement('div');
                 item.className = 'call-item';
-                item.innerHTML = \\\`
-                   <div class="call-icon" style="color:\\\\\\\${color}">\\\\\\\${icon}</div>
-                   <div class="call-details">
-                      <div class="call-number">\\\\\\\${number || 'Unknown'}</div>
-                      <div class="call-time">\\\\\\\${timeAgo(call.timestamp)} • \\\\\\\${call.duration}s</div>
-                   </div>
-                   \\\\\\\${actionHtml}
-                   <div class="call-status \\\\\\\${statusClass}">\\\\\\\${call.status}</div>
-                \\\`;
+                item.innerHTML = \`
+                  <div class="call-icon" style="color:\${color}">\${icon}</div>
+                  <div class="call-details">
+                    <div class="call-number">\${number || 'Unknown'}</div>
+                    <div class="call-time">\${timeAgo(call.timestamp)} • \${call.duration}s</div>
+                  </div>
+                  \${actionHtml}
+                  <div class="call-status \${statusClass}">\${call.status}</div>
+                \`;
                 list.appendChild(item);
              });
           }

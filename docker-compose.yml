@@ -38,27 +38,6 @@ services:
       - drachtio
       - freeswitch
 
-  mission-control:
-    build: ./mission-control
-    container_name: mission-control
-    restart: unless-stopped
-    network_mode: host
-    pid: host
-    env_file:
-      - .env
-    volumes:
-      - ./data/mission-control:/app/data
-      - .env:/app/.env
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - PORT=3030
-      - VOICE_APP_URL=http://localhost:3000
-      - API_SERVER_URL=http://localhost:3333
-      - INFERENCE_URL=http://localhost:4000
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - MISSION_CONTROL_GEMINI_KEY=${MISSION_CONTROL_GEMINI_KEY}
-      - GOOGLE_API_KEY=${GEMINI_API_KEY}
-
   gemini-api-server:
     build: ./gemini-api-server
     container_name: gemini-api-server

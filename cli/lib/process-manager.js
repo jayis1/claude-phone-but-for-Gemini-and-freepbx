@@ -8,8 +8,8 @@ import { getPidPath, getConfigDir } from './config.js';
  * @param {string} [pidPath] - Optional PID file path (for testing)
  * @returns {number|null} PID or null if not found
  */
-export function getServerPid(pidPath = null) {
-  pidPath = pidPath || getPidPath();
+export function getServerPid(name = 'server') {
+  const pidPath = getPidPath(name);
 
   if (!fs.existsSync(pidPath)) {
     return null;
@@ -43,8 +43,8 @@ function isProcessRunning(pid) {
  * @param {string} [pidPath] - Optional PID file path (for testing)
  * @returns {Promise<boolean>} True if running
  */
-export async function isServerRunning(pidPath = null) {
-  const pid = getServerPid(pidPath);
+export async function isServerRunning(name = 'server') {
+  const pid = getServerPid(name);
 
   if (!pid) {
     return false;
@@ -61,13 +61,13 @@ export async function isServerRunning(pidPath = null) {
  * @param {object} [extraEnv] - Optional extra environment variables
  * @returns {Promise<number>} Process PID
  */
-export async function startServer(serverPath, port, pidPath = null, extraEnv = {}) {
-  pidPath = pidPath || getPidPath();
+export async function startServer(serverPath, port, name = 'server', extraEnv = {}) {
+  const pidPath = getPidPath(name);
 
   // Check if already running
-  if (await isServerRunning(pidPath)) {
-    const pid = getServerPid(pidPath);
-    throw new Error(`Server already running (PID: ${pid})`);
+  if (await isServerRunning(name)) {
+    const pid = getServerPid(name);
+    throw new Error(`Service ${name} already running (PID: ${pid})`);
   }
 
   return new Promise((resolve, reject) => {
@@ -97,7 +97,7 @@ export async function startServer(serverPath, port, pidPath = null, extraEnv = {
       } catch (killError) {
         // Ignore kill errors
       }
-      reject(new Error(`Failed to write PID file: ${error.message}`));
+      reject(new Error(`Failed to write PID file for ${name}: ${error.message}`));
     }
   });
 }
@@ -108,16 +108,17 @@ export async function startServer(serverPath, port, pidPath = null, extraEnv = {
  * @param {string} [pidPath] - Optional PID file path (for testing)
  * @returns {Promise<void>}
  */
-export async function stopServer(pidPath = null) {
-  pidPath = pidPath || getPidPath();
-  const pid = getServerPid(pidPath);
+export async function stopServer(name = 'server') {
+  const pidPath = getPidPath(name);
+  const pid = getServerPid(name);
 
   if (!pid) {
     if (fs.existsSync(pidPath)) {
       fs.unlinkSync(pidPath);
     }
     // Fallback: Try to kill by name even if PID file is missing
-    await killProcessByName();
+    const processPattern = name === 'mission-control' ? 'mission-control/server.js' : 'gemini-api-server/server.js';
+    await killProcessByPattern(processPattern);
     return;
   }
 
@@ -155,15 +156,16 @@ export async function stopServer(pidPath = null) {
 
 
 /**
- * Kill process by name (fallback if PID file missing)
+ * Kill process by pattern (fallback if PID file missing)
+ * @param {string} pattern - Regex/string to match process command line
  * @returns {Promise<void>}
  */
-async function killProcessByName() {
+async function killProcessByPattern(pattern) {
   const { exec } = await import('child_process');
 
   return new Promise((resolve) => {
     // Try to find and kill the process
-    exec('pkill -f "node server.js"', (error, stdout, stderr) => {
+    exec(`pkill -f "${pattern}"`, (_error, _stdout, _stderr) => {
       // Ignore errors (process might not exist)
       resolve();
     });

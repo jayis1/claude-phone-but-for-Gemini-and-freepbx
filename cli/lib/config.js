@@ -90,10 +90,11 @@ export async function saveConfig(config) {
 
 /**
  * Get the PID file path
- * @returns {string} Path to server.pid
+ * @param {string} [name='server'] - Service name
+ * @returns {string} Path to service pid file
  */
-export function getPidPath() {
-  return path.join(getConfigDir(), 'server.pid');
+export function getPidPath(name = 'server') {
+  return path.join(getConfigDir(), `${name}.pid`);
 }
 
 /**
