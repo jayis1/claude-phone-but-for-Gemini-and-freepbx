@@ -582,7 +582,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
   } else {
     mcSpinner.warn(chalk.yellow(`Mission Control unreachable: ${mcResult.error || 'Port not responding'}`));
     console.log(chalk.gray(`  → Ensure 'gemini-phone start' is running\n`));
-    passedCount++; // Optional part
+    // passedCount++; // Critical failure, do not increment
   }
   checks.push({ name: 'Mission Control', passed: mcResult.running });
 
