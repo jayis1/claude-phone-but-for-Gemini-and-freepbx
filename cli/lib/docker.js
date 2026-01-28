@@ -327,9 +327,13 @@ export async function writeDockerConfig(config, stackId = 1) {
   const dockerComposeContent = generateDockerCompose(config, stackId);
   const envContent = generateEnvFile(config, stackId);
   const deviceConfigContent = generateDeviceConfig(config, stackId);
+  const fsConfigContent = generateFreeSwitchConfig(stackId);
+
+  const fsConfigPath = path.join(configDir, `event_socket${suffix}.conf.xml`);
 
   await fs.promises.writeFile(dockerComposePath, dockerComposeContent, { mode: 0o644 });
   await fs.promises.writeFile(envPath, envContent, { mode: 0o600 });
+  await fs.promises.writeFile(fsConfigPath, fsConfigContent, { mode: 0o644 });
 
   // Write devices.json for voice-app
   const devicesPath = path.join(configDir, `devices${suffix}.json`);
