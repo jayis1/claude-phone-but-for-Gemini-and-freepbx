@@ -1,4 +1,4 @@
-# Gemini Phone (v4.0.0) 🧠🔗🛰️
+# Gemini Phone (v4.0.13) 🧠🔗🛰️
 
 ![Gemini Phone](assets/logo.png)
 
@@ -7,7 +7,13 @@ Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can c
 ## What's New in v4.0.0
 
 + 🛠️ **Native Gemini SDK** - Replaced the external `gemini` CLI dependency with the native `@google/generative-ai` SDK. This fixes issues where the `gemini` command was not found in Mission Control and provides a more robust, faster integration.
-+ 🚀 **Unified Versioning** - All components (CLI, Voice App, API Server, Mission Control) are now synchronized to v4.0.0.
++ 🚀 **Unified Versioning** - All components (CLI, Voice App, API Server, Mission Control) are now synchronized to v4.0.13.
+
+## What's New in v4.0.13
+
++ 🕵️‍♂️ **Smarter Doctor** - Upgraded `gemini-phone doctor` to use real **UDP SIP OPTIONS** packets for checking PBX connectivity. No more "inconclusive" warnings due to TCP failures.
++ 🔧 **Mission Control Fixes** - Resolved 404 errors for legacy inference endpoints and fixed the System Stats widget crash by ensuring correct API routing.
++ 📦 **Install Stability** - Fixed the installer crash related to the removal of the legacy `inference-server` directory.
 
 ## What's New in v3.6.1
 
@@ -170,7 +176,7 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.0.0/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.0.13/install.sh | bash
 ```
 
 The installer performs the following steps:
