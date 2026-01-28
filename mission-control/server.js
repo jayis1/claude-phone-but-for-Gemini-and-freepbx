@@ -1064,8 +1064,8 @@ app.get('/', (req, res) => {
           setInterval(updateDockerStatus, 5000);
 
           setInterval(updateVoice, 5000);
-          setInterval(updateInference, 5000);
-          setInterval(updatePython, 10000); // Check every 10s (heavier)
+          // setInterval(updateInference, 5000); // REMOVED
+          // setInterval(updatePython, 10000); // REMOVED
           setInterval(updateApiStatus, 5000);
           setInterval(updateSystem, 2000);
           setInterval(updateLogs, 2000);
