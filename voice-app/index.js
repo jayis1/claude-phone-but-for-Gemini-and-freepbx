@@ -14,7 +14,6 @@ var cleanupOldFiles = httpServerModule.cleanupOldFiles;
 var AudioForkServer = require("./lib/audio-fork").AudioForkServer;
 var sipHandler = require("./lib/sip-handler");
 var handleInvite = sipHandler.handleInvite;
-var extractCallerId = sipHandler.extractCallerId;
 var whisperClient = require("./lib/whisper-client");
 var geminiBridge = require("./lib/gemini-bridge");
 var ttsService = require("./lib/tts-service");
@@ -181,6 +180,48 @@ async function initializeHttpServer() {
     }
   });
 
+  /**
+   * Provision single extension
+   */
+  httpServer.app.post('/api/pbx/provision-extension', async (req, res) => {
+    const { extension, name } = req.body;
+    if (!extension || !name) return res.status(400).json({ success: false, error: 'Extension and Name required' });
+
+    try {
+      console.log(`[API] Provisioning extension ${extension} (${name})...`);
+      const result = await pbxBridge.provisionExtension(extension, name);
+
+      // Auto-reload config
+      await pbxBridge.graphql('mutation { doreload(input: {}) { status message } }');
+
+      res.json({ success: true, result });
+    } catch (error) {
+      console.error('[API] Provisioning extension failed:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * Provision SIP Trunk and whitelist IP
+   */
+  httpServer.app.post('/api/pbx/provision-trunk', async (req, res) => {
+    const appStackIp = process.env.GEMINI_APP_STACK_IP || config.external_ip;
+
+    try {
+      console.log(`[API] Provisioning SIP Trunk for ${appStackIp}...`);
+      const trunkResult = await pbxBridge.provisionTrunk(appStackIp);
+      await pbxBridge.whitelistAppStackIp(appStackIp);
+
+      // Auto-reload config
+      await pbxBridge.graphql('mutation { doreload(input: {}) { status message } }');
+
+      res.json({ success: true, trunk: trunkResult });
+    } catch (error) {
+      console.error('[API] Provisioning trunk failed:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // Log Endpoint
   httpServer.app.get('/api/logs', (req, res) => {
     res.json({ success: true, logs: globalLogs || [] });
@@ -334,8 +375,6 @@ function checkReadyState() {
         deviceRegistry: deviceRegistry,
         config: config,
         whisperClient: whisperClient,
-        geminiBridge: geminiBridge,
-        ttsService: ttsService,
         geminiBridge: geminiBridge,
         ttsService: ttsService,
         wsPort: config.ws_port,

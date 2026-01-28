@@ -3,7 +3,7 @@
  * Allows listing, adding, and removing AI phone assistants
  */
 module.exports = function generateDevicesPage(devices) {
-    const deviceRows = Object.entries(devices).map(([ext, device]) => `
+  const deviceRows = Object.entries(devices).map(([ext, device]) => `
     <tr data-extension="${ext}">
       <td class="px-4 py-3 font-mono text-sm">${ext}</td>
       <td class="px-4 py-3 font-semibold">${device.name}</td>
@@ -15,7 +15,7 @@ module.exports = function generateDevicesPage(devices) {
     </tr>
   `).join('');
 
-    return `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -99,9 +99,12 @@ module.exports = function generateDevicesPage(devices) {
             </div>
             <div style="display: flex; gap: 1rem;">
               <a href="/" style="text-decoration: none;"><button class="btn btn-secondary">🏠 Back to Dashboard</button></a>
+              <button class="btn btn-secondary" onclick="setupSipTrunk()">📡 Setup SIP Trunk</button>
               <button class="btn btn-primary" onclick="showAddModal()">➕ Add New Device</button>
             </div>
           </div>
+
+          <div id="statusBanner" style="display: none; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; font-weight: 600;"></div>
 
           <table>
             <thead>
@@ -154,6 +157,10 @@ module.exports = function generateDevicesPage(devices) {
               <div class="form-group">
                 <label>System Prompt (Instructions)</label>
                 <textarea name="prompt" id="formPrompt" style="width: 100%; height: 100px; padding: 0.75rem; background: var(--input-bg); border: 1px solid var(--border); color: white; border-radius: 6px;" placeholder="You are a helpful AI assistant..."></textarea>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; background: rgba(139, 92, 246, 0.1); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">
+                <input type="checkbox" name="provisionPbx" id="formProvision" style="width: auto;">
+                <label style="margin-bottom: 0; cursor: pointer; color: var(--accent);">Auto-provision extension in FreePBX</label>
               </div>
               <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="hideModal()">Cancel</button>
@@ -228,13 +235,72 @@ module.exports = function generateDevicesPage(devices) {
               });
               
               if (res.ok) {
-                alert('Device configuration saved. Voice App will restart.');
-                location.reload();
+                // If auto-provision requested
+                if (data.provisionPbx) {
+                  showStatus('Provisioning extension ' + ext + ' in FreePBX...', 'info');
+                  try {
+                    const pbxRes = await fetch('/api/proxy/voice/api/pbx/provision-extension', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ extension: ext, name: data.name })
+                    });
+                    const pbxData = await pbxRes.json();
+                    if (pbxData.success) {
+                      showStatus('Device saved and PBX extension provisioned!', 'success');
+                    } else {
+                      showStatus('Device saved, but PBX provisioning failed: ' + pbxData.error, 'error');
+                    }
+                  } catch (e) {
+                    showStatus('Device saved, but PBX API call failed: ' + e.message, 'error');
+                  }
+                } else {
+                  alert('Device configuration saved. Voice App will restart.');
+                }
+                setTimeout(() => location.reload(), 2000);
               } else {
                 alert('Failed to save device');
               }
             } catch (err) {
               alert('Error: ' + err.message);
+            }
+          }
+
+          async function setupSipTrunk() {
+            if (!confirm('This will automatically create the SIP Trunk to this App Stack in FreePBX and whitelist your IP. Continue?')) return;
+            
+            showStatus('Provisioning SIP Trunk and whitelisting IP...', 'info');
+            
+            try {
+              const res = await fetch('/api/proxy/voice/api/pbx/provision-trunk', { method: 'POST' });
+              const data = await res.json();
+              
+              if (data.success) {
+                showStatus('SIP Trunk setup successful! Configuration applied.', 'success');
+              } else {
+                showStatus('Trunk setup failed: ' + data.error, 'error');
+              }
+            } catch (e) {
+              showStatus('Request failed: ' + e.message, 'error');
+            }
+          }
+
+          function showStatus(msg, type) {
+            const banner = document.getElementById('statusBanner');
+            banner.innerText = msg;
+            banner.style.display = 'block';
+            
+            if (type === 'info') {
+              banner.style.background = 'rgba(139, 92, 246, 0.1)';
+              banner.style.color = 'var(--accent)';
+              banner.style.border = '1px solid var(--accent)';
+            } else if (type === 'success') {
+              banner.style.background = 'rgba(16, 185, 129, 0.1)';
+              banner.style.color = 'var(--success)';
+              banner.style.border = '1px solid var(--success)';
+            } else if (type === 'error') {
+              banner.style.background = 'rgba(239, 68, 68, 0.1)';
+              banner.style.color = 'var(--error)';
+              banner.style.border = '1px solid var(--error)';
             }
           }
         </script>
