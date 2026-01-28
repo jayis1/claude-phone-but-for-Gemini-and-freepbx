@@ -108,6 +108,11 @@ module.exports = function generateSettingsPage(env) {
                     <div class="hint">Primary brain for reasoning</div>
                   </div>
                   <div class="form-group">
+                    <label>Mission Control Gemini Key</label>
+                    <input type="password" name="MISSION_CONTROL_GEMINI_KEY" value="${env.MISSION_CONTROL_GEMINI_KEY || ''}" placeholder="AIzaSy...">
+                    <div class="hint">Secondary key used specifically for the dashboard</div>
+                  </div>
+                  <div class="form-group">
                     <label>OpenAI API Key</label>
                     <input type="password" name="OPENAI_API_KEY" value="${env.OPENAI_API_KEY || ''}" placeholder="sk-...">
                     <div class="hint">Used for Whisper STT (Speech-to-Text)</div>
@@ -184,6 +189,11 @@ module.exports = function generateSettingsPage(env) {
                   <div class="form-group">
                     <label>Ring Timeout (s)</label>
                     <input type="number" name="OUTBOUND_RING_TIMEOUT" value="${env.OUTBOUND_RING_TIMEOUT || '30'}">
+                  </div>
+                  <div class="form-group">
+                    <label>Admin Test Number</label>
+                    <input type="text" name="TEST_PHONE_NUMBER" value="${env.TEST_PHONE_NUMBER || ''}" placeholder="+45...">
+                    <div class="hint">Phone number used for "Test AI Call" button</div>
                   </div>
                 </div>
               </div>

@@ -533,7 +533,7 @@ app.get('/', (req, res) => {
             </div>
           </div>
 
-          <!-- INFERENCE BRAIN PANEL -->
+          <!-- SYSTEM LOGS PANEL (Quadrant 2) -->
           <div class="panel">
             <div class="panel-header">
               <span>📋 SYSTEM LOGS</span>
@@ -550,7 +550,7 @@ app.get('/', (req, res) => {
               <!-- Shared Logs View -->
               <div style="display: flex; gap: 1rem; flex: 1; overflow: hidden; min-height: 250px;">
                 <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                  <div class="stat-label">Shared System Logs (Inference/API/Brain)</div>
+                  <div class="stat-label">Shared System Logs</div>
                   <div id="sys-logs" class="log-container"></div>
                 </div>
               </div>
@@ -621,12 +621,7 @@ app.get('/', (req, res) => {
                 <span id="val-cpu">--%</span>
               </div>
 
-              <!-- Brain Load & Model -->
-              <div class="monitor-row">
-                <span style="width: 40px">AI</span>
-                <div class="progress-bar"><div class="progress-fill" id="bar-ai-load" style="background: #ec4899"></div></div>
-                <span id="ai-load">0%</span>
-              </div>
+
 
               <div style="margin-top: 0.75rem;">
                    <div class="stat-label" style="margin-bottom: 0.25rem;">Active Model</div>
@@ -763,17 +758,7 @@ app.get('/', (req, res) => {
             } catch(e) { console.error('Speed update failed:', e); }
           }
 
-          async function updateMusicSpeed(val) {
-            const el = document.getElementById('music-speed-val');
-            if(el) el.innerText = val + 'x';
-            try {
-              await fetch('/api/proxy/inference/music-speed', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ speed: parseFloat(val) })
-              });
-            } catch(e) { console.error('Music speed update failed:', e); }
-          }
+
 
 
           async function checkForUpdates() {
@@ -908,7 +893,7 @@ app.get('/', (req, res) => {
               let html = "";
               data.logs.slice(0, 50).forEach(l => {
                 const timeStr = new Date(l.timestamp).toLocaleTimeString();
-                const serviceStr = (l.service || 'SYS').replace('INFERENCE-BRAIN', 'BRAIN');
+                const serviceStr = (l.service || 'SYS');
                 const levelColor = (l.level === 'ERROR') ? '#ef4444' : '#8b5cf6';
                 html += '<div class="log-entry">' +
                         '<span class="log-time">' + timeStr + '</span> ' +
@@ -918,20 +903,6 @@ app.get('/', (req, res) => {
               });
               const sysLogsEl = document.getElementById('sys-logs');
               if(sysLogsEl) sysLogsEl.innerHTML = html;
-
-              let brainHtml = "";
-              const brainLogs = data.logs.filter(l => l.service === 'INFERENCE-BRAIN' || l.service === 'INFERENCE');
-              brainLogs.slice(0, 20).forEach(l => {
-                const bTimeStr = new Date(l.timestamp).toLocaleTimeString();
-                brainHtml += '<div class="log-entry">' +
-                             '<span class="log-time">' + bTimeStr + '</span> ' +
-                             '<span style="color: #ec4899;">' + l.message + '</span>' +
-                             '</div>';
-              });
-              const brainLogEl = document.getElementById('brain-log');
-              if (brainLogEl) {
-                brainLogEl.innerHTML = brainHtml || '<div class="log-entry" style="color:#64748b">Waiting for thoughts...</div>';
-              }
             } catch (e) { console.error('Log update error:', e); }
           }
 
@@ -1726,10 +1697,10 @@ app.post('/api/settings/save', (req, res) => {
 
   // Only update allowed keys
   const allowedKeys = [
-    'GEMINI_API_KEY', 'OPENAI_API_KEY', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID',
+    'GEMINI_API_KEY', 'MISSION_CONTROL_GEMINI_KEY', 'OPENAI_API_KEY', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID',
     'EXTERNAL_IP', 'HTTP_PORT', 'WS_PORT', 'SIP_DOMAIN', 'SIP_REGISTRAR',
     'SIP_EXTENSION', 'SIP_AUTH_ID', 'SIP_PASSWORD', 'DRACHTIO_SIP_PORT',
-    'DEFAULT_CALLER_ID', 'MAX_CONVERSATION_TURNS', 'OUTBOUND_RING_TIMEOUT',
+    'DEFAULT_CALLER_ID', 'MAX_CONVERSATION_TURNS', 'OUTBOUND_RING_TIMEOUT', 'TEST_PHONE_NUMBER',
     'N8N_WEBHOOK_URL', 'N8N_API_KEY', 'N8N_BASE_URL',
     'N8N_WEBHOOK_URL_2', 'N8N_WEBHOOK_URL_3', 'N8N_WEBHOOK_URL_4', 'N8N_WEBHOOK_URL_5',
     'N8N_WEBHOOK_URL_6', 'N8N_WEBHOOK_URL_7', 'N8N_WEBHOOK_URL_8'
@@ -2208,6 +2179,6 @@ app.get('/api/logs', async (req, res) => {
 
 // HTTP Server (User requested no HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v3.6.1]`);
+  console.log(`Mission Control started on port ${PORT} (HTTP) [VERSION v4.0.17]`);
   addLog('INFO', 'MISSION-CONTROL', `Server started on http://localhost:${PORT}`);
 });
