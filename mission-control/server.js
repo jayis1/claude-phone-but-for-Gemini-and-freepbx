@@ -2102,7 +2102,7 @@ app.post('/api/pbx/provision', async (req, res) => {
       console.log('[PBX] Delete skipped or failed (safe to ignore):', e.message);
     }
 
-    // 2. CREATE with "password"
+    // 2. CREATE (Secret handling manual)
     const mutation = `
             mutation ($extension: ID!, $name: String!) {
               addExtension(input: {
@@ -2110,7 +2110,6 @@ app.post('/api/pbx/provision', async (req, res) => {
                 name: $name,
                 email: "gemini-phone@localhost",
                 tech: "pjsip",
-                secret: "password",
                 vmEnable: false
               }) {
                 status
@@ -2119,7 +2118,7 @@ app.post('/api/pbx/provision', async (req, res) => {
             }
         `;
 
-    console.log('[PBX] Executing addExtension mutation (with secret)...');
+    console.log('[PBX] Executing addExtension mutation...');
     const response = await fetch(`${env.FREEPBX_API_URL}/admin/api/api/gql`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -2147,7 +2146,7 @@ app.post('/api/pbx/provision', async (req, res) => {
 
     res.json({
       success: true,
-      message: `Provisioned Extension ${targetExtension} (Secret: password)`,
+      message: `Provisioned Extension ${targetExtension} (Note: Set Secret manually!)`,
       data: result.data
     });
 
