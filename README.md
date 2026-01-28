@@ -1,8 +1,14 @@
-# Gemini Phone (v4.1.02) 🧠🔗🛰️
+# Gemini Phone (v4.2.0) 🧠🔗🛰️
 
 ![Gemini Phone](assets/logo.png)
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
+
+## What's New in v4.2.0
+
++ 🏗️ **Multi-Stack Orchestration** - Run multiple independent Gemini Phone instances on a single server! Each stack gets its own isolated SIP trunk, Voice App, and Logic Engine. Perfect for assigning different AI personalities (e.g., "Sales", "Support") to different phone numbers.
++ 🖥️ **Stacks Dashboard** - A new Mission Control page to visualize, deploy, and manage your telephony stacks in real-time.
++ 🛠️ **CLI Power** - New `gemini-phone stack` commands to deploy and manage stacks from the terminal.
 
 ## What's New in v4.0.0
 
