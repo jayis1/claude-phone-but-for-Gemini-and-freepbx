@@ -25,6 +25,15 @@ const generateApiVaultPage = require('./settings-apis-page');
 const app = express();
 const PORT = process.env.PORT || 3030;
 
+// System logs in memory
+const systemLogs = [];
+function addLog(level, service, message) {
+  const timestamp = new Date().toISOString();
+  systemLogs.unshift({ timestamp, level, service, message });
+  // Keep last 1000 logs
+  if (systemLogs.length > 1000) systemLogs.pop();
+}
+
 // ... (middleware) ...
 
 // Main dashboard route
