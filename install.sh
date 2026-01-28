@@ -42,7 +42,8 @@ main() {
 
   REPO_URL="https://github.com/jayis1/claude-phone-but-for-Gemini-and-freepbx.git"
 
-  echo "🎯 Gemini Phone CLI Installer"
+  echo "🎯 Gemini Phone CLI Installer v420 🌿"
+  echo "   (High Performance Edition)"
   echo ""
 
   # Detect OS
