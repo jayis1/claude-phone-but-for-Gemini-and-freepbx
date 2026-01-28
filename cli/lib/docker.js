@@ -166,7 +166,7 @@ export function generateDockerCompose(config) {
     env_file:
       - .env
     volumes:
-      - \${getConfigDir()}/mission-control/data:/app/data
+      - ${getConfigDir()}/mission-control/data:/app/data
       - .env:/app/.env
     environment:
       - PORT=3030
