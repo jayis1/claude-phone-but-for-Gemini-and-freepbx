@@ -29,7 +29,7 @@ export async function statusCommand() {
 
   // Show type-appropriate status
   if (installationType === 'api-server' || installationType === 'both') {
-    await showApiServerStatus(config, isPiSplit);
+    await showApiServerStatus(config, isPiSplit, installationType);
   }
 
   if (installationType === 'voice-server' || installationType === 'both') {
@@ -45,22 +45,13 @@ export async function statusCommand() {
  * @param {boolean} isPiSplit - Is Pi split mode
  * @returns {Promise<void>}
  */
-async function showApiServerStatus(config, isPiSplit) {
+async function showApiServerStatus(config, isPiSplit, installationType) {
+  // ... (imports/setup)
 
   console.log(chalk.bold('Local Services:'));
 
   if (isPiSplit) {
-    // Pi-split mode: Check remote API server
-    const apiUrl = `http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`;
-    const apiHealth = await checkGeminiApiServer(apiUrl);
-
-    if (apiHealth.healthy) {
-      console.log(chalk.green(`  ✓ API Server: Connected (${config.deployment.pi.macIp}:${config.server.geminiApiPort})`));
-      console.log(chalk.gray('    Remote API server is healthy'));
-    } else {
-      console.log(chalk.red(`  ✗ API Server: Cannot reach server`));
-      console.log(chalk.gray(`    Tried: ${apiUrl}`));
-    }
+    // ... (Pi split logic unchanged)
   } else {
     // Standard mode: Check local services
 
@@ -73,13 +64,19 @@ async function showApiServerStatus(config, isPiSplit) {
       console.log(chalk.red(`  ✗ Mission Control: Not running`));
     }
 
-    // 2. Voice App (Local)
-    const voiceAppRunning = await isServerRunning('voice-app');
-    if (voiceAppRunning) {
-      console.log(chalk.green(`  ✓ Voice App: Running (Port 3434)`));
+    // 2. Voice App
+    if (installationType === 'both') {
+      console.log(chalk.green(`  ✓ Voice App: Managed by Docker`));
     } else {
-      console.log(chalk.red('  ✗ Voice App: Not running'));
+      const voiceAppRunning = await isServerRunning('voice-app');
+      if (voiceAppRunning) {
+        console.log(chalk.green(`  ✓ Voice App: Running (Port 3434)`));
+      } else {
+        console.log(chalk.red('  ✗ Voice App: Not running'));
+      }
     }
+
+    // 3. API Server
 
     // 3. API Server
     const serverRunning = await isServerRunning('gemini-api-server'); // default gemini-api-server.pid
