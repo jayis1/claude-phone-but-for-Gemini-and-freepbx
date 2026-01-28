@@ -4,122 +4,12 @@
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v4.2.0
+## What's New in v42.0
 
 + 🏗️ **Multi-Stack Orchestration** - Run multiple independent Gemini Phone instances on a single server! Each stack gets its own isolated SIP trunk, Voice App, and Logic Engine. Perfect for assigning different AI personalities (e.g., "Sales", "Support") to different phone numbers.
 + 🖥️ **Stacks Dashboard** - A new Mission Control page to visualize, deploy, and manage your telephony stacks in real-time.
 + 🛠️ **CLI Power** - New `gemini-phone stack` commands to deploy and manage stacks from the terminal.
-
-## What's New in v4.0.0
-
-+ 🛠️ **Native Gemini SDK** - Replaced the external `gemini` CLI dependency with the native `@google/generative-ai` SDK. This fixes issues where the `gemini` command was not found in Mission Control and provides a more robust, faster integration.
-+ 🚀 **Unified Versioning** - All components (CLI, Voice App, API Server, Mission Control) are now synchronized to v4.1.02.
-
-## What's New in v4.0.13
-
-+ 🕵️‍♂️ **Smarter Doctor** - Upgraded `gemini-phone doctor` to use real **UDP SIP OPTIONS** packets for checking PBX connectivity. No more "inconclusive" warnings due to TCP failures.
-+ 🔧 **Mission Control Fixes** - Resolved 404 errors for legacy inference endpoints and fixed the System Stats widget crash by ensuring correct API routing.
-+ 📦 **Install Stability** - Fixed the installer crash related to the removal of the legacy `inference-server` directory.
-
-## What's New in v3.6.1
-
-+ 🐍💀 **Python-Free Architecture** - Completely removed the legacy `inference-server` and Python dependencies. The system is now 100% Node.js for maximum stability and speed.
-+ 🔧 **Clean Stack** - Stripped all vestigial code, logs, and health checks related to the old "Brain Proxy".
-
-## What's New in v3.6.0
-
-+ 🧠🔗🛰️ **The Skill Cluster: 8 Distinct Intelligence Webhooks** - Your AI just got a massive brain upgrade. You can now configure up to 8 distinct n8n webhooks in Mission Control. Use Slot 1 for general reasoning and Slots 2-8 for specialized "Skills" like calendar, IoT, or business automation.
-
-## What's New in v3.5.1
-
-+ 🧠🖱️ **Dynamic Logic: n8n Injection UI** - Introducing the dedicated "Logic Engine" page in Mission Control. Inject n8n webhook URLs and credentials in real-time while updating your stack, without ever needing to re-run the CLI setup.
-
-## What's New in v3.5.0
-
-+ 🧠🔗 **The Hybrid Core: Webhooks + REST API** - Gemini Phone now supports a dual-path n8n integration. Use Webhooks for lightning-fast voice reasoning and the REST API for secure, deep health diagnostics.
-
-## What's New in v3.4.1
-
-+ 🛠️ **UX Upgrade: Interactive n8n Setup** - Added `N8N_WEBHOOK_URL` to the `gemini-phone setup` wizard. Now you can configure your n8n logic engine without touching a text editor.
-
-## What's New in v3.4.0
-
-+ 🧠 **Intelligence Upgrade: n8n Bridge** - Gemini Phone now supports routing its reasoning requests directly to **n8n**. Upgrade your AI's brain with 500+ integrations and visual skill building.
-
-## What's New in v3.3.5
-
-+ 🛠️ **Hotfix: Self-Healing Storage** - Added automatic directory creation for storage and mission control data. No more "Directory missing" errors on startup or health checks.
-
-## What's New in v3.3.4
-
-+ 🩺 **Hotfix: Doctor Stability** - Fixed a crash in the `gemini-phone doctor` command when run as the root user. Improved internal path resolution for version reporting.
-
-## What's New in v3.3.3
-
-+ 🩺 **Hotfix: Root User Persistence** - Resolved health check failures when running as root by ensuring data directories are audited using absolute paths and fixing the `doctor` output for clearer debugging.
-
-## What's New in v3.3.2
-
-+ 🩺 **Hotfix: Persistence & Health Checks** - Fixed `gemini-phone doctor` false negatives by moving storage audits to the global config directory and correcting the `EXTERNAL_IP` lookup logic.
-
-## What's New in v3.3.1
-
-+ 🎨 **UI Overhaul: Dashboard Interactivity** - Major improvements to button clickability and visual feedback on the TipTop dashboard. Added glow effects, hover states, and explicit z-index management to resolve "unpressable" buttons.
-
-## What's New in v3.2.9
-
-+ 🚀 **Hotfix: Dashboard Interactivity** - Fixed "Refresh" button visibility/usability and resolved proxy stability issues causing "Play" button failures.
-
-## What's New in v3.2.8
-
-+ 🩺 **Doctor 2.0 Expansion** - The `gemini-phone doctor` command now performs deep diagnostics on Mission Control connectivity, storage write permissions for recordings/notes, and validates `EXTERNAL_IP` against local interfaces to prevent RTP issues.
-
-## What's New in v3.2.7
-
-+ 🔉 **Hotfix: Playback Stability** - Optimized recording playback with streaming support and persistent audio elements to prevent browser interruptions.
-
-## What's New in v3.2.6
-
-+ 🚑 **Hotfix: Mission Control Fix** - Resolved a critical structural error in the dashboard HTML that caused the page to fail to render correctly.
-
-## What's New in v3.2.5
-
-+ 💅 **Hotfix: UI Repair** - Fixed broken layout containers and mangled CSS transparency in the Mission Control dashboard.
-
-## What's New in v3.2.4
-
-+ 🚑 **Hotfix: Playback Fix** - Resolved a proxy issue in Mission Control that blocked call recording playback.
-
-## What's New in v3.2.3
-
-+ 🚑 **Hotfix: Docker YAML Fix** - Resolved an interpolation error in the generated `docker-compose.yml` that blocked startup.
-
-## What's New in v3.2.2
-
-+ 🚑 **Hotfix: Persistence & Recordings** - Fixed missing volume mount for FreeSWITCH that blocked recordings.
-+ 💾 **Note Persistence** - TipTop notes are now saved to disk and survive restarts.
-+ 🎨 **UI Fixes** - Repaired corrupted CSS colors in the Mission Control dashboard.
-
-## What's New in v3.2.0
-
-+ 📼 **Call Recordings** - Full audio recording of every conversation (Inbound & Outbound).
-+ ▶️ **Playback Support** - Play recordings directly from the Mission Control "Recent Calls" UI.
-+ 💾 **Persistence** - Data volumes added so logs, recordings, and settings survive restarts.
-+ 🚑 **Crash Fixes** - Fixed Mission Control `server.js` startup crash and API history 404s.
-
-## What's New in v3.0.1
-
-+ ⚡ **One-Click Universal Provisioning** - Automated Extension and Outbound Route creation via FreePBX M2M API.
-+ 🧬 **Hardware Scaling** - Dedicated support for NVIDIA (NVENC) and AMD (ROCm) GPUs kept for future-proofing.
-+ 🔇 **Silent Build Mode** - Hidden Docker build/pull logs for a cleaner terminal.
-
-+ ⚙️ **Web Settings Dashboard** - Full configuration via Gear icon (no CLI needed for API keys).
-+ 📊 **htop Integration** - Real-time colorful system stats directly in Mission Control.
-+ 💎 **The Beautiful Stack** - A cohesive 4-part system working in harmony.
-+ grid-cols-2 **Mission Control 2.0** - Stunning 2x2 grid dashboard for total system oversight.
-
-+ 🐍 **Python Brain** - Execute Python scripts via the new `/run-python` endpoint.
-+ 📞 **FreePBX Only** - Simplified stack strictly for FreePBX/Asterisk.
++ 🤖 **v42.0** - Because it's the answer to everything.
 
 ## What is this?
 
