@@ -118,46 +118,34 @@ async function checkPbxApi(pbxConfig) {
 }
 
 /**
- * Check if gemini-api-server is running
+ * Check if gemini-api-server is running (Host or Docker)
  * @param {number} port - Port to check
  * @returns {Promise<{running: boolean, pid?: number, healthy?: boolean, error?: string}>}
  */
 async function checkGeminiAPIServer(port, containerName = 'gemini-api-server') {
-  const containers = await getContainerStatus();
-  const apiContainer = containers.find(c => c.name.includes(containerName));
-
-  if (!apiContainer) {
-    return {
-      running: false,
-      error: 'Container not found'
-    };
-  }
-
-  const isRunning = apiContainer.status.toLowerCase().includes('up') ||
-    apiContainer.status.toLowerCase().includes('running');
-
-  if (!isRunning) {
-    return {
-      running: false,
-      error: `Container status: ${apiContainer.status}`
-    };
-  }
-
-  // Try HTTP health check
+  // First, check if running as host process
   try {
     const response = await axios.get(`http://localhost:${port}/health`, {
       timeout: 2000
     });
 
+    // If we get a response, it's running regardless of how (host or docker)
     return {
       running: true,
       healthy: response.status === 200
     };
   } catch (error) {
+    if (error.code === 'ECONNREFUSED') {
+      return {
+        running: false,
+        error: `Port ${port} not reachable`
+      };
+    }
+    // Connected but error? It's running but unhealthy
     return {
       running: true,
       healthy: false,
-      error: 'Health endpoint not responding'
+      error: error.message
     };
   }
 }
@@ -357,19 +345,19 @@ async function runApiServerChecks(config) {
   const checks = [];
   let passedCount = 0;
 
-  // Check local Gemini API server container
+  // Check local Gemini API server (Host or Docker)
   const apiServerSpinner = ora('Checking Gemini API server...').start();
   const apiServerResult = await checkGeminiAPIServer(config.server.geminiApiPort);
   if (apiServerResult.running && apiServerResult.healthy) {
-    apiServerSpinner.succeed(chalk.green(`Gemini API server running in Docker`));
+    apiServerSpinner.succeed(chalk.green(`Gemini API server running (Port ${config.server.geminiApiPort})`));
     passedCount++;
   } else if (apiServerResult.running && !apiServerResult.healthy) {
-    apiServerSpinner.warn(chalk.yellow(`Gemini API server container running but unhealthy`));
+    apiServerSpinner.warn(chalk.yellow(`Gemini API server running but unhealthy`));
     console.log(chalk.gray(`  → ${apiServerResult.error}\n`));
     passedCount++; // Count as partial pass
   } else {
-    apiServerSpinner.fail(chalk.red(`Gemini API server container not running`));
-    console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
+    apiServerSpinner.fail(chalk.red(`Gemini API server not running`));
+    console.log(chalk.gray(`  → Run "gemini-phone start" to launch services\n`));
   }
   checks.push({ name: 'Gemini API server', passed: apiServerResult.running });
 
