@@ -1727,21 +1727,24 @@ app.get('/api/docker-health', async (req, res) => {
     socket.on('connect', () => { socket.destroy(); resolve(true); });
     socket.on('timeout', () => { socket.destroy(); resolve(false); });
     socket.on('error', () => { socket.destroy(); resolve(false); });
-    socket.connect(port, '127.0.0.1');
+    // Use localhost to allow IPv4/IPv6 resolution
+    socket.connect(port, 'localhost');
   });
 
   try {
-    const [drachtio, freeswitch, voiceApp] = await Promise.all([
+    const [drachtio, freeswitch, voiceApp, apiServer] = await Promise.all([
       checkPort(9022), // Drachtio Console/TCP
       checkPort(8021), // FreeSWITCH ESL
-      checkPort(3000)  // Voice App HTTP
+      checkPort(3000), // Voice App HTTP
+      checkPort(3333)  // Gemini API Server
     ]);
 
     res.json({
       success: true,
       drachtio,
       freeswitch,
-      voiceApp
+      voiceApp,
+      apiServer
     });
   } catch (error) {
     res.json({ success: false, error: 'Health check failed: ' + error.message });
