@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { loadConfig, configExists, getInstallationType, getConfigDir } from '../config.js';
 import { checkDocker, writeDockerConfig, startContainers, buildContainers } from '../docker.js';
-import { startServer, isServerRunning, startInferenceServer } from '../process-manager.js';
+import { startServer, isServerRunning } from '../process-manager.js';
 import { sleep } from '../utils.js';
 
 import { checkGeminiApiServer } from '../network.js';
