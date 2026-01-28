@@ -146,7 +146,7 @@ export function generateDockerCompose(config, stackId = 1) {
     restart: unless-stopped
     network_mode: host
     env_file:
-      - .env-${stackId}
+      - .env${stackId === 1 ? '' : '-' + stackId}
     volumes:
       - ${config.paths.voiceApp}/audio:/app/audio
       - ${config.paths.voiceApp}/config:/app/config
