@@ -481,13 +481,15 @@ export async function stopContainers() {
   // Iterate and stop each
   for (const file of files) {
     const stackIdMatch = file.match(/docker-compose-(\d+)\.yml/);
+    const stackId = stackIdMatch ? stackIdMatch[1] : 1;
+    const projectName = `gemini-phone-${stackId}`;
     const stackSuffix = stackIdMatch ? ` (Stack ${stackIdMatch[1]})` : ' (Main Stack)';
 
     console.log(`Stopping containers${stackSuffix}...`);
 
     const filePath = path.join(configDir, file);
     // Use down --remove-orphans to be clean
-    const cmd = `docker compose -f "${filePath}" down --remove-orphans`;
+    const cmd = `docker compose -p "${projectName}" -f "${filePath}" down --remove-orphans`;
 
     try {
       await execAsync(cmd);
