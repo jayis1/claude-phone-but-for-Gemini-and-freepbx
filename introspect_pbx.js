@@ -22,27 +22,27 @@ async function introspect() {
         const token = tokenRes.data.access_token;
         console.log('Token acquired.');
 
-        const introspectionQuery = `
-            query IntrospectionQuery {
-              __schema {
-                mutationType {
-                  fields {
-                    name
-                  }
+        // Minimal query to avoid timeout
+        const inputTypeQuery = `
+            query InputTypeQuery {
+              addExtension: __type(name: "addExtensionInput") {
+                inputFields {
+                  name
                 }
               }
             }
         `;
 
         const gqlRes = await axios.post(`${FREEPBX_API_URL}/admin/api/api/gql`, {
-            query: introspectionQuery
+            query: inputTypeQuery
         }, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const mutations = gqlRes.data.data.__schema.mutationType.fields.map(f => f.name);
-        console.log('Available Mutations:');
-        console.log(mutations.join('\n'));
+        console.log('--- Extension Fields ---');
+        gqlRes.data.data.addExtension.inputFields.forEach(f => {
+            console.log(f.name);
+        });
 
     } catch (e) {
         console.error('Error:', e.response?.data || e.message);

@@ -1,10 +1,10 @@
-# Gemini Phone (v4.2.1) 🧠🔗🛰️
+# Gemini Phone (v4.2.2) 🧠🔗🛰️
 
 ![Gemini Phone](assets/logo.png)
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v4.2.1 (The "Heavy Control" Update)
+## What's New in v4.2.2
 
 + 🏗️ **Mission Control Stability** - Fixed connectivity issues in dual-stack (IPv4/IPv6) environments. The dashboard now properly connects to all local services regardless of network binding.
 + 🛠️ **Smart Status** - `gemini-phone status` now correctly identifies services running in Docker vs. Host, eliminating false "Not running" alerts.
@@ -73,7 +73,7 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.2.1/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.2.2/install.sh | bash
 ```
 
 The installer performs the following steps:
