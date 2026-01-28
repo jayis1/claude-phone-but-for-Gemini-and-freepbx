@@ -194,12 +194,19 @@ module.exports = function generateApiVaultPage(env) {
                 </div>
               </div>
 
-              <!-- N8N -->
               <div class="section">
                 <div class="section-title"><span>⚡</span> n8n Automation (Optional)</div>
                 
                 <div class="form-group">
-                  <label>n8n API Key</label>
+                  <label>n8n Webhook URL (Specific to this Stack)</label>
+                  <div class="input-wrapper">
+                    <input type="text" id="N8N_WEBHOOK_URL" name="N8N_WEBHOOK_URL" value="${env.N8N_WEBHOOK_URL || ''}" placeholder="https://n8n.yourdom.com/webhook/...">
+                  </div>
+                  <div class="hint">Different stacks can trigger different n8n workflows (e.g. Sales vs Support).</div>
+                </div>
+
+                <div class="form-group">
+                  <label>n8n API Key (Global Server Access)</label>
                   <div class="input-wrapper">
                     <input type="password" id="N8N_API_KEY" name="N8N_API_KEY" value="${env.N8N_API_KEY || ''}" placeholder="api_key_...">
                     <span class="eye-icon" onclick="toggleVis(this)">👁️</span>
@@ -223,7 +230,9 @@ module.exports = function generateApiVaultPage(env) {
             MISSION_CONTROL_GEMINI_KEY: "${env.MISSION_CONTROL_GEMINI_KEY || ''}",
             OPENAI_API_KEY: "${env.OPENAI_API_KEY || ''}",
             ELEVENLABS_API_KEY: "${env.ELEVENLABS_API_KEY || ''}",
-            N8N_API_KEY: "${env.N8N_API_KEY || ''}"
+            ELEVENLABS_API_KEY: "${env.ELEVENLABS_API_KEY || ''}",
+            N8N_API_KEY: "${env.N8N_API_KEY || ''}",
+            N8N_WEBHOOK_URL: "${env.N8N_WEBHOOK_URL || ''}"
           };
 
           function toggleVis(el) {
@@ -265,7 +274,10 @@ module.exports = function generateApiVaultPage(env) {
                     MISSION_CONTROL_GEMINI_KEY: '', // Stack likely doesn't have its own Mission Control key usually
                     OPENAI_API_KEY: data.rawStackApi.openai?.apiKey || '',
                     ELEVENLABS_API_KEY: data.rawStackApi.elevenlabs?.apiKey || '',
-                    N8N_API_KEY: (data.rawStackApi.n8n && data.rawStackApi.n8n.apiKey) || ''
+                    OPENAI_API_KEY: data.rawStackApi.openai?.apiKey || '',
+                    ELEVENLABS_API_KEY: data.rawStackApi.elevenlabs?.apiKey || '',
+                    N8N_API_KEY: (data.rawStackApi.n8n && data.rawStackApi.n8n.apiKey) || '',
+                    N8N_WEBHOOK_URL: (data.rawStackApi.n8n && data.rawStackApi.n8n.webhookUrl) || ''
                   };
 
                   Object.keys(map).forEach(key => {
@@ -318,7 +330,11 @@ module.exports = function generateApiVaultPage(env) {
                   gemini: { apiKey: entries.GEMINI_API_KEY },
                   openai: { apiKey: entries.OPENAI_API_KEY },
                   elevenlabs: { apiKey: entries.ELEVENLABS_API_KEY },
-                  n8n: { apiKey: entries.N8N_API_KEY }
+                  elevenlabs: { apiKey: entries.ELEVENLABS_API_KEY },
+                  n8n: { 
+                    apiKey: entries.N8N_API_KEY,
+                    webhookUrl: entries.N8N_WEBHOOK_URL 
+                  }
                 };
                 
                 const res = await fetch('/api/settings/stack-config', {

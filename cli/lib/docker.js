@@ -302,10 +302,11 @@ export function generateEnvFile(config, stackId = 1) {
     `FREEPBX_TRUNK_NAME=${(config.pbx?.trunkName || 'RedSpot') + (stackId > 1 ? '-' + stackId : '')}`,
     `GEMINI_APP_STACK_IP=${config.pbx?.appStackIp || ''}`,
     '',
-    '# n8n Integration',
-    `N8N_WEBHOOK_URL=${(config.n8n && config.n8n.webhookUrl) || ''}`,
-    `N8N_API_KEY=${(config.n8n && config.n8n.apiKey) || ''}`,
-    `N8N_BASE_URL=${(config.n8n && config.n8n.baseUrl) || ''}`,
+    '# n8n Integration (Single Server, Multi-Webhook)',
+    // Logic: Webhook URL is per-stack (different workflows), but API Key/Base URL are usually global (same server)
+    `N8N_WEBHOOK_URL=${stackApi.n8n?.webhookUrl || globalApi.n8n?.webhookUrl || ''}`,
+    `N8N_API_KEY=${stackApi.n8n?.apiKey || globalApi.n8n?.apiKey || ''}`,
+    `N8N_BASE_URL=${stackApi.n8n?.baseUrl || globalApi.n8n?.baseUrl || ''}`,
     ''
   ];
 
