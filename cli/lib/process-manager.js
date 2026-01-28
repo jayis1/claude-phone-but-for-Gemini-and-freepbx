@@ -71,11 +71,16 @@ export async function startServer(serverPath, port, name = 'server', extraEnv = 
   }
 
   return new Promise((resolve, reject) => {
-    // Spawn detached process
+    // Determine log file path
+    const configDir = getConfigDir();
+    const logFile = path.join(configDir, `${name}.log`);
+    const logStream = fs.openSync(logFile, 'a');
+
+    // Spawn detached process with log redirection
     const child = spawn('node', ['server.js'], {
       cwd: serverPath,
       detached: true,
-      stdio: 'ignore',
+      stdio: ['ignore', logStream, logStream],
       env: {
         ...process.env,
         PORT: port,
