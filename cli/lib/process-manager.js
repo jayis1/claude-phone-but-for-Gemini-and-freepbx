@@ -74,6 +74,7 @@ export async function startServer(serverPath, port, name = 'server', extraEnv = 
     // Determine log file path
     const configDir = getConfigDir();
     const logFile = path.join(configDir, `${name}.log`);
+    console.log(`[DEBUG] Redirecting ${name} logs to: ${logFile}`);
     const logStream = fs.openSync(logFile, 'a');
 
     // Spawn detached process with log redirection
