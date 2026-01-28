@@ -114,13 +114,18 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
   }
 
   // 2. CREATE
+  // We use a fixed secret for now to match devices.json (Config 1)
+  // TODO: dynamic secret from config
+  const secret = '2fhbcvsTMNK6PJ6';
+
   const mutation = `
-    mutation ($extension: ID!, $name: String!) {
+    mutation ($extension: ID!, $name: String!, $secret: String!) {
       addExtension(input: {
         extensionId: $extension,
         name: $name,
         email: "gemini-phone@localhost",
         tech: "pjsip",
+        secret: $secret, 
         vmEnable: false
       }) {
         status
@@ -129,7 +134,7 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
     }
   `;
 
-  return await graphql(mutation, { extension, name });
+  return await graphql(mutation, { extension, name, secret });
 }
 
 /**
