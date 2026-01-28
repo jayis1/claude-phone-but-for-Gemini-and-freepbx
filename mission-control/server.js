@@ -98,20 +98,7 @@ app.post('/api/test-call', async (req, res) => {
   }
 });
 
-app.post('/api/pbx/provision', async (req, res) => {
-  try {
-    const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-    const response = await fetch(`${VOICE_APP_URL}/api/pbx/provision`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to trigger PBX provisioning: ${error.message}` });
-  }
-});
+// Inference proxies removed (Legacy Python server retired)
 
 app.get('/', (req, res) => {
   res.send(`

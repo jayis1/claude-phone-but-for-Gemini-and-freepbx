@@ -354,7 +354,7 @@ function generateTopPage() {
           async function updateStats() {
             try {
               document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-              const res = await fetch('/api/system-stats');
+              const res = await fetch('/api/system/stats');
               const data = await res.json();
               
               // Update Bars
