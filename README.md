@@ -1,15 +1,16 @@
-# Gemini Phone (v42.0) 🧠🔗🛰️
+# Gemini Phone (v4.2.1) 🧠🔗🛰️
 
 ![Gemini Phone](assets/logo.png)
 
 Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
 
-## What's New in v42.0
+## What's New in v4.2.1 (The "Heavy Control" Update)
 
-+ 🏗️ **Multi-Stack Orchestration** - Run multiple independent Gemini Phone instances on a single server! Each stack gets its own isolated SIP trunk, Voice App, and Logic Engine. Perfect for assigning different AI personalities (e.g., "Sales", "Support") to different phone numbers.
-+ 🖥️ **Stacks Dashboard** - A new Mission Control page to visualize, deploy, and manage your telephony stacks in real-time.
-+ 🛠️ **CLI Power** - New `gemini-phone stack` commands to deploy and manage stacks from the terminal.
-+ 🤖 **v42.0** - Because it's the answer to everything.
++ 🏗️ **Mission Control Stability** - Fixed connectivity issues in dual-stack (IPv4/IPv6) environments. The dashboard now properly connects to all local services regardless of network binding.
++ 🛠️ **Smart Status** - `gemini-phone status` now correctly identifies services running in Docker vs. Host, eliminating false "Not running" alerts.
++ 🏥 **Enhanced Doctor** - Health checks now verify the Gemini API Server (port 3333) and Mission Control reachability with higher precision.
++ 🐛 **Bug Fixes** - Resolved critical proxy crashes (`VOICE_APP_URL`/`API_SERVER_URL` errors) to ensure the dashboard stays online 24/7.
++ 🚀 **v4.2.1** - Because stability is the ultimate feature.
 
 ## What is this?
 
