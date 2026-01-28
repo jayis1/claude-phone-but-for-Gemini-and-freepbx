@@ -2078,6 +2078,31 @@ app.post('/api/pbx/provision', async (req, res) => {
   }
 
   try {
+    // 1. DELETE Existing (Cleanup to ensure password sync)
+    const deleteMutation = `
+            mutation ($extension: ID!) {
+              deleteExtension(input: { extensionId: $extension }) {
+                status
+                message
+              }
+            }
+        `;
+    try {
+      console.log(`[PBX] Ensuring ${targetExtension} is clean (attempting delete)...`);
+      await fetch(`${env.FREEPBX_API_URL}/admin/api/api/gql`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: deleteMutation,
+          variables: { extension: targetExtension }
+        })
+      });
+    } catch (e) {
+      // Ignore delete errors (e.g. if it doesn't exist yet)
+      console.log('[PBX] Delete skipped or failed (safe to ignore):', e.message);
+    }
+
+    // 2. CREATE with "password"
     const mutation = `
             mutation ($extension: ID!, $name: String!) {
               addExtension(input: {
@@ -2085,6 +2110,7 @@ app.post('/api/pbx/provision', async (req, res) => {
                 name: $name,
                 email: "gemini-phone@localhost",
                 tech: "pjsip",
+                secret: "password",
                 vmEnable: false
               }) {
                 status
@@ -2093,7 +2119,7 @@ app.post('/api/pbx/provision', async (req, res) => {
             }
         `;
 
-    console.log('[PBX] Executing addExtension mutation...');
+    console.log('[PBX] Executing addExtension mutation (with secret)...');
     const response = await fetch(`${env.FREEPBX_API_URL}/admin/api/api/gql`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -2121,7 +2147,7 @@ app.post('/api/pbx/provision', async (req, res) => {
 
     res.json({
       success: true,
-      message: `Provisioned Extension ${targetExtension}`,
+      message: `Provisioned Extension ${targetExtension} (Secret: password)`,
       data: result.data
     });
 

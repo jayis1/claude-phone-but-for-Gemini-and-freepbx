@@ -461,9 +461,10 @@ export async function startContainers(stackId = 1) {
 }
 
 /**
- * Stop Docker containers for all stacks
+ * Stop Docker containers
+ * @param {number} [targetStackId] - Optional: Stop only this stack ID
  */
-export async function stopContainers() {
+export async function stopContainers(targetStackId) {
   const configDir = getConfigDir();
   const { exec } = await import('child_process');
   const { promisify } = await import('util');
@@ -478,10 +479,16 @@ export async function stopContainers() {
     return;
   }
 
-  // Iterate and stop each
+  // Iterate and stop
   for (const file of files) {
     const stackIdMatch = file.match(/docker-compose-(\d+)\.yml/);
-    const stackId = stackIdMatch ? stackIdMatch[1] : 1;
+    const stackId = stackIdMatch ? parseInt(stackIdMatch[1], 10) : 1;
+
+    // If targeting a specific stack, skip others
+    if (targetStackId && stackId !== targetStackId) {
+      continue;
+    }
+
     const projectName = `gemini-phone-${stackId}`;
     const stackSuffix = stackIdMatch ? ` (Stack ${stackIdMatch[1]})` : ' (Main Stack)';
 
