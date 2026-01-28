@@ -201,6 +201,74 @@ async function provisionInboundRoute(destination = "ext-group,600,1") {
 }
 
 /**
+ * Provision Ring Group 600
+ * @param {string[]} extensions - Array of extensions to ring (e.g. ['9000', '9001'])
+ */
+async function provisionRingGroup(extensions = ['9000']) {
+  const groupNumber = '600';
+  console.log(`[PBX-BRIDGE] Provisioning Ring Group ${groupNumber} with members: ${extensions.join(', ')}...`);
+
+  // DELETE FIRST
+  try {
+    const delMutation = `mutation { deleteRingGroup(input: { groupNumber: "${groupNumber}" }) { status } }`;
+    await graphql(delMutation);
+  } catch (e) { /* Ignore */ }
+
+  const mutation = `
+    mutation ($input: addRingGroupInput!) {
+      addRingGroup(input: $input) {
+        status
+        message
+      }
+    }
+  `;
+
+  const input = {
+    groupNumber: groupNumber,
+    description: "Gemini AI Switchboard",
+    strategy: "ringall", // Simultaneous ring
+    extensionList: extensions.join('-'), // Format: 9000-9001
+    ringTime: "30",
+    destination: "app-blackhole,hangup,1" // Default failover
+  };
+
+  return await graphql(mutation, { input });
+}
+
+/**
+ * Provision Inbound Route to Destination
+ * @param {string} destination - e.g. "from-did-direct,9000,1" or "ext-group,600,1"
+ */
+async function provisionInboundRoute(destination = "ext-group,600,1") {
+  console.log(`[PBX-BRIDGE] Provisioning Inbound Route to ${destination}...`);
+
+  // DELETE FIRST (Generic Any/Any route)
+  try {
+    // Delete generic route if exists (CID: '', DID: '')
+    const delMutation = `mutation { deleteInboundRoute(input: { extension: "", cidnum: "" }) { status } }`;
+    await graphql(delMutation);
+  } catch (e) { /* Ignore */ }
+
+  const mutation = `
+    mutation ($input: addInboundRouteInput!) {
+      addInboundRoute(input: $input) {
+        status
+        message
+      }
+    }
+  `;
+
+  const input = {
+    extension: "", // ANY DID
+    cidnum: "",    // ANY CID
+    description: "Gemini AI Master Route",
+    destination: destination
+  };
+
+  return await graphql(mutation, { input });
+}
+
+/**
  * Provision Outbound Route "Gemini-to-PSTN"
  * @param {string} trunkName - Optional trunk name to use
  */
