@@ -19,7 +19,7 @@ const { z } = require("zod");
 const server = new Server(
     {
         name: "gemini-phone-mcp",
-        version: "1.0.0",
+        version: "1.0.1",
     },
     {
         capabilities: {
