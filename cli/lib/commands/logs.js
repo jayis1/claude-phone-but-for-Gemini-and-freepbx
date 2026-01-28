@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { spawn } from 'child_process';
-import axios from 'axios';
+
 import { loadConfig, configExists, getDockerComposePath, getPidPath } from '../config.js';
 import fs from 'fs';
 
@@ -116,7 +116,7 @@ function tailDockerLogs(dockerComposePath) {
  * Tail API server logs
  * @param {object} config - Configuration object
  */
-function tailAPIServerLogs(config) {
+function tailAPIServerLogs(_config) {
   console.log(chalk.gray('Watching Gemini API server output...\n'));
 }
 
@@ -162,9 +162,7 @@ function tailDockerServiceLogs(dockerComposePath, serviceName) {
  * @param {string} dockerComposePath - Path to docker-compose.yml
  * @param {object} config - Configuration object
  */
-function tailBothServices(dockerComposePath, config) {
-  const { getConfigDir } = import('../config.js');
-
+function tailBothServices(dockerComposePath, _config) {
   // Docker logs
   const dockerChild = spawn('docker', [
     'compose',

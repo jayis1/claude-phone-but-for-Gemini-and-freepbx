@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { getContainerStatus } from '../docker.js';
-import { isServerRunning, getServerPid } from '../process-manager.js';
+import { isServerRunning } from '../process-manager.js';
 import { checkGeminiApiServer } from '../network.js';
 
 /**
@@ -46,9 +46,6 @@ export async function statusCommand() {
  * @returns {Promise<void>}
  */
 async function showApiServerStatus(config, isPiSplit) {
-  const { getConfigDir } = await import('../config.js');
-  const path = await import('path');
-  const configDir = getConfigDir();
 
   console.log(chalk.bold('Local Services:'));
 
