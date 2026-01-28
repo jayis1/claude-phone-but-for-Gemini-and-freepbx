@@ -128,7 +128,7 @@ async function startApiServer(config) {
  * @returns {Promise<void>}
  */
 async function startMissionControl(config) {
-  const mcPath = path.join(process.cwd(), 'mission-control');
+  let mcPath = path.join(process.cwd(), 'mission-control');
 
   if (!fs.existsSync(mcPath)) {
     // Try relative to CLI
