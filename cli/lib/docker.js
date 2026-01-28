@@ -177,13 +177,13 @@ export function generateDockerCompose(config) {
       - GOOGLE_API_KEY=\${GEMINI_API_KEY}`);
   }
 
-  return \`# CRITICAL: All containers must use network_mode: host
+  return `# CRITICAL: All containers must use network_mode: host
 # Docker bridge networking causes FreeSWITCH to advertise internal IPs
 # in SDP, making RTP unreachable from external callers.
 
 services:
-\${services.join('\\n\\n')}
-\`;
+${services.join('\n\n')}
+`;
 }
 
 /**
@@ -199,11 +199,11 @@ export function generateEnvFile(config) {
 
   let geminiApiUrl;
   if (config.deployment && config.deployment.mode === 'pi-split' && config.deployment.pi && config.deployment.pi.macIp) {
-    geminiApiUrl = \`http://\${config.deployment.pi.macIp}:\${config.server.geminiApiPort}\`;
+    geminiApiUrl = `http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`;
   } else if (config.deployment && config.deployment.mode === 'voice-server' && config.deployment.apiServerIp) {
-    geminiApiUrl = \`http://\${config.deployment.apiServerIp}:\${config.server.geminiApiPort}\`;
+    geminiApiUrl = `http://${config.deployment.apiServerIp}:${config.server.geminiApiPort}`;
   } else {
-    geminiApiUrl = \`http://localhost:\${config.server.geminiApiPort || 3333}\`;
+    geminiApiUrl = `http://localhost:${config.server.geminiApiPort || 3333}`;
   }
 
   const lines = [
@@ -216,7 +216,7 @@ export function generateEnvFile(config) {
     '# ====================================',
     '',
     '# Network Configuration',
-    \`EXTERNAL_IP=\${config.server.externalIp === 'auto' ? 'auto' : config.server.externalIp}\`,
+  \`EXTERNAL_IP=\${config.server.externalIp === 'auto' ? 'auto' : config.server.externalIp}\`,
     '',
     '# Drachtio Configuration',
     'DRACHTIO_HOST=127.0.0.1',
@@ -230,52 +230,52 @@ export function generateEnvFile(config) {
     'FREESWITCH_SECRET=JambonzR0ck$',
     '',
     '# FreePBX / SIP Configuration',
-    \`SIP_DOMAIN=\${config.sip.domain}\`,
-    \`SIP_REGISTRAR=\${config.sip.registrar}\`,
-    \`SIP_REGISTRAR_PORT=\${config.sip.registrar_port || 5060}\`,
+    `SIP_DOMAIN = ${ config.sip.domain } `,
+    `SIP_REGISTRAR = ${ config.sip.registrar } `,
+    `SIP_REGISTRAR_PORT = ${ config.sip.registrar_port || 5060 } `,
     '',
     '# Default extension (primary device)',
-    \`SIP_EXTENSION=\${config.devices[0].extension}\`,
-    \`SIP_AUTH_ID=\${config.devices[0].authId}\`,
-    \`SIP_PASSWORD=\${config.devices[0].password}\`,
+    `SIP_EXTENSION = ${ config.devices[0].extension } `,
+    `SIP_AUTH_ID = ${ config.devices[0].authId } `,
+    `SIP_PASSWORD = ${ config.devices[0].password } `,
     '',
     '# Gemini API Server',
-    \`GEMINI_API_URL=\${geminiApiUrl}\`,
+    `GEMINI_API_URL = ${ geminiApiUrl } `,
     '',
     '# ElevenLabs TTS',
-    \`ELEVENLABS_API_KEY=\${config.api.elevenlabs.apiKey}\`,
-    \`ELEVENLABS_VOICE_ID=\${config.devices[0].voiceId}\`,
+    `ELEVENLABS_API_KEY = ${ config.api.elevenlabs.apiKey } `,
+    `ELEVENLABS_VOICE_ID = ${ config.devices[0].voiceId } `,
     '',
     '# OpenAI (Whisper STT)',
-    \`OPENAI_API_KEY=\${config.api.openai.apiKey}\`,
+    `OPENAI_API_KEY = ${ config.api.openai.apiKey } `,
     '',
     '# Gemini API Key',
-    \`GEMINI_API_KEY=\${config.api.gemini?.apiKey || ''}\`,
-    \`MISSION_CONTROL_GEMINI_KEY=\${config.api.gemini?.missionControlKey || ''}\`,
+    `GEMINI_API_KEY = ${ config.api.gemini?.apiKey || '' } `,
+    `MISSION_CONTROL_GEMINI_KEY = ${ config.api.gemini?.missionControlKey || '' } `,
     '',
     '# Application Settings',
-    \`HTTP_PORT=\${config.server.httpPort || 3000}\`,
+    `HTTP_PORT = ${ config.server.httpPort || 3000 } `,
     'WS_PORT=3001',
     'AUDIO_DIR=/app/audio',
     '',
     '# Outbound Call Settings',
-    \`DEFAULT_CALLER_ID=\${config.outbound?.callerId || ''}\`,
-    \`DIAL_PREFIX=\${config.outbound?.dialPrefix || ''}\`,
-    \`MAX_CONVERSATION_TURNS=\${config.outbound?.maxTurns || 10}\`,
-    \`OUTBOUND_RING_TIMEOUT=\${config.outbound?.ringTimeout || 30}\`,
-    \`TEST_PHONE_NUMBER=\${config.outbound?.testPhoneNumber || ''}\`,
+    `DEFAULT_CALLER_ID = ${ config.outbound?.callerId || '' } `,
+    `DIAL_PREFIX = ${ config.outbound?.dialPrefix || '' } `,
+    `MAX_CONVERSATION_TURNS = ${ config.outbound?.maxTurns || 10 } `,
+    `OUTBOUND_RING_TIMEOUT = ${ config.outbound?.ringTimeout || 30 } `,
+    `TEST_PHONE_NUMBER = ${ config.outbound?.testPhoneNumber || '' } `,
     '',
     '# FreePBX API (Automation)',
-    \`FREEPBX_API_URL=\${config.pbx?.apiUrl || ''}\`,
-    \`FREEPBX_CLIENT_ID=\${config.pbx?.clientId || ''}\`,
-    \`FREEPBX_CLIENT_SECRET=\${config.pbx?.clientSecret || ''}\`,
-    \`FREEPBX_TRUNK_NAME=\${config.pbx?.trunkName || 'RedSpot'}\`,
-    \`GEMINI_APP_STACK_IP=\${config.pbx?.appStackIp || ''}\`,
+    `FREEPBX_API_URL = ${ config.pbx?.apiUrl || '' } `,
+    `FREEPBX_CLIENT_ID = ${ config.pbx?.clientId || '' } `,
+    `FREEPBX_CLIENT_SECRET = ${ config.pbx?.clientSecret || '' } `,
+    `FREEPBX_TRUNK_NAME = ${ config.pbx?.trunkName || 'RedSpot' } `,
+    `GEMINI_APP_STACK_IP = ${ config.pbx?.appStackIp || '' } `,
     '',
     '# n8n Integration',
-    \`N8N_WEBHOOK_URL=\${(config.n8n && config.n8n.webhookUrl) || ''}\`,
-    \`N8N_API_KEY=\${(config.n8n && config.n8n.apiKey) || ''}\`,
-    \`N8N_BASE_URL=\${(config.n8n && config.n8n.baseUrl) || ''}\`,
+    `N8N_WEBHOOK_URL = ${ (config.n8n && config.n8n.webhookUrl) || '' } `,
+    `N8N_API_KEY = ${ (config.n8n && config.n8n.apiKey) || '' } `,
+    `N8N_BASE_URL = ${ (config.n8n && config.n8n.baseUrl) || '' } `,
     ''
   ];
 
@@ -323,7 +323,7 @@ export async function buildContainers() {
 
     child.on('close', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(\`Docker build failed (exit \${code}):\\n\${output}\`));
+      else reject(new Error(`Docker build failed(exit \${ code }): \n\${ output } `));
     });
   });
 }
@@ -354,7 +354,7 @@ export async function startContainers() {
 
     child.on('close', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(\`Docker compose failed (exit \${code}): \${output}\`));
+      else reject(new Error(`Docker compose failed(exit \${ code }): \${ output } `));
     });
   });
 }
@@ -383,7 +383,7 @@ export async function stopContainers() {
 
     child.on('close', (code) => {
       if (code === 0) resolve();
-      else reject(new Error(\`Docker compose down failed (exit \${code}): \${output}\`));
+      else reject(new Error(`Docker compose down failed(exit \${ code }): \${ output } `));
     });
   });
 }
