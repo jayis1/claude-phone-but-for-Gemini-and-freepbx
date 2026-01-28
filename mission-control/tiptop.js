@@ -334,20 +334,8 @@ function generateTopPage() {
              if(!confirm('KILL process ' + selectedPid + '?')) return;
              
              try {
-                const res = await fetch('/api/process/kill', {
-                   method: 'POST',
-                   headers: {'Content-Type': 'application/json'},
-                   body: JSON.stringify({ pid: selectedPid })
-                });
-                const d = await res.json();
-                if(d.success) {
-                   // Optimistic remove
-                   currentProcesses = currentProcesses.filter(p => p.pid != selectedPid);
-                   selectedPid = null;
-                   updateTable();
-                } else {
-                   alert('Error: ' + d.error);
-                }
+                // Legacy Python Execution Removed
+                alert('Python execution is no longer supported in v4.0+ (Native Gemini SDK used instead)');
              } catch(e) { alert('Request failed'); }
           }
 

@@ -1,5 +1,65 @@
 import net from 'net';
 import http from 'http';
+import dgram from 'dgram';
+
+/**
+ * Check if a SIP server is reachable via UDP OPTIONS ping
+ * @param {string} host - Hostname or IP to check
+ * @param {number} [port=5060] - SIP port
+ * @param {number} [timeout=2000] - Timeout in milliseconds
+ * @returns {Promise<boolean>} True if any SIP response received
+ */
+export async function isSipReachable(host, port = 5060, timeout = 2000) {
+  return new Promise((resolve) => {
+    const socket = dgram.createSocket('udp4');
+    let resolved = false;
+
+    const cleanup = () => {
+      if (!resolved) {
+        resolved = true;
+        try { socket.close(); } catch (e) { }
+      }
+    };
+
+    // Set timeout
+    const timer = setTimeout(() => {
+      cleanup();
+      resolve(false);
+    }, timeout);
+
+    socket.on('message', (msg) => {
+      // Any response (200, 404, 401) means the server is there
+      clearTimeout(timer);
+      cleanup();
+      resolve(true);
+    });
+
+    socket.on('error', (err) => {
+      clearTimeout(timer);
+      cleanup();
+      resolve(false);
+    });
+
+    // Minimal SIP OPTIONS packet
+    const branch = 'z9hG4bK-' + Math.floor(Math.random() * 1000000);
+    const packet = `OPTIONS sip:${host} SIP/2.0\r\nVia: SIP/2.0/UDP 0.0.0.0;branch=${branch}\r\nMax-Forwards: 70\r\nFrom: <sip:ping@0.0.0.0>;tag=ping\r\nTo: <sip:${host}>\r\nCall-ID: ping-${Math.random()}\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\n\r\n`;
+
+    try {
+      socket.send(packet, port, host, (err) => {
+        if (err) {
+          clearTimeout(timer);
+          cleanup();
+          resolve(false);
+        }
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      cleanup();
+      resolve(false);
+    }
+  });
+}
+
 
 /**
  * Check if an IP address is reachable on the network

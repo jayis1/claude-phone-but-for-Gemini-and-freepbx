@@ -6,7 +6,7 @@ import { loadConfig, configExists, getInstallationType, getConfigDir } from '../
 import { checkDocker, getContainerStatus } from '../docker.js';
 import { isServerRunning, getServerPid } from '../process-manager.js';
 import { validateElevenLabsKey, validateOpenAIKey } from '../validators.js';
-import { isReachable, checkGeminiApiServer as checkGeminiApiHealth } from '../network.js';
+import { isReachable, checkGeminiApiServer as checkGeminiApiHealth, isSipReachable } from '../network.js';
 import { checkPort } from '../port-check.js';
 import os from 'os';
 import fs from 'fs';
@@ -514,17 +514,19 @@ async function runVoiceServerChecks(config, isPiSplit) {
   const pbxSpinner = ora(`Checking PBX reachability (${sipDomain}:${sipPort})...`).start();
 
   // Skip reachability check if using localhost (might be SIP conflict detection)
+  // Skip reachability check if using localhost (might be SIP conflict detection)
   const isLocal = sipDomain === 'localhost' || sipDomain === '127.0.0.1';
-  const pbxReachable = isLocal ? true : await isReachable(sipDomain, sipPort);
+
+  // Use UDP SIP OPTIONS check for accuracy
+  const pbxReachable = isLocal ? true : await isSipReachable(sipDomain, sipPort);
 
   if (pbxReachable) {
     pbxSpinner.succeed(chalk.green(`PBX server is reachable (${sipDomain}:${sipPort})`));
     passedCount++;
   } else {
-    pbxSpinner.warn(chalk.yellow(`PBX reachability check is inconclusive (${sipDomain}:${sipPort})`));
-    console.log(chalk.gray('  → Note: SIP uses UDP. This check uses TCP which can fail even if SIP is working.'));
-    console.log(chalk.gray('  → If registration succeeds later, you can ignore this warning.\n'));
-    passedCount++; // Count as partial pass since UDP can be tricky to check via Socket
+    pbxSpinner.fail(chalk.red(`PBX unreachable (${sipDomain}:${sipPort})`));
+    console.log(chalk.gray('  → Check firewall, IP address, and that UDP/5060 is allowed\n'));
+    // Do not increment passedCount
   }
 
   checks.push({ name: 'PBX reachability', passed: pbxReachable });
