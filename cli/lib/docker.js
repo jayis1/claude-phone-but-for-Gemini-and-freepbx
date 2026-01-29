@@ -121,10 +121,11 @@ export function generateDockerCompose(config, stackId = 1) {
     image: ${drachtioImage}${platformLine}
     container_name: drachtio-${containerSuffix}
     restart: unless-stopped
-    ports:
-      - "${sipPort}:5060/udp"
-      - "${sipPort}:5060/tcp"
-      - "${drachtioAdminPort}:9022"
+    network_mode: "host"
+    # ports:
+    #   - "${sipPort}:5060/udp"
+    #   - "${sipPort}:5060/tcp"
+    #   - "${drachtioAdminPort}:9022"
     command: >
       drachtio
       --contact "sip:*:5060;transport=tcp,udp"
@@ -136,10 +137,11 @@ export function generateDockerCompose(config, stackId = 1) {
     image: ${freeswitchImage}${platformLine}
     container_name: freeswitch-${containerSuffix}
     restart: unless-stopped
-    ports:
-      - "${fsSipPort}:5060/udp"
-      - "${fsSipPort}:5060/tcp"
-      - "${rtpStart}-${rtpEnd}:${rtpStart}-${rtpEnd}/udp"
+    network_mode: "host"
+    # ports:
+    #   - "${fsSipPort}:5060/udp"
+    #   - "${fsSipPort}:5060/tcp"
+    #   - "${rtpStart}-${rtpEnd}:${rtpStart}-${rtpEnd}/udp"
     command: >
       freeswitch
       --sip-port 5060
@@ -159,9 +161,10 @@ export function generateDockerCompose(config, stackId = 1) {
     build: ${config.paths.voiceApp}
     container_name: voice-app-${containerSuffix}
     restart: unless-stopped
-    ports:
-      - "${voicePort}:${voicePort}"
-      - "${voicePort + 1}:${voicePort + 1}"
+    network_mode: "host"
+    # ports:
+    #   - "${voicePort}:${voicePort}"
+    #   - "${voicePort + 1}:${voicePort + 1}"
     env_file:
       - .env${stackId === 1 ? '' : '-' + stackId}
     volumes:
