@@ -315,11 +315,17 @@ srf.on("connect", function (err, hostport) {
   drachtioConnected = true;
 
   var localAddress = config.external_ip;
+  var localPort = 5060;
+
   if (hostport && hostport.length > 0) {
-    var match = hostport[0].match(/\/([^:]+)/);
-    if (match) localAddress = match[1];
+    // Expected format: "udp/192.168.1.50:5060" or "tcp/..."
+    var matchIp = hostport[0].match(/\/([^:]+)/);
+    if (matchIp) localAddress = matchIp[1];
+
+    var matchPort = hostport[0].match(/:(\d+)$/);
+    if (matchPort) localPort = parseInt(matchPort[1], 10);
   }
-  console.log("[DRACHTIO] Local SIP address: " + localAddress);
+  console.log("[DRACHTIO] Local SIP address: " + localAddress + ":" + localPort);
 
   // Start Multi-Registration for all devices
   if (!registrar) {
@@ -329,7 +335,8 @@ srf.on("connect", function (err, hostport) {
       registrar_port: config.sip.registrar_port,
       password: config.sip.password,
       expiry: config.sip.expiry,
-      local_address: localAddress
+      local_address: localAddress,
+      local_port: localPort
     });
     // registerAll takes the device configurations (ext, authId, password)
     registrar.registerAll(deviceRegistry.getAll());

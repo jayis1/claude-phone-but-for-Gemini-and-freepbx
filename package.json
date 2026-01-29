@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone",
-  "version": "weedsnacker3",
+  "version": "weedsnacker4",
   "description": "Voice interface for Gemini Code via SIP/FreePBX",
   "private": true,
   "scripts": {
