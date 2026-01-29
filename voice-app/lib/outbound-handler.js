@@ -65,7 +65,8 @@ async function initiateOutboundCall(srf, mediaServer, options) {
     const externalIp = process.env.EXTERNAL_IP || '127.0.0.1';
     const headerDomain = sipTrunkHost;
     const extensionNumber = process.env.SIP_EXTENSION || '9000';
-    const defaultCallerId = callerId || process.env.DEFAULT_CALLER_ID || extensionNumber;
+    // PRIORITY: 1. Request-specific callerId, 2. Device-specific callerId 3. Env Var default 4. Extension
+    const defaultCallerId = callerId || (deviceConfig && deviceConfig.callerId) || process.env.DEFAULT_CALLER_ID || extensionNumber;
 
     // SIP Authentication
     const sipAuthUsername = process.env.SIP_AUTH_ID || process.env.SIP_EXTENSION;
@@ -203,7 +204,8 @@ async function initiateOutboundCall(srf, mediaServer, options) {
         logger.error('🚨 CRITICAL SIP ERROR: No path to destination (Cause 34)');
         logger.error('🔎 FREEPBX DIAGNOSIS: The link between the AI (Port 5070) and FreePBX (Port 5060) is HEALTHY.');
         logger.error('🔎 PROBLEM: FreePBX cannot find a matching "Outbound Route" for the dialed number.');
-        logger.error(`🔎 ATTEMPTED: ${dialPrefix}${to.replace(/^\+/, '')}`);
+        const safeDialPrefix = process.env.DIAL_PREFIX || '';
+        logger.error(`🔎 ATTEMPTED: ${safeDialPrefix}${to.replace(/^\+/, '')}`);
         logger.error('🛠️ FIX: In FreePBX -> Outbound Routes, ensure you have a pattern like "00." or "00XXXXXXX" that matches your country.');
         throw new Error('no_route_to_destination');
       }

@@ -4,6 +4,7 @@
     "extension": "9000",
     "authId": "88707695",
     "password": "2fhbcvsTMNK6PJ6",
+    "callerId": "+45123443210",
     "voiceId": "ErXwobaYiN019PkySvjV",
     "prompt": "You are a helpful AI assistant. Keep voice responses under 40 words, and a bit of a nerd but sassy as fuck."
   },
@@ -12,6 +13,7 @@
     "extension": "9001",
     "authId": "88707696",
     "password": "2fhbcvsTMNK6PJ6",
+    "callerId": "+45123443211",
     "voiceId": "ErXwobaYiN019PkySvjV",
     "prompt": "You are Neo. You are the chosen one. Keep voice responses concise."
   },
@@ -20,6 +22,7 @@
     "extension": "9002",
     "authId": "88707697",
     "password": "2fhbcvsTMNK6PJ6",
+    "callerId": "+45123443212",
     "voiceId": "ErXwobaYiN019PkySvjV",
     "prompt": "You are Trinity. You are a skilled hacker and pilot. Keep voice responses concise."
   }
