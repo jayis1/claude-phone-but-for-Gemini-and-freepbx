@@ -57,11 +57,11 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 - **Smart Routing**: AIs can use the PBX to transfer calls (`"Let me transfer you to billing..."` -> *Transfers to Ext 200*).
 - **"Synx PBX"**: One-click provisioning of Extensions, Trunks, and Inbound Routes on FreePBX.
 - **Mission Control**: Real-time dashboard to see who is talking, view logs, and manage stacks.
-- **Nano Banana 🍌**: Visual Data Flow engine. Watch the brains of your AI employees work in real-time. (Coming in v4.3)
+- **Technical Architecture**: A clean, serious diagram showing the layout of Host vs Docker components, including Mission Control, API Server, SIP Stacks, and External Services.
 
-### Nano Banana Architecture (Visual Data Flow)
+### Technical Architecture Diagram
 
-![Nano Banana Architecture](docs/nano_banana_architecture.png)
+![System Architecture](docs/nano_banana_architecture.png)
 
 ```mermaid
 graph TD
