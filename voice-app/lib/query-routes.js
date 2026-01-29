@@ -14,7 +14,6 @@ const logger = require('./logger');
 
 const deviceRegistry = require('./device-registry');
 const callManager = require('./call-manager');
-const callManager = require('./call-manager');
 
 // Dependencies injected via setupRoutes()
 let geminiBridge = null;
@@ -107,25 +106,7 @@ function extractJson(text) {
   return null;
 }
 
-/**
- * Build query context for JSON format
- * Forces Gemini to return structured JSON with specified schema
- */
-function buildJsonQueryContext(schema) {
-  if (!schema || !schema.requiredFields) {
-    return '[STRUCTURED QUERY - RESPOND WITH JSON ONLY]\nReturn a valid JSON object. No markdown, no code fences, no explanations.';
-  }
 
-  let context = '[STRUCTURED QUERY - RESPOND WITH JSON ONLY]\n';
-  context += 'Return EXACTLY ONE valid JSON object. No markdown, no code fences, no explanations.\n';
-  context += `Required fields: ${JSON.stringify(schema.requiredFields)}\n`;
-
-  if (schema.fieldGuidance) {
-    context += `Field guidance: ${JSON.stringify(schema.fieldGuidance)}\n`;
-  }
-
-  return context;
-}
 
 /**
  * Validate query request
