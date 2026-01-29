@@ -32,18 +32,54 @@ export async function meshCommand(cmd, options) {
         // Handled by main cli, but if it fell through here:
         console.log(chalk.yellow('Use "gemini-phone mesh doctor" directly.'));
     } else if (cmd === 'logs') {
-        // Pass through to main logs command, defaulting to 'all' or specific service if provided
-        // Since logsCommand expects a service arg, we might need to handle it.
-        // options is actually the second arg from commander if we were using it that way, 
-        // but here we are parsing manually in cli-main.
-        // Let's just point them to the right command roughly or Implement simple wrapper.
         await logsCommand('voice-app');
     } else {
         console.log(chalk.red('Invalid mesh command. Use: start, stop, status, logs'));
     }
 }
 
-// ... startApiServer and startMissionControl ...
+async function startApiServer(config) {
+    const spinner = ora('Starting Gemini API server...').start();
+    try {
+        if (await isServerRunning('gemini-api-server')) {
+            spinner.warn('Gemini API server already running');
+        } else {
+            const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+            await startServer(config.paths.geminiApiServer, config.server.geminiApiPort, 'gemini-api-server', {
+                GEMINI_API_KEY: geminiKey
+            });
+            spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
+        }
+    } catch (error) {
+        spinner.fail(`Failed to start API server: ${error.message}`);
+    }
+}
+
+async function startMissionControl(config) {
+    let mcPath = path.join(process.cwd(), 'mission-control');
+    if (!fs.existsSync(mcPath)) {
+        const altPath = path.join(config.paths.voiceApp, '..', 'mission-control');
+        if (fs.existsSync(altPath)) mcPath = altPath;
+    }
+
+    const spinner = ora('Starting Mission Control (The One)...').start();
+    try {
+        if (await isServerRunning('mission-control')) {
+            spinner.warn('Mission Control already running');
+        } else {
+            const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+            await startServer(mcPath, 3030, 'mission-control', {
+                GEMINI_API_KEY: geminiKey,
+                VOICE_APP_URL: `http://localhost:${config.server.httpPort || 3000}`,
+                API_SERVER_URL: `http://localhost:${config.server.geminiApiPort || 3333}`,
+                PAI_DIR: path.join(os.homedir(), '.gemini')
+            });
+            spinner.succeed('Mission Control started on port 3030');
+        }
+    } catch (error) {
+        spinner.fail(`Failed to start Mission Control: ${error.message}`);
+    }
+}
 
 async function startMesh(config) {
     console.log(chalk.bold.blue('\n🕸️  Initializing The Mesh (3-Node Cluster)\n'));
@@ -85,13 +121,6 @@ async function startMesh(config) {
         const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
         process.stdout.write(`   - Building Node ${stackId} (${name})... `);
         try {
-            // We only need to build once really if they share the same image/context, 
-            // but strictly speaking they are separate compose projects. 
-            // However, voice-app image is the same. Building stack 1 might be enough if image tag is shared?
-            // docker.js uses "voice-app-{stackId}" as container name, but "build: path". 
-            // Compose usually tags image as "folder_service". 
-            // Safest to build all 3 or just ensure the image is updated. 
-            // Let's build all 3 to be safe and parallel-ready.
             await buildContainers(stackId);
             console.log(chalk.green('✓'));
         } catch (e) {
@@ -116,8 +145,7 @@ async function startMesh(config) {
         }
     }
 
-
-    // 6. Success
+    // 7. Success
     console.log(chalk.green('\n✨ The Mesh is Online!'));
     console.log(chalk.gray('--------------------------------------------------'));
     console.log(`Node 1 (Morpheus): SIP ${baseSipPort}   | HTTP 3000`);
@@ -170,4 +198,3 @@ async function meshStatus() {
         console.log('');
     }
 }
-
