@@ -5,7 +5,6 @@
 
 const { setTimeout: sleep } = require('node:timers/promises');
 const callManager = require('./call-manager');
-const callManager = require('./call-manager');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -130,9 +129,6 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
     // Play device-specific greeting with device voice
     const greetingUrl = await ttsService.generateSpeech(greeting, voiceId);
     await endpoint.play(greetingUrl);
-
-    // Register with CallManager for external control
-    callManager.register(callUuid, { device: deviceName });
 
     // Register with CallManager for external control
     callManager.register(callUuid, { device: deviceName });
@@ -295,7 +291,6 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
     try {
       await geminiBridge.endSession(callUuid);
-      callManager.unregister(callUuid);
       callManager.unregister(callUuid);
     } catch (e) { }
 
