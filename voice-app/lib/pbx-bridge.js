@@ -129,7 +129,7 @@ async function graphql(query, variables = {}) {
 /**
  * Provision PJSIP Extension 9000
  */
-async function provisionExtension(extension = '9000', name = 'Gemini AI') {
+async function provisionExtension(extension = '9000', name = 'Gemini AI', secret = 'password') {
   console.log(`[PBX-BRIDGE] Provisioning extension ${extension}...`);
 
   // 1. DELETE FIRST (Nuclear Sync)
@@ -150,10 +150,11 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
 
   // 2. CREATE
   const mutation = `
-    mutation ($extension: ID!, $name: String!) {
+    mutation ($extension: ID!, $name: String!, $secret: String!) {
       addExtension(input: {
         extensionId: $extension,
         name: $name,
+        secret: $secret,
         email: "gemini-phone@localhost",
         tech: "pjsip",
         vmEnable: false
@@ -164,7 +165,7 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
     }
   `;
 
-  return await graphql(mutation, { extension, name });
+  return await graphql(mutation, { extension, name, secret });
 }
 
 /**

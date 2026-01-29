@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone-cli",
-  "version": "MIssionweedSNACKS.1",
+  "version": "MIssionweedSNACKS.2",
   "description": "Unified CLI installer for Gemini Phone voice interface",
   "type": "module",
   "bin": {

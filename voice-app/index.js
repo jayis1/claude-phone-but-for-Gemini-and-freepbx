@@ -285,7 +285,7 @@ async function start() {
           // Only provision if it has auth credentials (is a real SIP device)
           if (dev.authId && dev.password) {
             console.log(`[PROVISION] Ensuring extension ${ext} (${dev.name}) exists...`);
-            await pbxBridge.provisionExtension(ext, dev.name);
+            await pbxBridge.provisionExtension(ext, dev.name, dev.password);
           }
         } catch (e) {
           console.error(`[PROVISION] Failed to provision ${ext}: ${e.message}`);
