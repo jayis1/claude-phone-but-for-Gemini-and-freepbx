@@ -226,19 +226,21 @@ async function initializeHttpServer() {
    * Provision AI Switchboard (Ring Group + Inbound Route)
    * Rings ALL active extensions simultaneously
    */
+  /**
+   * Provision AI Switchboard (Ring Group + Inbound Route)
+   * Rings ALL active extensions simultaneously
+   */
   httpServer.app.post('/api/pbx/provision-switchboard', async (req, res) => {
     try {
-      // 1. Identify all active extensions (naive approach: 9000-9009)
-      // Ideally we would read this from Docker/devices.json, but for now we'll assume a range
-      // or check which ones are actually online.
-      // Let's assume stacks 1-5 for now, or just check the active device registry if we implemented that.
-      // Better: Use a fixed reasonable range for the "AI Team"
-      const extensions = ['9000', '9001', '9002', '9003', '9004'];
+      // 1. Identify active extensions
+      // We assume a standard 5-stack deployment for the "AI Squad"
+      // Stack 1: 9000, Stack 2: 9010 ... Stack 5: 9040
+      const extensions = ['9000', '9010', '9020', '9030', '9040'];
 
       console.log(`[API] Provisioning AI Switchboard for extensions: ${extensions.join(', ')}...`);
 
       // 2. Create Ring Group 600
-      await pbxBridge.provisionRingGroup(extensions);
+      await pbxBridge.provisionRingGroup(extensions, 600, "Gemini AI Switchboard");
 
       // 3. Create Inbound Route -> Ring Group 600
       await pbxBridge.provisionInboundRoute('ext-group,600,1');
@@ -246,7 +248,7 @@ async function initializeHttpServer() {
       // 4. Reload
       await pbxBridge.graphql('mutation { doreload(input: {}) { status message } }');
 
-      res.json({ success: true, message: 'AI Switchboard created (Group 600 -> 9000-9004)' });
+      res.json({ success: true, message: 'AI Switchboard created (Group 600 -> 9000-9040)' });
     } catch (error) {
       console.error('[API] Switchboard provisioning failed:', error.message);
       res.status(500).json({ success: false, error: error.message });

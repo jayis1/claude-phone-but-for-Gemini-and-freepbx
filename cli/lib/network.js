@@ -42,7 +42,7 @@ export async function isSipReachable(host, port = 5060, timeout = 2000) {
 
     // Minimal SIP OPTIONS packet
     const branch = 'z9hG4bK-' + Math.floor(Math.random() * 1000000);
-    const packet = `OPTIONS sip:${host} SIP/2.0\r\nVia: SIP/2.0/UDP 0.0.0.0;branch=${branch}\r\nMax-Forwards: 70\r\nFrom: <sip:ping@0.0.0.0>;tag=ping\r\nTo: <sip:${host}>\r\nCall-ID: ping-${Math.random()}\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\n\r\n`;
+    const packet = `OPTIONS sip:${host} SIP/2.0\r\nVia: SIP/2.0/UDP 127.0.0.1;branch=${branch}\r\nMax-Forwards: 70\r\nFrom: <sip:ping@127.0.0.1>;tag=ping\r\nTo: <sip:${host}>\r\nCall-ID: ping-${Math.random()}\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\n\r\n`;
 
     try {
       socket.send(packet, port, host, (err) => {

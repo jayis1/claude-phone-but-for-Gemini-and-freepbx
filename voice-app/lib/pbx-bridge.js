@@ -171,13 +171,11 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
  * Provision Ring Group 600
  * @param {string[]} extensions - Array of extensions to ring (e.g. ['9000', '9001'])
  */
-async function provisionRingGroup(extensions = ['9000']) {
-  const groupNumber = 600; // Int, not String
-  console.log(`[PBX-BRIDGE] Provisioning Ring Group ${groupNumber} with members: ${extensions.join(', ')}...`);
+async function provisionRingGroup(extensions = ['9000'], groupNumber = 600, description = "Gemini AI Switchboard") {
+  console.log(`[PBX-BRIDGE] Provisioning Ring Group ${groupNumber} (${description}) with members: ${extensions.join(', ')}...`);
 
   // DELETE FIRST
   try {
-    // Note: groupNumber is integer
     const delMutation = `mutation { deleteRingGroup(input: { groupNumber: ${groupNumber} }) { status } }`;
     await graphql(delMutation);
   } catch (e) { /* Ignore */ }
@@ -193,10 +191,11 @@ async function provisionRingGroup(extensions = ['9000']) {
 
   const input = {
     groupNumber: groupNumber,
-    description: "Gemini AI Switchboard",
+    description: description,
     strategy: "ringall", // Simultaneous ring
     extensionList: extensions.join('-'), // Format: 9000-9001
-    ringTime: "30"
+    ringTime: "30",
+    destination: "tsk-pjsip,9000,1" // Failover to primary
   };
 
   return await graphql(mutation, { input });

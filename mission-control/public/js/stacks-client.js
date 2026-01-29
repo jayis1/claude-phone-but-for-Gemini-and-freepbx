@@ -15,7 +15,7 @@ async function fetchStacks() {
 }
 
 async function createSwitchboard() {
-    if (!confirm('This will create Ring Group 600 and route ALL incoming calls to it. Continue?')) return;
+    if (!confirm('This will create Ring Group 600 and route ALL incoming calls to it.\nit will ring extensions 9000, 9010, 9020... (All Stacks).\n\nContinue?')) return;
 
     const btn = document.querySelector('button[title*="Switchboard"]');
     const oldText = btn ? btn.innerText : 'Create Switchboard';
@@ -25,6 +25,7 @@ async function createSwitchboard() {
     }
 
     try {
+        // Use the voice-app proxy (Voice App 1 is the PBX Controller)
         const res = await fetch('/api/proxy/voice/api/pbx/provision-switchboard', { method: 'POST' });
         const data = await res.json();
 
