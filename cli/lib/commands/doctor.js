@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { spawn } from 'child_process';
+
 import axios from 'axios';
 import { loadConfig, configExists, getInstallationType, getConfigDir } from '../config.js';
 import { checkDocker, getContainerStatus } from '../docker.js';
-import { isServerRunning, getServerPid } from '../process-manager.js';
+
 import { validateElevenLabsKey, validateOpenAIKey } from '../validators.js';
 import { isReachable, checkGeminiApiServer as checkGeminiApiHealth, isSipReachable } from '../network.js';
 import { checkPort } from '../port-check.js';
@@ -54,33 +54,7 @@ async function checkOpenAIAPI(apiKey) {
   }
 }
 
-/**
- * Check if voice-app container is running
- * @returns {Promise<{running: boolean, error?: string}>}
- */
-async function checkVoiceApp() {
-  const containers = await getContainerStatus();
-  const voiceApp = containers.find(c => c.name.includes('voice-app'));
 
-  if (!voiceApp) {
-    return {
-      running: false,
-      error: 'Container not found'
-    };
-  }
-
-  const isRunning = voiceApp.status.toLowerCase().includes('up') ||
-    voiceApp.status.toLowerCase().includes('running');
-
-  if (!isRunning) {
-    return {
-      running: false,
-      error: `Container status: ${voiceApp.status}`
-    };
-  }
-
-  return { running: true };
-}
 
 /**
  * Check FreePBX API connectivity (M2M)
@@ -377,7 +351,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
   const checks = [];
   let passedCount = 0;
 
-  // Check Docker
+  // Check Docker - Mesh Aware
   const dockerSpinner = ora('Checking Docker...').start();
   const dockerResult = await checkDocker();
   if (dockerResult.installed && dockerResult.running) {
@@ -417,17 +391,30 @@ async function runVoiceServerChecks(config, isPiSplit) {
     checks.push({ name: 'OpenAI API', passed: openAIResult.connected });
   }
 
-  // Check Voice-app container
-  const voiceAppSpinner = ora('Checking voice-app container...').start();
-  const voiceAppResult = await checkVoiceApp();
-  if (voiceAppResult.running) {
-    voiceAppSpinner.succeed(chalk.green('Voice-app container running'));
-    passedCount++;
-  } else {
-    voiceAppSpinner.fail(chalk.red(`Voice-app container not running: ${voiceAppResult.error}`));
-    console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
+  // Check Voice-app containers (1-3)
+  for (let stackId = 1; stackId <= 3; stackId++) {
+    const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
+    const vaSpinner = ora(`Checking Node ${stackId} (${name})...`).start();
+
+    const containers = await getContainerStatus(stackId);
+    const voiceApp = containers.find(c => c.name.includes('voice-app'));
+
+    if (voiceApp && (voiceApp.status.toLowerCase().includes('up') || voiceApp.status.toLowerCase().includes('running'))) {
+      vaSpinner.succeed(chalk.green(`Node ${stackId} (${name}) is running`));
+      passedCount++;
+      checks.push({ name: `Node ${stackId} (${name})`, passed: true });
+    } else {
+      // Only fail heavily if it's Node 1, others might be optional if partial mesh
+      if (stackId === 1) {
+        vaSpinner.fail(chalk.red(`Node ${stackId} (${name}) not running`));
+        checks.push({ name: `Node ${stackId} (${name})`, passed: false });
+      } else {
+        vaSpinner.warn(chalk.yellow(`Node ${stackId} (${name}) not detected (Optional)`));
+        // Don't penalize passedCount for partial mesh
+        checks.push({ name: `Node ${stackId} (${name})`, passed: true });
+      }
+    }
   }
-  checks.push({ name: 'Voice-app container', passed: voiceAppResult.running });
 
   // Check API server reachability
   if (isPiSplit) {

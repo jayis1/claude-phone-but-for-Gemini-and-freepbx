@@ -245,6 +245,18 @@ mesh
     }
   });
 
+mesh
+  .command('doctor')
+  .description('Run health checks on the Mesh')
+  .action(async () => {
+    try {
+      await doctorCommand(); // Reuse the main doctor, which is now mesh-aware
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Mesh doctor failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
 program
   .command('logs [service]')
   .description('Tail service logs (voice-app, api-server, or all)')

@@ -107,19 +107,23 @@ async function showApiServerStatus(config, isPiSplit, installationType) {
  * @returns {Promise<void>}
  */
 async function showVoiceServerStatus(config, isPiSplit, installationType) {
-  // Docker Containers
+  // Docker Containers - Mesh Aware
   console.log(chalk.bold('Docker Containers:'));
-  const containers = await getContainerStatus();
 
-  if (containers.length === 0) {
-    console.log(chalk.red('  ✗ No containers running'));
-  } else {
-    for (const container of containers) {
-      const isRunning = container.status.toLowerCase().includes('up') ||
-        container.status.toLowerCase().includes('running');
-      const icon = isRunning ? '✓' : '✗';
-      const color = isRunning ? chalk.green : chalk.red;
-      console.log(color(`  ${icon} ${container.name}: ${container.status}`));
+  for (let stackId = 1; stackId <= 3; stackId++) {
+    const peers = ['Morpheus', 'Neo', 'Trinity'];
+    const name = peers[stackId - 1] || `Stack ${stackId}`;
+    const containers = await getContainerStatus(stackId);
+
+    if (containers.length > 0) {
+      console.log(chalk.bold.blue(`  Node ${stackId}: ${name}`));
+      for (const container of containers) {
+        const isRunning = container.status.toLowerCase().includes('up') ||
+          container.status.toLowerCase().includes('running');
+        const icon = isRunning ? '✓' : '✗';
+        const color = isRunning ? chalk.green : chalk.red;
+        console.log(color(`    ${icon} ${container.name}: ${container.status}`));
+      }
     }
   }
   console.log();
