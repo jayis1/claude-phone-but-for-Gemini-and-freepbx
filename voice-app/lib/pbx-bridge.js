@@ -414,14 +414,10 @@ async function provisionFaxExtension(extension = '9003', name = 'TheOne Fax', se
       addExtension(input: {
         extensionId: $extension,
         name: $name,
-        secret: $secret,
+        umPassword: $secret,
         email: "fax@localhost",
         tech: "pjsip",
-        vmEnable: false,
-        
-        # FAX SPECIFIC SETTINGS (Hypothetical GraphQL Schema for Fax)
-        # In a real scenario, this depends on the specific FreePBX GraphQL implementation.
-        # Assuming standard map options for T38/FaxDetect
+        vmEnable: false
       }) {
         status
         message
@@ -429,9 +425,14 @@ async function provisionFaxExtension(extension = '9003', name = 'TheOne Fax', se
     }
   `;
 
-  // Note: Since we don't have the exact schema for Fax Detect, we create a standard extension
-  // but we log that we *would* enable T38 here.
-  // "The One" relies on SIP MESSAGE, which works over standard SIP extensions.
+  // Note regarding Fax Options: The FreePBX GraphQL API often handles Fax via the User Manager module.
+  // We provision the extension first. Configuring specific fax rates (9600) usually requires
+  // a separate 'updateUser' mutation or REST call if not supported in addExtension.
+  // For now, we ensure the PJSIP endpoint exists for "The One" to register against.
+
+  // Note: We use standard extension creation. Advanced fax settings (ECM, header, rates)
+  // are typically configured in User Management -> Fax.
+  console.log('[PBX-BRIDGE] NOTE: Extension created. Please configure specific Fax Options (ECM, Rate, Header) in FreePBX User Manager.');
 
   return await graphql(mutation, { extension, name, secret });
 }
