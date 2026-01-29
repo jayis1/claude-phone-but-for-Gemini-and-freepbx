@@ -122,6 +122,19 @@ Because they are standard SIP extensions, you can set up scenarios where:
 
 *(Future update: creating "Conference Room" scenarios for multi-agent swarms)*
 
+### 📠 The "Fax Machine" Protocol (Hyper-Mesh)
+
+**"Never send a human to do a machine's job."**
+
+When Morpheus transfers a call to Trinity, he doesn't just transfer the audio. That would be rude.
+Instead, the Mesh utilizes a high-speed data interconnect (The "Fax Machine") to instantly transmit:
+
+1. **Full Conversation Transcript**: Trinity reads what you said to Morpheus.
+2. **Sentiment Vector**: She knows if you are angry, happy, or confused.
+3. **Active Variables**: Account numbers, names, and dates are pre-filled in her memory.
+
+This allows the Mesh to operate as a **Single Collective Brain** rather than isolated bots. "The One" (Mission Control) monitors these "Faxes" to visualize the thought process of the entire network.
+
 ---
 
 ## 📦 Requirements
