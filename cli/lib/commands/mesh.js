@@ -8,14 +8,13 @@ import {
     loadConfig as getConfig
 } from '../config.js';
 import {
-import {
-        writeDockerConfig,
-        startContainers,
-        stopContainers,
-        checkDocker,
-        getContainerStatus,
-        buildContainers
-    } from '../docker.js';
+    writeDockerConfig,
+    startContainers,
+    stopContainers,
+    checkDocker,
+    getContainerStatus,
+    buildContainers
+} from '../docker.js';
 import { startServer, stopServer, isServerRunning } from '../process-manager.js';
 import { logsCommand } from './logs.js';
 
