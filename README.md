@@ -61,7 +61,7 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 
 ### Nano Banana Architecture (Visual Data Flow)
 
-![Nano Banana Data Flow](docs/nano_banana_flow.png)
+![Nano Banana Architecture](docs/nano_banana_architecture.png)
 
 ```mermaid
 graph TD
