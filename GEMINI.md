@@ -21,7 +21,7 @@ Gemini Phone gives your Gemini Code installation a phone number through FreePBX 
 | AI Backend | Gemini CLI (via HTTP wrapper) |
 | PBX | FreePBX (any SIP-compatible works) |
 | Container | Docker Compose |
-| **Version** | MIssionweedSNACKS.3 (Elite Mesh Architecture) |
+| **Version** | MIssionweedSNACKS.4 (Elite Mesh Architecture) |
 
 ## Architecture
 

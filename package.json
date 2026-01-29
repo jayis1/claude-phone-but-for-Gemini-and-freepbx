@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone",
-  "version": "MIssionweedSNACKS.3",
+  "version": "MIssionweedSNACKS.4",
   "description": "Voice interface for Gemini Code via SIP/FreePBX",
   "private": true,
   "scripts": {
