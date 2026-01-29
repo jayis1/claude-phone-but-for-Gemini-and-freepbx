@@ -5,9 +5,7 @@ import path from 'path';
 import {
   getConfigDir
 } from './config.js';
-import {
-  stopContainer
-} from './process-manager.js';
+
 import { generateMeshConfig } from './mesh.js';
 
 /**
@@ -103,6 +101,7 @@ export function generateDockerCompose(config, stackId = 1) {
 
   // Drachtio Admin Port (Default 9022 -> 9022, 9023, 9024)
   const drachtioAdminPort = 9022 + idOffset;
+  const voicePort = (config.server && config.server.httpPort ? config.server.httpPort : 3000) + (idOffset * 2);
 
   const isPiMode = config.deployment && config.deployment.mode === 'pi-split';
   const drachtioImage = isPiMode ? 'drachtio/drachtio-server:0.9.4' : 'drachtio/drachtio-server:latest';
