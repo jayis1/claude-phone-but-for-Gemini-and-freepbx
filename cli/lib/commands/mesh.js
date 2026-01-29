@@ -1,5 +1,9 @@
 
 import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import ora from 'ora';
 import {
     loadConfig as getConfig
 } from '../config.js';
@@ -10,6 +14,7 @@ import {
     checkDocker,
     getContainerStatus
 } from '../docker.js';
+import { startServer, stopServer, isServerRunning } from '../process-manager.js';
 
 export async function meshCommand(cmd, _options) {
     const config = await getConfig();
@@ -26,6 +31,50 @@ export async function meshCommand(cmd, _options) {
     }
 }
 
+async function startApiServer(config) {
+    const spinner = ora('Starting Gemini API server...').start();
+    try {
+        if (await isServerRunning('gemini-api-server')) {
+            spinner.warn('Gemini API server already running');
+        } else {
+            const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+            await startServer(config.paths.geminiApiServer, config.server.geminiApiPort, 'gemini-api-server', {
+                GEMINI_API_KEY: geminiKey
+            });
+            spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
+        }
+    } catch (error) {
+        spinner.fail(`Failed to start API server: ${error.message}`);
+        // Don't fail the whole mesh for this, but warn
+    }
+}
+
+async function startMissionControl(config) {
+    let mcPath = path.join(process.cwd(), 'mission-control');
+    if (!fs.existsSync(mcPath)) {
+        const altPath = path.join(config.paths.voiceApp, '..', 'mission-control');
+        if (fs.existsSync(altPath)) mcPath = altPath;
+    }
+
+    const spinner = ora('Starting Mission Control (The One)...').start();
+    try {
+        if (await isServerRunning('mission-control')) {
+            spinner.warn('Mission Control already running');
+        } else {
+            const geminiKey = process.env.GEMINI_API_KEY || config.api?.gemini?.apiKey;
+            await startServer(mcPath, 3030, 'mission-control', {
+                GEMINI_API_KEY: geminiKey,
+                VOICE_APP_URL: `http://localhost:${config.server.httpPort || 3000}`,
+                API_SERVER_URL: `http://localhost:${config.server.geminiApiPort || 3333}`,
+                PAI_DIR: path.join(os.homedir(), '.gemini')
+            });
+            spinner.succeed('Mission Control started on port 3030');
+        }
+    } catch (error) {
+        spinner.fail(`Failed to start Mission Control: ${error.message}`);
+    }
+}
+
 async function startMesh(config) {
     console.log(chalk.bold.blue('\n🕸️  Initializing The Mesh (3-Node Cluster)\n'));
 
@@ -36,14 +85,16 @@ async function startMesh(config) {
         return;
     }
 
-    // 2. Network Info
+    // 2. Start Host Services (The One + Brain)
+    console.log(chalk.yellow('🧠 initializing Host Services...'));
+    await startApiServer(config);
+    await startMissionControl(config);
+
+    // 3. Network Info
     const baseSipPort = 5060;
 
-    // 3. Generate Configs for Stacks 1, 2, 3
-    console.log(chalk.yellow('📝 Generating Configuration...'));
-
-    // We need to inject the full mesh map into each stack
-    // This is handled by docker.js using generateMeshConfig helper
+    // 4. Generate Configs for Stacks 1, 2, 3
+    console.log(chalk.yellow('\n📝 Generating Configuration...'));
 
     for (let stackId = 1; stackId <= 3; stackId++) {
         const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
@@ -58,7 +109,7 @@ async function startMesh(config) {
         }
     }
 
-    // 4. Launch Stacks
+    // 5. Launch Stacks
     console.log(chalk.yellow('\n🚀 Launching Containers...'));
 
     for (let stackId = 1; stackId <= 3; stackId++) {
@@ -69,12 +120,11 @@ async function startMesh(config) {
             console.log(chalk.green('✓'));
         } catch (e) {
             console.log(chalk.red('❌'));
-            // If it fails, it might be already running, try to continue
             console.log(chalk.gray(`     (Note: ${e.message.split('\n')[0]})`));
         }
     }
 
-    // 5. Success
+    // 6. Success
     console.log(chalk.green('\n✨ The Mesh is Online!'));
     console.log(chalk.gray('--------------------------------------------------'));
     console.log(`Node 1 (Morpheus): SIP ${baseSipPort}   | HTTP 3000`);
@@ -86,13 +136,32 @@ async function startMesh(config) {
 
 async function stopMesh() {
     console.log(chalk.bold.blue('\n🛑 Stopping The Mesh...'));
-    await stopContainers(); // Stops all stacks by default logic in docker.js
+
+    // Stop Docker Stacks
+    await stopContainers();
+
+    // Stop Host Services
+    const spinner = ora('Stopping Host Services...').start();
+    await stopServer('gemini-api-server');
+    await stopServer('mission-control');
+    spinner.succeed('Host services stopped');
+
     console.log(chalk.green('✓ All nodes halted.'));
 }
 
 async function meshStatus() {
     console.log(chalk.bold.blue('\n📊 Mesh Status\n'));
 
+    // Check Host Services
+    const mcRunning = await isServerRunning('mission-control');
+    const apiRunning = await isServerRunning('gemini-api-server');
+
+    console.log(chalk.bold('Host Services (The One):'));
+    console.log(`  Mission Control: ${mcRunning ? chalk.green('ONLINE (3030)') : chalk.red('OFFLINE')}`);
+    console.log(`  API Server:      ${apiRunning ? chalk.green('ONLINE (3333)') : chalk.red('OFFLINE')}`);
+    console.log('');
+
+    console.log(chalk.bold('Mesh Nodes (Docker):'));
     for (let stackId = 1; stackId <= 3; stackId++) {
         const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
         const containers = await getContainerStatus(stackId);
@@ -108,3 +177,4 @@ async function meshStatus() {
         console.log('');
     }
 }
+
