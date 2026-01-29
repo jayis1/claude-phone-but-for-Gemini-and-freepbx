@@ -154,11 +154,10 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI', secret
       addExtension(input: {
         extensionId: $extension,
         name: $name,
-        password: $secret, # Updated field name from 'secret' to 'password'
+        secret: $secret,
         email: "gemini-phone@localhost",
         tech: "pjsip",
         vmEnable: false
-        # TODO: Enable User Directory linking once field name is confirmed
         # usermanDirectory: "Property Management"
       }) {
         status
