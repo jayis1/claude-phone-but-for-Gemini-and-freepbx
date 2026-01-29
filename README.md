@@ -73,7 +73,7 @@ Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautif
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.2.4/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.2.5/install.sh | bash
 ```
 
 The installer performs the following steps:
