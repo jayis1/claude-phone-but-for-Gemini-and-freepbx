@@ -128,6 +128,10 @@ async function initializeHttpServer() {
   ttsService.setAudioDir(config.audio_dir);
   console.log("[" + new Date().toISOString() + "] TTS Service configured");
 
+  // Register Configuration Routes
+  // This enables /api/config, /api/devices, etc.
+  httpServer.addConfigRoutes(deviceRegistry);
+
   // Status Endpoint (for gemini-phone doctor)
   // MOVED UP before queryRouter to ensure priority
   httpServer.app.get('/api/status', (req, res) => {
