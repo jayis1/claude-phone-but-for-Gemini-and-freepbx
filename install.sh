@@ -325,7 +325,7 @@ main() {
 
     cd "$INSTALL_DIR"
     git fetch --tags --force
-    git reset --hard MIssionweedSNACKS
+    git reset --hard refs/tags/MIssionweedSNACKS
     
     # Restore .env
     if [ "$HAS_BACKUP" = true ]; then
