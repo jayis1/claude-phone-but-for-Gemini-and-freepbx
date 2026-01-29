@@ -16,14 +16,14 @@ Gemini Phone allows you to deploy fully autonomous "AI Employees" (Stacks) that 
 Run this on any Linux machine (Ubuntu/Debian/Pi) on the same LAN as your FreePBX:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/MIssionweedSNACKS/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/WEEDsMARTIX1.0/install.sh | bash
 ```
 
 Run setup:
 
 ```bash
 gemini-phone setup
-gemini-phone start
+gemini-phone mesh start   # Launch the 3-Node AI Cluster
 ```
 
 ---
@@ -32,21 +32,18 @@ gemini-phone start
 
 Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 
-### The Architecture
+### The Architecture (WEEDsMARTIX 1.0)
 
-- **Mission Control**: A dashboard to manage your AI workforce.
-- **Stacks (AI Employees)**: Each "Stack" is a dedicated independent AI agent with its own:
-  - **Phone Extension** (e.g., 9000, 9010, 9020)
-  - **Voice** (ElevenLabs / Google)
-  - **Personality** (System Prompt)
-  - **Memory** (Context)
-- **Synx PBX**: Auto-magically configures your FreePBX. No manual trunk/route setup needed.
+- **The One (Mission Control)**: A central orchestrator (Port 3030) that listens to all agents and visualizes the network.
+- **The Mesh (AI Employees)**: A 3-node interconnected cluster:
 
-### Example Team
+| Agent | Port | Role | Personality |
+| :--- | :--- | :--- | :--- |
+| **Morpheus** | 5060 | L1 Support | The Mentor. Filters noise. |
+| **Neo** | 5070 | Specialist | The One. Solves problems. |
+| **Trinity** | 5080 | Empathy | The Heart. Handles sensitive calls. |
 
-1. **Morpheus (Ext 9000)**: Level 1 Support. Answers all incoming calls. Filters spam.
-2. **Trinity (Ext 9010)**: Specialist. Morpheus transfers technical questions to her.
-3. **Neo (Ext 9020)**: Outbound Sales. Calls leads from a list.
+- **Synx PBX**: Auto-magically configures your FreePBX via API.
 
 ---
 
@@ -54,10 +51,10 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 
 - **Multi-Modal AI**: Powered by Gemini 1.5 Pro/Flash.
 - **Natural Voice**: Ultra-low latency TTS via ElevenLabs.
-- **Smart Routing**: AIs can use the PBX to transfer calls (`"Let me transfer you to billing..."` -> *Transfers to Ext 200*).
+- **Smart Routing**: AIs can use the PBX to transfer calls.
 - **"Synx PBX"**: One-click provisioning of Extensions, Trunks, and Inbound Routes on FreePBX.
-- **Mission Control**: Real-time dashboard to see who is talking, view logs, and manage stacks.
-- **Technical Architecture**: A clean, serious diagram showing the *Elite Mesh Architecture*, including Active Call Stats, Async n8n Control Loop, and Inter-AI SIP Links.
+- **Mission Control ("The One")**: Real-time dashboard and event bus.
+- **Elite Mesh Architecture**: Inter-AI calling via internal SIP mesh.
 
 ### Technical Architecture Diagram
 
@@ -65,30 +62,24 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 
 ```mermaid
 graph TD
-    subgraph "Your Network"
-        Users[Phones/PSTN] <-->|SIP/RTP| FreePBX[FreePBX Server]
-        FreePBX <-->|SIP Trunk| Drachtio[Drachtio SIP]
-        
-        subgraph "Gemini Phone Stack"
-            Drachtio <-->|SIP| VoiceApp[Voice App Node.js]
-            VoiceApp <-->|ESL| FreeSWITCH[FreeSWITCH Media]
-        end
-        
-        VoiceApp -->|GraphQL| FreePBX_API[FreePBX M2M API]
-        VoiceApp -->|WebSockets| UserDash[Mission Control UI]
+    subgraph "The One (Orchestrator)"
+        MC[Mission Control :3030]
+    end
+
+    subgraph "The Mesh (SIP Cluster)"
+        M[Morpheus :5060] <-->|SIP| N[Neo :5070]
+        N <-->|SIP| T[Trinity :5080]
+        T <-->|SIP| M
     end
     
-    subgraph "Cloud AI"
-        VoiceApp <-->|Audio Stream| OpenAI[Deepgram/Whisper STT]
-        VoiceApp <-->|Text Prompt| Gemini[Google Gemini 1.5]
-        VoiceApp <-->|Text| ElevenLabs[ElevenLabs TTS]
-        ElevenLabs -->|Audio Stream| VoiceApp
-    end
+    MC <-->|Events| M
+    MC <-->|Events| N
+    MC <-->|Events| T
     
-    classDef cloud fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef local fill:#ccf,stroke:#333,stroke-width:2px;
-    class OpenAI,Gemini,ElevenLabs cloud;
-    class VoiceApp,Drachtio,FreeSWITCH,FreePBX local;
+    Users[Phones/PSTN] <-->|SIP| FreePBX[FreePBX Server]
+    FreePBX <-->|SIP Trunk| M
+    FreePBX <-->|SIP Trunk| N
+    FreePBX <-->|SIP Trunk| T
 ```
 
 ---
@@ -102,12 +93,11 @@ Everything is managed via the `gemini-phone` tool.
 | Command | Description |
 | :--- | :--- |
 | `gemini-phone setup` | Hardware/Network wizard. |
-| `gemini-phone start` | Wake up the workforce. |
-| `gemini-phone stop` | Send everyone home. |
-| `gemini-phone status` | See who is online. |
+| `gemini-phone mesh start` | **NEW**: Wake up the full 3-Node Cluster. |
+| `gemini-phone mesh stop` | Stop the cluster. |
+| `gemini-phone mesh status` | See status of all nodes. |
 | `gemini-phone doctor` | Diagnose connectivity/network issues. |
-| `gemini-phone stack deploy [N]` | Hire a new AI (Deploy Stack N). |
-| `gemini-phone stack remove [N]` | Fire an AI (Remove Stack N). |
+| `gemini-phone stack deploy [N]` | Deploy individual stacks manually. |
 
 ### Mission Control
 
