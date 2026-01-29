@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone-cli",
-  "version": "WEEDsMARTIX1.0",
+  "version": "WEEDsMARTIX1.1",
   "description": "Unified CLI installer for Gemini Phone voice interface",
   "type": "module",
   "bin": {
