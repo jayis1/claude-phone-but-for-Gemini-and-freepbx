@@ -121,22 +121,28 @@ export function generateDockerCompose(config, stackId = 1) {
     image: ${drachtioImage}${platformLine}
     container_name: drachtio-${containerSuffix}
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "${sipPort}:5060/udp"
+      - "${sipPort}:5060/tcp"
+      - "${drachtioAdminPort}:9022"
     command: >
       drachtio
-      --contact "sip:*:${sipPort};transport=tcp,udp"
+      --contact "sip:*:5060;transport=tcp,udp"
       --secret \${DRACHTIO_SECRET:-cymru}
-      --port ${drachtioAdminPort}
+      --port 9022
       --loglevel info
     
   freeswitch:
     image: ${freeswitchImage}${platformLine}
     container_name: freeswitch-${containerSuffix}
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "${fsSipPort}:5060/udp"
+      - "${fsSipPort}:5060/tcp"
+      - "${rtpStart}-${rtpEnd}:${rtpStart}-${rtpEnd}/udp"
     command: >
       freeswitch
-      --sip-port ${fsSipPort}
+      --sip-port 5060
       --rtp-range-start ${rtpStart}
       --rtp-range-end ${rtpEnd}
       --ext-rtp-ip \${EXTERNAL_IP:-127.0.0.1}
@@ -148,11 +154,14 @@ export function generateDockerCompose(config, stackId = 1) {
       - EXTERNAL_IP=\${EXTERNAL_IP}
       - MESH_PEERS='${generateMeshConfig(4, baseSipPort)}'
       - HTTP_PORT=${voicePort}
+
   voice-app:
     build: ${config.paths.voiceApp}
     container_name: voice-app-${containerSuffix}
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "${voicePort}:${voicePort}"
+      - "${voicePort + 1}:${voicePort + 1}"
     env_file:
       - .env${stackId === 1 ? '' : '-' + stackId}
     volumes:
@@ -242,7 +251,7 @@ export function generateEnvFile(config, stackId = 1) {
     // Auto-generate unique extension for stacks 2+ if not configured
     extension: (9000 + deviceIndex).toString(),
     authId: (9000 + deviceIndex).toString(),
-    password: 'password', // Default, user should configure this!
+    password: 'pass', // Short password to fit FreePBX db column
     voiceId: 'default'
   };
 
