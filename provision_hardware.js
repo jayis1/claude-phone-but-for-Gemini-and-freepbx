@@ -7,14 +7,18 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { program } = require('commander');
-require('dotenv').config();
 
 program
     .option('-m, --mac <mac>', 'MAC Address of the device (format: AABBCCDDEEFF)')
     .option('-e, --ext <ext>', 'Extension number (e.g. 6784)', '6784')
     .option('-t, --type <type>', 'Device Type: cisco, sangoma, digium', 'cisco')
-    .option('--ip <ip>', 'PBX IP Address (defaults to .env or 172.16.1.83)', process.env.GEMINI_APP_STACK_IP || '172.16.1.83')
+    .option('-t, --type <type>', 'Device Type: cisco, sangoma, digium', 'cisco')
+    .option('--ip <ip>', 'PBX IP Address (defaults to .env or 172.16.1.83)', '172.16.1.83')
+    .option('--api-url <url>', 'FreePBX API URL')
+    .option('--client-id <id>', 'FreePBX Client ID')
+    .option('--client-secret <secret>', 'FreePBX Client Secret')
     .parse(process.argv);
 
 const options = program.opts();
@@ -22,20 +26,39 @@ const options = program.opts();
 // Validation
 if (!options.mac || !options.ext) {
     console.error('Error: MAC address and Extension are required.');
-    console.log('Usage: node provision_hardware.js --mac AABBCCDDEEFF --ext 6784 --type sangoma');
+    console.log('Usage: node provision_hardware.js --mac AABBCCDDEEFF --ext 6784 --type cisco');
     process.exit(1);
 }
 
-const FREEPBX_API_URL = process.env.FREEPBX_API_URL;
-const CLIENT_ID = process.env.FREEPBX_CLIENT_ID;
-const CLIENT_SECRET = process.env.FREEPBX_CLIENT_SECRET;
+// Config Loader
+function loadConfig() {
+    const configPath = path.join(os.homedir(), '.gemini-phone', 'config.json');
+    if (fs.existsSync(configPath)) {
+        try {
+            return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        } catch (e) { return {}; }
+    }
+    return {};
+}
+
+const config = loadConfig();
+const envParams = config.pbx || {};
+
+// Auth Logic
+let FREEPBX_API_URL = options.apiUrl || envParams.apiUrl || process.env.FREEPBX_API_URL;
+let CLIENT_ID = options.clientId || envParams.clientId || process.env.FREEPBX_CLIENT_ID;
+let CLIENT_SECRET = options.clientSecret || envParams.clientSecret || process.env.FREEPBX_CLIENT_SECRET;
+let PBX_IP = options.ip || config.server?.externalIp || '172.16.1.83';
+
 const EXTENSION = options.ext;
 const MAC = options.mac.toUpperCase().replace(/[^0-9A-F]/g, ''); // Clean MAC
 const DEVICE_TYPE = options.type.toLowerCase();
-const PBX_IP = options.ip;
 
-// Auth Logic
 async function getAccessToken() {
+    if (!FREEPBX_API_URL || !CLIENT_ID || !CLIENT_SECRET) {
+        throw new Error("Missing FreePBX credentials. Run 'gemini-phone setup' or check ~/.gemini-phone/config.json");
+    }
+
     const auth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
     const params = new URLSearchParams();
     params.append('grant_type', 'client_credentials');
