@@ -257,11 +257,19 @@ module.exports = function generateApiVaultPage(env) {
                 const el = document.getElementById(key);
                 if(el) el.value = globalEnv[key];
               });
+              // SHOW Mission Control Key for Global
+              const mcContainer = document.getElementById('MISSION_CONTROL_GEMINI_KEY').closest('.form-group');
+              if (mcContainer) mcContainer.style.display = 'block';
+
               document.getElementById('save-btn').innerText = '🔒 Encrypt & Save Global Keys';
             } else {
               // Fetch stack specific config
               document.getElementById('save-btn').innerText = '⏳ Loading Stack ' + id + '...';
               document.getElementById('save-btn').disabled = true;
+
+              // HIDE Mission Control Key for Stacks (It's global only)
+              const mcContainer = document.getElementById('MISSION_CONTROL_GEMINI_KEY').closest('.form-group');
+              if (mcContainer) mcContainer.style.display = 'none';
               
               try {
                 const res = await fetch('/api/settings/stack-config/' + id);

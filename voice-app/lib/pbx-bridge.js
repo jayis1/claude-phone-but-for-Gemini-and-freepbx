@@ -58,6 +58,41 @@ async function getAccessToken() {
 }
 
 /**
+ * Get Inbound Route ID by destination
+ * Helper to find ID because removeInboundRoute requires ID, not extension/cid
+ */
+async function getInboundRouteId(destination) {
+  const query = `
+    query {
+      inboundRoutes(first: 100) {
+        edges {
+          node {
+            id
+            destination
+            description
+          }
+        }
+      }
+    }
+  `;
+  try {
+    const data = await graphql(query);
+    if (data && data.inboundRoutes && data.inboundRoutes.edges) {
+      // Find route matching our target destination OR generic description
+      // Note: FreePBX GraphQL return for destination might be object or string, simple check
+      const route = data.inboundRoutes.edges.find(e =>
+        e.node.description === "Gemini AI Master Route" ||
+        e.node.destination === destination
+      );
+      return route ? route.node.id : null;
+    }
+  } catch (e) {
+    console.warn('[PBX-BRIDGE] Failed to query inbound routes:', e.message);
+  }
+  return null;
+}
+
+/**
  * Perform GraphQL Query/Mutation
  */
 async function graphql(query, variables = {}) {
@@ -176,10 +211,20 @@ async function provisionInboundRoute(destination = "ext-group,600,1") {
 
   // DELETE FIRST (Generic Any/Any route)
   try {
-    // Correct mutation name: removeInboundRoute
-    const delMutation = `mutation { removeInboundRoute(input: { extension: "", cidnum: "" }) { status } }`;
-    await graphql(delMutation);
-  } catch (e) { /* Ignore */ }
+    // 1. Find ID first
+    const existingId = await getInboundRouteId(destination);
+
+    if (existingId) {
+      console.log(`[PBX-BRIDGE] Found existing route ${existingId}, removing...`);
+      // 2. Remove by ID
+      const delMutation = `mutation { removeInboundRoute(input: { id: "${existingId}" }) { status } }`;
+      await graphql(delMutation);
+    } else {
+      console.log('[PBX-BRIDGE] No existing route found to delete.');
+    }
+  } catch (e) {
+    console.warn('[PBX-BRIDGE] Cleanup failed (non-fatal):', e.message);
+  }
 
   const mutation = `
     mutation ($input: addInboundRouteInput!) {
