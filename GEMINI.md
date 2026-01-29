@@ -155,7 +155,7 @@ gemini-phone/
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/weedsnacker5/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/weedsnacker7/install.sh | bash
 
 # Setup and run
 gemini-phone setup    # Interactive configuration

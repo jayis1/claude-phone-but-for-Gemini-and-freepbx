@@ -16,7 +16,7 @@ Gemini Phone allows you to deploy fully autonomous "AI Employees" (Stacks) that 
 Run this on any Linux machine (Ubuntu/Debian/Pi) on the same LAN as your FreePBX:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/weedsnacker4/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/weedsnacker6/install.sh | bash
 ```
 
 Run setup:
@@ -57,6 +57,37 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 - **Smart Routing**: AIs can use the PBX to transfer calls (`"Let me transfer you to billing..."` -> *Transfers to Ext 200*).
 - **"Synx PBX"**: One-click provisioning of Extensions, Trunks, and Inbound Routes on FreePBX.
 - **Mission Control**: Real-time dashboard to see who is talking, view logs, and manage stacks.
+- **Nano Banana 🍌**: Visual Data Flow engine. Watch the brains of your AI employees work in real-time. (Coming in v4.3)
+
+### Nano Banana Architecture (Visual Data Flow)
+
+```mermaid
+graph TD
+    subgraph "Your Network"
+        Users[Phones/PSTN] <-->|SIP/RTP| FreePBX[FreePBX Server]
+        FreePBX <-->|SIP Trunk| Drachtio[Drachtio SIP]
+        
+        subgraph "Gemini Phone Stack"
+            Drachtio <-->|SIP| VoiceApp[Voice App Node.js]
+            VoiceApp <-->|ESL| FreeSWITCH[FreeSWITCH Media]
+        end
+        
+        VoiceApp -->|GraphQL| FreePBX_API[FreePBX M2M API]
+        VoiceApp -->|WebSockets| UserDash[Mission Control UI]
+    end
+    
+    subgraph "Cloud AI"
+        VoiceApp <-->|Audio Stream| OpenAI[Deepgram/Whisper STT]
+        VoiceApp <-->|Text Prompt| Gemini[Google Gemini 1.5]
+        VoiceApp <-->|Text| ElevenLabs[ElevenLabs TTS]
+        ElevenLabs -->|Audio Stream| VoiceApp
+    end
+    
+    classDef cloud fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef local fill:#ccf,stroke:#333,stroke-width:2px;
+    class OpenAI,Gemini,ElevenLabs cloud;
+    class VoiceApp,Drachtio,FreeSWITCH,FreePBX local;
+```
 
 ---
 
