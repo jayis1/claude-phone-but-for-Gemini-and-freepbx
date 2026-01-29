@@ -1,6 +1,6 @@
 # 🤖 Gemini AI Call Center
 
-### The "AI Employees" for your FreePBX System
+## The "AI Employees" for your FreePBX System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Gemini](https://img.shields.io/badge/AI-Gemini%201.5-blue)](https://deepmind.google/technologies/gemini/)
@@ -122,9 +122,9 @@ Because they are standard SIP extensions, you can set up scenarios where:
 
 *(Future update: creating "Conference Room" scenarios for multi-agent swarms)*
 
-### 📠 The "Fax Machine" Protocol (Hyper-Mesh)
+#### 📠 The "Fax Machine" Protocol (Hyper-Mesh)
 
-**"Never send a human to do a machine's job."**
+"Never send a human to do a machine's job."
 
 When Morpheus transfers a call to Trinity, he doesn't just transfer the audio. That would be rude.
 Instead, the Mesh utilizes a high-speed data interconnect (The "Fax Machine") to instantly transmit:
@@ -156,4 +156,5 @@ We are building the future of open-source AI telephony.
 - **Feature Requests**: Join the discussion.
 
 ---
-*Built with ❤️ by NetworkChuck Community & The "Antigravity" Agent*
+
+### Built with ❤️ by NetworkChuck Community & The "Antigravity" Agent
