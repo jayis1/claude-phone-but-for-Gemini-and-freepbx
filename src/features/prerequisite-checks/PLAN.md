@@ -1,7 +1,7 @@
 # Technical Plan: Prerequisite Checks with Auto-Fix
 
 ## Overview
-Implement intelligent prerequisite checking at the start of `claude-phone setup` with platform-aware auto-fix capabilities.
+Implement intelligent prerequisite checking at the start of `gemini-phone setup` with platform-aware auto-fix capabilities.
 
 ## Architecture
 

@@ -7,29 +7,29 @@ import { getProjectRoot } from '../utils.js';
 import { savePid, removePid } from '../process-manager.js';
 
 /**
- * API Server command - Start claude-api-server for remote connections
+ * API Server command - Start gemini-api-server for remote connections
  * @param {object} options - Command options
  * @param {number} options.port - Port to listen on (default: 3333)
  * @returns {Promise<void>}
  */
 export async function apiServerCommand(options = {}) {
-  console.log(chalk.bold.cyan('\n🤖 Claude API Server\n'));
+  console.log(chalk.bold.cyan('\n🤖 Gemini API Server\n'));
 
   // Load config to get port if not provided
   let port = options.port;
   if (!port && configExists()) {
     const config = await loadConfig();
-    port = config.server?.claudeApiPort || 3333;
+    port = config.server?.geminiApiPort || 3333;
   }
   if (!port) {
     port = 3333; // Final fallback
   }
 
   console.log(chalk.gray(`Starting API server on port ${port}...`));
-  console.log(chalk.gray('This wraps Claude Code CLI for Pi connections.\n'));
+  console.log(chalk.gray('This wraps Gemini Code CLI for Pi connections.\n'));
 
   const projectRoot = getProjectRoot();
-  const serverPath = path.join(projectRoot, 'claude-api-server', 'server.js');
+  const serverPath = path.join(projectRoot, 'gemini-api-server', 'server.js');
 
   const spinner = ora('Starting server...').start();
 
@@ -43,7 +43,7 @@ export async function apiServerCommand(options = {}) {
     });
 
     // Save PID
-    savePid('claude-api-server', child.pid);
+    savePid('gemini-api-server', child.pid);
 
     spinner.succeed(chalk.green('Server started'));
     console.log(chalk.bold.cyan(`\n📡 Listening on port ${port}\n`));
@@ -52,7 +52,7 @@ export async function apiServerCommand(options = {}) {
 
     // Handle cleanup on exit
     const cleanup = () => {
-      removePid('claude-api-server');
+      removePid('gemini-api-server');
       child.kill();
       process.exit(0);
     };
@@ -62,7 +62,7 @@ export async function apiServerCommand(options = {}) {
 
     // Wait for child to exit
     child.on('exit', (code) => {
-      removePid('claude-api-server');
+      removePid('gemini-api-server');
       if (code !== 0) {
         console.log(chalk.red(`\n✗ Server exited with code ${code}\n`));
         process.exit(code);

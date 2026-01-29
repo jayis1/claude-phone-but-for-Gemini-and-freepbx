@@ -2,19 +2,19 @@ import chalk from 'chalk';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { getContainerStatus } from '../docker.js';
 import { isServerRunning, getServerPid } from '../process-manager.js';
-import { checkClaudeApiServer } from '../network.js';
+import { checkGeminiApiServer } from '../network.js';
 
 /**
  * Status command - Show service status
  * @returns {Promise<void>}
  */
 export async function statusCommand() {
-  console.log(chalk.bold.cyan('\n📊 Claude Phone Status\n'));
+  console.log(chalk.bold.cyan('\n📊 Gemini Phone Status\n'));
 
   // Check if configured
   if (!configExists()) {
     console.log(chalk.red('✗ Not configured'));
-    console.log(chalk.gray('  Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" first\n'));
     return;
   }
 
@@ -46,20 +46,20 @@ export async function statusCommand() {
  * @returns {Promise<void>}
  */
 async function showApiServerStatus(config, isPiSplit) {
-  console.log(chalk.bold('Claude API Server:'));
+  console.log(chalk.bold('Gemini API Server:'));
 
   if (isPiSplit) {
     // Pi-split mode: Check remote API server
-    const apiUrl = `http://${config.deployment.pi.macIp}:${config.server.claudeApiPort}`;
-    const apiHealth = await checkClaudeApiServer(apiUrl);
+    const apiUrl = `http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`;
+    const apiHealth = await checkGeminiApiServer(apiUrl);
 
     if (apiHealth.healthy) {
-      console.log(chalk.green(`  ✓ Connected to API server (${config.deployment.pi.macIp}:${config.server.claudeApiPort})`));
+      console.log(chalk.green(`  ✓ Connected to API server (${config.deployment.pi.macIp}:${config.server.geminiApiPort})`));
       console.log(chalk.gray('    Remote API server is healthy'));
     } else {
       console.log(chalk.red(`  ✗ Cannot reach API server`));
       console.log(chalk.gray(`    Tried: ${apiUrl}`));
-      console.log(chalk.gray('    Run "claude-phone api-server" on your API server'));
+      console.log(chalk.gray('    Run "gemini-phone api-server" on your API server'));
     }
   } else {
     // Standard mode: Check local server
@@ -67,7 +67,7 @@ async function showApiServerStatus(config, isPiSplit) {
     if (serverRunning) {
       const pid = getServerPid();
       console.log(chalk.green(`  ✓ Running (PID: ${pid})`));
-      console.log(chalk.gray(`    Port: ${config.server.claudeApiPort}`));
+      console.log(chalk.gray(`    Port: ${config.server.geminiApiPort}`));
     } else {
       console.log(chalk.red('  ✗ Not running'));
     }
@@ -92,7 +92,7 @@ async function showVoiceServerStatus(config, isPiSplit, installationType) {
   } else {
     for (const container of containers) {
       const isRunning = container.status.toLowerCase().includes('up') ||
-                        container.status.toLowerCase().includes('running');
+        container.status.toLowerCase().includes('running');
       const icon = isRunning ? '✓' : '✗';
       const color = isRunning ? chalk.green : chalk.red;
       console.log(color(`  ${icon} ${container.name}: ${container.status}`));

@@ -1,6 +1,6 @@
 # Outbound Calling API
 
-API reference for initiating outbound calls from Claude Phone.
+API reference for initiating outbound calls from Gemini Phone.
 
 ## Overview
 

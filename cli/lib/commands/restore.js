@@ -7,7 +7,7 @@ import { getConfigPath, getConfigDir } from '../config.js';
 
 /**
  * Get the backups directory path
- * @returns {string} Path to ~/.claude-phone/backups
+ * @returns {string} Path to ~/.gemini-phone/backups
  */
 function getBackupsDir() {
   return path.join(getConfigDir(), 'backups');
@@ -78,7 +78,7 @@ export async function restoreCommand() {
   // Check if backups directory exists
   if (!fs.existsSync(backupsDir)) {
     console.log(chalk.yellow('⚠️  No backups directory found.'));
-    console.log(chalk.gray('Create a backup first with: claude-phone backup\n'));
+    console.log(chalk.gray('Create a backup first with: gemini-phone backup\n'));
     return;
   }
 
@@ -88,7 +88,7 @@ export async function restoreCommand() {
 
   if (backups.length === 0) {
     console.log(chalk.yellow('⚠️  No backups found.'));
-    console.log(chalk.gray('Create a backup first with: claude-phone backup\n'));
+    console.log(chalk.gray('Create a backup first with: gemini-phone backup\n'));
     return;
   }
 
@@ -164,7 +164,7 @@ export async function restoreCommand() {
     spinner.succeed('Configuration restored');
 
     console.log(chalk.bold.green('\n✓ Configuration restored successfully!\n'));
-    console.log(chalk.gray('Run "claude-phone start" to apply changes.\n'));
+    console.log(chalk.gray('Run "gemini-phone start" to apply changes.\n'));
   } catch (error) {
     spinner.fail(`Restore failed: ${error.message}`);
     throw error;

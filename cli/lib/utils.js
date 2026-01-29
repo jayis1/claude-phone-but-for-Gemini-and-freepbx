@@ -7,16 +7,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Get the project root directory (where voice-app and claude-api-server live)
+ * Get the project root directory (where voice-app and gemini-api-server live)
  * This resolves from the CLI package location, not process.cwd()
  *
  * Directory structure:
- *   claude-phone/           <- project root (returned)
+ *   gemini-phone/           <- project root (returned)
  *   ├── cli/
  *   │   └── lib/
  *   │       └── utils.js    <- this file
  *   ├── voice-app/
- *   └── claude-api-server/
+ *   └── gemini-api-server/
  *
  * @returns {string} Absolute path to project root
  */
@@ -47,12 +47,12 @@ export function getLocalIP() {
 }
 
 /**
- * Check if Claude CLI is installed
+ * Check if Gemini CLI is installed
  * @returns {Promise<boolean>}
  */
-export async function isClaudeInstalled() {
+export async function isGeminiInstalled() {
   return new Promise((resolve) => {
-    const check = spawn('which', ['claude']);
+    const check = spawn('which', ['gemini']);
     check.on('close', (code) => {
       resolve(code === 0);
     });

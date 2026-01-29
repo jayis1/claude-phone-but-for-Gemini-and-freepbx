@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-# Claude Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/.../install.sh | bash
+# Gemini Phone CLI Installer
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/networkschucks-phone-but-for-gemini/main/install.sh | bash
 
-INSTALL_DIR="$HOME/.claude-phone-cli"
-REPO_URL="https://github.com/theNetworkChuck/claude-phone.git"
+INSTALL_DIR="$HOME/.gemini-phone-cli"
+REPO_URL="https://github.com/jayis1/2fast2dumb2fun.git"
 
-echo "🎯 Claude Phone CLI Installer"
+echo "🎯 Gemini Phone CLI Installer"
 echo ""
 
 # Detect OS
@@ -205,12 +205,12 @@ if [ "$OS" = "Linux" ]; then
   fi
 fi
 
-# Check Claude CLI (optional - only needed for API server)
-if ! command -v claude &> /dev/null; then
-  echo "⚠️  Claude CLI not found (needed for API server only)"
-  echo "  Install from: https://claude.ai/download"
+# Check Gemini CLI (optional - only needed for API server)
+if ! command -v gemini &> /dev/null; then
+  echo "⚠️  Gemini CLI not found (needed for API server only)"
+  echo "  Install from: https://geminicli.com/docs/get-started/installation/"
 else
-  echo "✓ Claude CLI installed"
+  echo "✓ Gemini CLI installed"
 fi
 
 # Clone or update repository
@@ -220,7 +220,7 @@ if [ -d "$INSTALL_DIR" ]; then
   cd "$INSTALL_DIR"
   git pull origin main
 else
-  echo "Cloning Claude Phone..."
+  echo "Cloning Gemini Phone..."
   git clone "$REPO_URL" "$INSTALL_DIR"
   cd "$INSTALL_DIR"
 fi
@@ -233,13 +233,13 @@ npm install --silent --production
 
 # Create symlink
 echo ""
-if [ -L "$BIN_DIR/claude-phone" ]; then
-  rm "$BIN_DIR/claude-phone"
+if [ -L "$BIN_DIR/gemini-phone" ]; then
+  rm "$BIN_DIR/gemini-phone"
 fi
 
 if [ "$OS" = "Linux" ]; then
-  ln -s "$INSTALL_DIR/cli/bin/claude-phone.js" "$BIN_DIR/claude-phone"
-  echo "✓ Installed to: $BIN_DIR/claude-phone"
+  ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
+  echo "✓ Installed to: $BIN_DIR/gemini-phone"
 
   if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     echo ""
@@ -249,11 +249,11 @@ if [ "$OS" = "Linux" ]; then
   fi
 else
   if [ -w "$BIN_DIR" ]; then
-    ln -s "$INSTALL_DIR/cli/bin/claude-phone.js" "$BIN_DIR/claude-phone"
+    ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
   else
-    sudo ln -s "$INSTALL_DIR/cli/bin/claude-phone.js" "$BIN_DIR/claude-phone"
+    sudo ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
   fi
-  echo "✓ Installed to: $BIN_DIR/claude-phone"
+  echo "✓ Installed to: $BIN_DIR/gemini-phone"
 fi
 
 echo ""
@@ -262,6 +262,6 @@ echo "✓ Installation complete!"
 echo "════════════════════════════════════════════"
 echo ""
 echo "Next steps:"
-echo "  claude-phone setup    # Configure your installation"
-echo "  claude-phone start    # Launch services"
+echo "  gemini-phone setup    # Configure your installation"
+echo "  gemini-phone start    # Launch services"
 echo ""

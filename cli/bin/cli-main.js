@@ -21,8 +21,8 @@ import { uninstallCommand } from '../lib/commands/uninstall.js';
 const program = new Command();
 
 program
-  .name('claude-phone')
-  .description('Voice interface for Claude Code via SIP - Call your AI, and your AI can call you')
+  .name('gemini-phone')
+  .description('Voice interface for Gemini Code via SIP - Call your AI, and your AI can call you')
   .version('1.0.0');
 
 program
@@ -40,7 +40,7 @@ program
 
 program
   .command('start')
-  .description('Start all services (Docker containers + claude-api-server)')
+  .description('Start all services (Docker containers + gemini-api-server)')
   .action(async () => {
     try {
       await startCommand();
@@ -88,7 +88,7 @@ program
 
 program
   .command('api-server')
-  .description('Start Claude API server for Pi remote connections')
+  .description('Start Gemini API server for Pi remote connections')
   .option('-p, --port <port>', 'Port to listen on', '3333')
   .action(async (options) => {
     try {
@@ -200,7 +200,7 @@ config
 
 program
   .command('update')
-  .description('Update Claude Phone to latest version')
+  .description('Update Gemini Phone to latest version')
   .action(async () => {
     try {
       await updateCommand();
@@ -236,7 +236,7 @@ program
 
 program
   .command('uninstall')
-  .description('Uninstall Claude Phone completely')
+  .description('Uninstall Gemini Phone completely')
   .action(async () => {
     try {
       await uninstallCommand();

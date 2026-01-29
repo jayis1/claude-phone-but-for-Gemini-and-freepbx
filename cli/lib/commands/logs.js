@@ -12,7 +12,7 @@ import fs from 'fs';
 export async function logsCommand(service = null) {
   if (!configExists()) {
     console.log(chalk.red('\n✗ Not configured'));
-    console.log(chalk.gray('  Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" first\n'));
     process.exit(1);
   }
 
@@ -40,7 +40,7 @@ export async function logsCommand(service = null) {
     // Docker container logs
     if (!fs.existsSync(dockerComposePath)) {
       console.log(chalk.yellow('⚠ Docker containers not configured'));
-      console.log(chalk.gray('  Run "claude-phone start" first\n'));
+      console.log(chalk.gray('  Run "gemini-phone start" first\n'));
       if (service === 'voice-app') {
         process.exit(1);
       }
@@ -59,8 +59,8 @@ export async function logsCommand(service = null) {
     // API server logs
     const pidPath = getPidPath();
     if (!fs.existsSync(pidPath)) {
-      console.log(chalk.yellow('⚠ Claude API server not running'));
-      console.log(chalk.gray('  Run "claude-phone start" first\n'));
+      console.log(chalk.yellow('⚠ Gemini API server not running'));
+      console.log(chalk.gray('  Run "gemini-phone start" first\n'));
       if (service === 'api-server') {
         process.exit(1);
       }
@@ -107,7 +107,7 @@ function tailDockerLogs(dockerComposePath) {
  * @param {object} config - Configuration object
  */
 function tailAPIServerLogs(config) {
-  console.log(chalk.gray('Watching Claude API server output...\n'));
+  console.log(chalk.gray('Watching Gemini API server output...\n'));
 
   // Since the server runs detached, we can't easily tail its logs
   // Instead, we'll monitor its health endpoint
@@ -118,7 +118,7 @@ function tailAPIServerLogs(config) {
 
   const checkHealth = async () => {
     try {
-      const response = await axios.get(`http://localhost:${config.server.claudeApiPort}/health`, {
+      const response = await axios.get(`http://localhost:${config.server.geminiApiPort}/health`, {
         timeout: 3000
       });
 

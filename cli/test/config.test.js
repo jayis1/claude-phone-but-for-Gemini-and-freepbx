@@ -12,18 +12,18 @@ import {
 } from '../lib/config.js';
 
 // Test config directory
-const TEST_HOME = path.join(os.tmpdir(), 'claude-phone-test-' + Date.now());
+const TEST_HOME = path.join(os.tmpdir(), 'gemini-phone-test-' + Date.now());
 process.env.HOME = TEST_HOME;
 
 test('config module', async (t) => {
-  await t.test('getConfigDir returns ~/.claude-phone', () => {
+  await t.test('getConfigDir returns ~/.gemini-phone', () => {
     const dir = getConfigDir();
-    assert.strictEqual(dir, path.join(TEST_HOME, '.claude-phone'));
+    assert.strictEqual(dir, path.join(TEST_HOME, '.gemini-phone'));
   });
 
-  await t.test('getConfigPath returns ~/.claude-phone/config.json', () => {
+  await t.test('getConfigPath returns ~/.gemini-phone/config.json', () => {
     const configPath = getConfigPath();
-    assert.strictEqual(configPath, path.join(TEST_HOME, '.claude-phone', 'config.json'));
+    assert.strictEqual(configPath, path.join(TEST_HOME, '.gemini-phone', 'config.json'));
   });
 
   await t.test('configExists returns false when no config', () => {

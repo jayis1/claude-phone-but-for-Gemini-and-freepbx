@@ -98,9 +98,9 @@
 
 ## Manual Testing
 
-- [ ] Run `claude-phone setup` on Pi
+- [ ] Run `gemini-phone setup` on Pi
 - [ ] Verify new TUI flow (SBC → API → Device → Mac)
-- [ ] Run `claude-phone start` on Pi
+- [ ] Run `gemini-phone start` on Pi
 - [ ] Make test call to extension
 - [ ] Verify call connects and AI responds
 
@@ -108,7 +108,7 @@
 
 ## Documentation
 
-- [ ] Update CLAUDE.md with feature completion
+- [ ] Update GEMINI.md with feature completion
 - [ ] Code comments for new functions
 
 ---

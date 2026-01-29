@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import {
   isReachable,
-  checkClaudeApiServer
+  checkGeminiApiServer
 } from '../lib/network.js';
 
 test('network module', async (t) => {
@@ -47,31 +47,31 @@ test('network module', async (t) => {
     assert.strictEqual(result, false, 'Invalid IP should return false');
   });
 
-  await t.test('checkClaudeApiServer returns result object', async () => {
+  await t.test('checkGeminiApiServer returns result object', async () => {
     // Test with a URL that won't exist
-    const result = await checkClaudeApiServer('http://192.0.2.1:3333');
+    const result = await checkGeminiApiServer('http://192.0.2.1:3333');
 
-    assert.ok(result, 'checkClaudeApiServer should return a result');
+    assert.ok(result, 'checkGeminiApiServer should return a result');
     assert.ok('reachable' in result, 'result should have reachable property');
     assert.ok(typeof result.reachable === 'boolean', 'reachable should be boolean');
   });
 
-  await t.test('checkClaudeApiServer detects unreachable server', async () => {
-    const result = await checkClaudeApiServer('http://192.0.2.1:3333');
+  await t.test('checkGeminiApiServer detects unreachable server', async () => {
+    const result = await checkGeminiApiServer('http://192.0.2.1:3333');
 
     assert.strictEqual(result.reachable, false, 'Unreachable server should return false');
   });
 
-  await t.test('checkClaudeApiServer validates URL format', async () => {
-    const result = await checkClaudeApiServer('not-a-url');
+  await t.test('checkGeminiApiServer validates URL format', async () => {
+    const result = await checkGeminiApiServer('not-a-url');
 
     assert.strictEqual(result.reachable, false, 'Invalid URL should return false');
   });
 
-  await t.test('checkClaudeApiServer includes healthy property when reachable', async () => {
+  await t.test('checkGeminiApiServer includes healthy property when reachable', async () => {
     // We can't guarantee a real server for testing
     // Just verify the structure is correct
-    const result = await checkClaudeApiServer('http://127.0.0.1:9999');
+    const result = await checkGeminiApiServer('http://127.0.0.1:9999');
 
     assert.ok('reachable' in result, 'Should have reachable property');
     // If reachable is true, should also have healthy

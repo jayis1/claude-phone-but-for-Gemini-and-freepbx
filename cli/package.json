@@ -1,20 +1,21 @@
 {
-  "name": "claude-phone-cli",
-  "version": "1.0.0",
-  "description": "Unified CLI installer for Claude Phone voice interface",
+  "name": "gemini-phone-cli",
+  "version": "2.0.0",
+  "description": "Unified CLI installer for Gemini Phone voice interface",
   "type": "module",
   "bin": {
-    "claude-phone": "./bin/claude-phone.js"
+    "gemini-phone": "./bin/gemini-phone.js"
   },
   "scripts": {
     "test": "node --test test/**/*.test.js",
     "lint": "eslint ."
   },
   "keywords": [
-    "claude",
+    "gemini",
     "voice",
     "sip",
-    "3cx",
+    "sip",
+    "freepbx",
     "ai"
   ],
   "author": "Chuck",

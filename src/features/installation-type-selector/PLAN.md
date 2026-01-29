@@ -1,7 +1,7 @@
 # Technical Plan: Installation Type Selector
 
 ## Overview
-Add installation type selection to `claude-phone setup` that customizes the setup flow and service management based on deployment type.
+Add installation type selection to `<gemini-phone> setup` that customizes the setup flow and service management based on deployment type.
 
 ## Architecture
 
@@ -192,7 +192,7 @@ async function setupApiServer(config) {
     type: 'input',
     name: 'port',
     message: 'API server port:',
-    default: config.server?.claudeApiPort || 3333,
+    default: config.server?.geminiApiPort || 3333,
     validate: (v) => /^\d+$/.test(v) && v > 0 && v < 65536
   }]);
 
@@ -200,7 +200,7 @@ async function setupApiServer(config) {
     ...config,
     server: {
       ...config.server,
-      claudeApiPort: parseInt(answers.port)
+    geminiApiPort: parseInt(answers.port)
     }
   };
 }
@@ -257,7 +257,7 @@ export async function startCommand() {
 }
 
 async function startApiServer() {
-  // Start claude-api-server only
+  // Start gemini-api-server only
 }
 
 async function startVoiceServer(config) {

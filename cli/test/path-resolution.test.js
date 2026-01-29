@@ -29,12 +29,12 @@ test('path resolution', async (t) => {
       `Path should not include /cli/voice-app: ${voiceAppPath}`);
   });
 
-  await t.test('getProjectRoot finds claude-api-server directory', () => {
+  await t.test('getProjectRoot finds gemini-api-server directory', () => {
     const projectRoot = getProjectRoot();
-    const apiServerPath = path.join(projectRoot, 'claude-api-server');
+    const apiServerPath = path.join(projectRoot, 'gemini-api-server');
 
-    // The path should NOT contain /cli/claude-api-server
-    assert.ok(!apiServerPath.includes('/cli/claude-api-server'),
-      `Path should not include /cli/claude-api-server: ${apiServerPath}`);
+    // The path should NOT contain /cli/gemini-api-server
+    assert.ok(!apiServerPath.includes('/cli/gemini-api-server'),
+      `Path should not include /cli/gemini-api-server: ${apiServerPath}`);
   });
 });

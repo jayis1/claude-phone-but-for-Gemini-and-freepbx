@@ -5,8 +5,8 @@ import path from 'path';
 import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { checkDocker, writeDockerConfig, startContainers } from '../docker.js';
 import { startServer, isServerRunning } from '../process-manager.js';
-import { isClaudeInstalled, sleep } from '../utils.js';
-import { checkClaudeApiServer } from '../network.js';
+import { isGeminiInstalled, sleep } from '../utils.js';
+import { checkGeminiApiServer } from '../network.js';
 import { runPrereqChecks } from '../prereqs.js';
 
 /**
@@ -14,12 +14,12 @@ import { runPrereqChecks } from '../prereqs.js';
  * @returns {Promise<void>}
  */
 export async function startCommand() {
-  console.log(chalk.bold.cyan('\n🚀 Starting Claude Phone\n'));
+  console.log(chalk.bold.cyan('\n🚀 Starting Gemini Phone\n'));
 
   // Check if configured
   if (!configExists()) {
     console.log(chalk.red('✗ Configuration not found'));
-    console.log(chalk.gray('  Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" first\n'));
     process.exit(1);
   }
 
@@ -33,7 +33,7 @@ export async function startCommand() {
   // Run prerequisite checks for this installation type
   const prereqResult = await runPrereqChecks({ type: installationType });
   if (!prereqResult.success) {
-    console.log(chalk.red('\n❌ Prerequisites not met. Please run "claude-phone setup" to fix.\n'));
+    console.log(chalk.red('\n❌ Prerequisites not met. Please run "gemini-phone setup" to fix.\n'));
     process.exit(1);
   }
 
@@ -62,36 +62,36 @@ export async function startCommand() {
  * @returns {Promise<void>}
  */
 async function startApiServer(config) {
-  // Check Claude CLI
-  if (!(await isClaudeInstalled())) {
-    console.log(chalk.yellow('⚠️  Claude CLI not found'));
-    console.log(chalk.gray('  Install from: https://claude.com/download\n'));
+  // Check Gemini CLI
+  if (!(await isGeminiInstalled())) {
+    console.log(chalk.yellow('⚠️  Gemini CLI not found'));
+    console.log(chalk.gray('  Install from: https://gemini.com/download\n'));
   }
 
   // Verify path exists
-  if (!fs.existsSync(config.paths.claudeApiServer)) {
-    console.log(chalk.red(`✗ Claude API server not found at: ${config.paths.claudeApiServer}`));
+  if (!fs.existsSync(config.paths.geminiApiServer)) {
+    console.log(chalk.red(`✗ G emini API server not found at: ${config.paths.geminiApiServer}`));
     console.log(chalk.gray('  Update paths in configuration\n'));
     process.exit(1);
   }
 
   // Check if dependencies are installed
-  const nodeModulesPath = path.join(config.paths.claudeApiServer, 'node_modules');
+  const nodeModulesPath = path.join(config.paths.geminiApiServer, 'node_modules');
   if (!fs.existsSync(nodeModulesPath)) {
-    console.log(chalk.red('✗ Dependencies not installed in claude-api-server'));
+    console.log(chalk.red('✗ Dependencies not installed in gemini-api-server'));
     console.log(chalk.yellow('\nRun the following to install dependencies:'));
-    console.log(chalk.cyan(`  cd ${config.paths.claudeApiServer} && npm install\n`));
+    console.log(chalk.cyan(`  cd ${config.paths.geminiApiServer} && npm install\n`));
     process.exit(1);
   }
 
-  // Start claude-api-server
-  const spinner = ora('Starting Claude API server...').start();
+  // Start gemini-api-server
+  const spinner = ora('Starting Gemini API server...').start();
   try {
     if (await isServerRunning()) {
-      spinner.warn('Claude API server already running');
+      spinner.warn('Gemini API server already running');
     } else {
-      await startServer(config.paths.claudeApiServer, config.server.claudeApiPort);
-      spinner.succeed(`Claude API server started on port ${config.server.claudeApiPort}`);
+      await startServer(config.paths.geminiApiServer, config.server.geminiApiPort);
+      spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
     }
   } catch (error) {
     spinner.fail(`Failed to start server: ${error.message}`);
@@ -101,7 +101,7 @@ async function startApiServer(config) {
   // Success
   console.log(chalk.bold.green('\n✓ API server running!\n'));
   console.log(chalk.gray('Service:'));
-  console.log(chalk.gray(`  • Claude API server: http://localhost:${config.server.claudeApiPort}\n`));
+  console.log(chalk.gray(`  • Gemini API server: http://localhost:${config.server.geminiApiPort}\n`));
   console.log(chalk.gray('Voice servers can connect to this API server.\n'));
 }
 
@@ -122,14 +122,14 @@ async function startVoiceServer(config, isPiMode) {
   // In Pi mode or voice-server mode, check API server reachability
   const apiServerIp = isPiMode ? config.deployment.pi.macIp : config.deployment.apiServerIp;
   if (apiServerIp) {
-    const apiServerUrl = `http://${apiServerIp}:${config.server.claudeApiPort}`;
+    const apiServerUrl = `http://${apiServerIp}:${config.server.geminiApiPort}`;
     const apiSpinner = ora(`Checking API server at ${apiServerUrl}...`).start();
-    const apiHealth = await checkClaudeApiServer(apiServerUrl);
+    const apiHealth = await checkGeminiApiServer(apiServerUrl);
     if (apiHealth.healthy) {
       apiSpinner.succeed(`API server is healthy at ${apiServerUrl}`);
     } else {
       apiSpinner.warn(`API server not responding at ${apiServerUrl}`);
-      console.log(chalk.yellow('  ⚠️  Make sure "claude-phone api-server" is running on your API server\n'));
+      console.log(chalk.yellow('  ⚠️  Make sure "gemini-phone api-server" is running on your API server\n'));
     }
   }
 
@@ -176,7 +176,7 @@ async function startVoiceServer(config, isPiMode) {
       console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "claude-phone setup" again'));
+      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }
@@ -194,7 +194,7 @@ async function startVoiceServer(config, isPiMode) {
   console.log(chalk.gray('Services:'));
   console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app`));
   if (apiServerIp) {
-    console.log(chalk.gray(`  • API server: http://${apiServerIp}:${config.server.claudeApiPort}`));
+    console.log(chalk.gray(`  • API server: http://${apiServerIp}:${config.server.geminiApiPort}`));
   }
   console.log(chalk.gray(`  • Voice app API: http://localhost:${config.server.httpPort}\n`));
   console.log(chalk.gray('Ready to receive calls on:'));
@@ -219,39 +219,39 @@ async function startBoth(config, isPiMode) {
   }
 
   // Only check claude-api-server path in standard mode (not Pi mode)
-  if (!isPiMode && !fs.existsSync(config.paths.claudeApiServer)) {
-    console.log(chalk.red(`✗ Claude API server not found at: ${config.paths.claudeApiServer}`));
+  if (!isPiMode && !fs.existsSync(config.paths.geminiApiServer)) {
+    console.log(chalk.red(`✗ Gemini API server not found at: ${config.paths.geminiApiServer}`));
     console.log(chalk.gray('  Update paths in configuration\n'));
     process.exit(1);
   }
 
   // Check if dependencies are installed (not in Pi mode)
   if (!isPiMode) {
-    const nodeModulesPath = path.join(config.paths.claudeApiServer, 'node_modules');
+    const nodeModulesPath = path.join(config.paths.geminiApiServer, 'node_modules');
     if (!fs.existsSync(nodeModulesPath)) {
-      console.log(chalk.red('✗ Dependencies not installed in claude-api-server'));
+      console.log(chalk.red('✗ Dependencies not installed in gemini-api-server'));
       console.log(chalk.yellow('\nRun the following to install dependencies:'));
-      console.log(chalk.cyan(`  cd ${config.paths.claudeApiServer} && npm install\n`));
+      console.log(chalk.cyan(`  cd ${config.paths.geminiApiServer} && npm install\n`));
       process.exit(1);
     }
   }
 
-  // Check Claude CLI only in standard mode (Pi mode connects to API server instead)
-  if (!isPiMode && !(await isClaudeInstalled())) {
-    console.log(chalk.yellow('⚠️  Claude CLI not found'));
-    console.log(chalk.gray('  Install from: https://claude.com/download\n'));
+  // Check Gemini CLI only in standard mode (Pi mode connects to API server instead)
+  if (!isPiMode && !(await isGeminiInstalled())) {
+    console.log(chalk.yellow('⚠️  Gemini CLI not found'));
+    console.log(chalk.gray('  Install from: https://gemini.com/download\n'));
   }
 
   // In Pi mode, verify API server is reachable
   if (isPiMode) {
-    const apiServerUrl = `http://${config.deployment.pi.macIp}:${config.server.claudeApiPort}`;
+    const apiServerUrl = `http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`;
     const apiSpinner = ora(`Checking API server at ${apiServerUrl}...`).start();
-    const apiHealth = await checkClaudeApiServer(apiServerUrl);
+    const apiHealth = await checkGeminiApiServer(apiServerUrl);
     if (apiHealth.healthy) {
       apiSpinner.succeed(`API server is healthy at ${apiServerUrl}`);
     } else {
       apiSpinner.warn(`API server not responding at ${apiServerUrl}`);
-      console.log(chalk.yellow('  ⚠️  Make sure "claude-phone api-server" is running on your API server\n'));
+      console.log(chalk.yellow('  ⚠️  Make sure "gemini-phone api-server" is running on your API server\n'));
     }
   }
 
@@ -299,7 +299,7 @@ async function startBoth(config, isPiMode) {
       console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "claude-phone setup" again'));
+      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }
@@ -312,15 +312,15 @@ async function startBoth(config, isPiMode) {
   await sleep(3000);
   spinner.succeed('Containers initialized');
 
-  // Start claude-api-server (only in standard mode - Pi mode uses remote API server)
+  // Start gemini-api-server (only in standard mode - Pi mode uses remote API server)
   if (!isPiMode) {
-    spinner.start('Starting Claude API server...');
+    spinner.start('Starting Gemini API server...');
     try {
       if (await isServerRunning()) {
-        spinner.warn('Claude API server already running');
+        spinner.warn('Gemini API server already running');
       } else {
-        await startServer(config.paths.claudeApiServer, config.server.claudeApiPort);
-        spinner.succeed(`Claude API server started on port ${config.server.claudeApiPort}`);
+        await startServer(config.paths.geminiApiServer, config.server.geminiApiPort);
+        spinner.succeed(`Gemini API server started on port ${config.server.geminiApiPort}`);
       }
     } catch (error) {
       spinner.fail(`Failed to start server: ${error.message}`);
@@ -333,9 +333,9 @@ async function startBoth(config, isPiMode) {
   console.log(chalk.gray('Services:'));
   console.log(chalk.gray(`  • Docker containers: drachtio, freeswitch, voice-app`));
   if (isPiMode) {
-    console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.claudeApiPort}`));
+    console.log(chalk.gray(`  • API server: http://${config.deployment.pi.macIp}:${config.server.geminiApiPort}`));
   } else {
-    console.log(chalk.gray(`  • Claude API server: http://localhost:${config.server.claudeApiPort}`));
+    console.log(chalk.gray(`  • Gemini API server: http://localhost:${config.server.geminiApiPort}`));
   }
   console.log(chalk.gray(`  • Voice app API: http://localhost:${config.server.httpPort}\n`));
   console.log(chalk.gray('Ready to receive calls on:'));

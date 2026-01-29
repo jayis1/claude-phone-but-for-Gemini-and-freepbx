@@ -20,9 +20,9 @@ import {
 } from '../validators.js';
 import { getLocalIP, getProjectRoot } from '../utils.js';
 import { isRaspberryPi } from '../platform.js';
-import { detect3cxSbc } from '../port-check.js';
+import { detectSbc } from '../port-check.js';
 import { checkPiPrerequisites } from '../prerequisites.js';
-import { checkClaudeApiServer } from '../network.js';
+import { checkGeminiApiServer } from '../network.js';
 import { runPrereqChecks } from '../prereqs.js';
 
 /**
@@ -42,7 +42,7 @@ async function promptInstallationType(currentType = 'both') {
         value: 'voice-server'
       },
       {
-        name: 'API Server - Claude Code wrapper, minimal setup',
+        name: 'API Server - Gemini Code wrapper, minimal setup',
         value: 'api-server'
       },
       {
@@ -63,7 +63,7 @@ async function promptInstallationType(currentType = 'both') {
  * @returns {Promise<void>}
  */
 export async function setupCommand(options = {}) {
-  console.log(chalk.bold.cyan('\n🎯 Claude Phone Setup\n'));
+  console.log(chalk.bold.cyan('\n🎯 Gemini Phone Setup\n'));
 
   // Run minimal prerequisite check first (Node.js only)
   if (!options.skipPrereqs) {
@@ -207,7 +207,7 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
 
   // Install dependencies for API server types
   if (installationType === 'api-server' || installationType === 'both') {
-    const apiServerPath = config.paths?.claudeApiServer;
+    const apiServerPath = config.paths?.geminiApiServer;
     if (apiServerPath && fs.existsSync(apiServerPath)) {
       const nodeModulesPath = path.join(apiServerPath, 'node_modules');
       if (!fs.existsSync(nodeModulesPath)) {
@@ -232,33 +232,33 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
 
   if (installationType === 'api-server') {
     console.log(chalk.gray('To start the API server:'));
-    console.log(chalk.gray('  claude-phone start\n'));
-    console.log(chalk.gray(`The API server will listen on port ${config.server.claudeApiPort}.`));
-    console.log(chalk.gray('Voice servers can connect to: http://YOUR_IP:' + config.server.claudeApiPort + '\n'));
+    console.log(chalk.gray('  gemini-phone start\n'));
+    console.log(chalk.gray(`The API server will listen on port ${config.server.geminiApiPort}.`));
+    console.log(chalk.gray('Voice servers can connect to: http://YOUR_IP:' + config.server.geminiApiPort + '\n'));
   } else if (installationType === 'voice-server') {
     if (isPi) {
       console.log(chalk.bold.cyan('📋 API server instructions:\n'));
       console.log(chalk.gray('  On your API server, run:'));
-      console.log(chalk.white(`    claude-phone api-server --port ${config.server.claudeApiPort}\n`));
-      console.log(chalk.gray('  This starts the Claude API wrapper that the Pi will connect to.\n'));
+      console.log(chalk.white(`    gemini-phone api-server --port ${config.server.geminiApiPort}\n`));
+      console.log(chalk.gray('  This starts the Gemini API wrapper that the Pi will connect to.\n'));
       console.log(chalk.bold.cyan('📋 Pi-side next steps:\n'));
-      console.log(chalk.gray('  1. Run "claude-phone start" to launch voice-app'));
+      console.log(chalk.gray('  1. Run "gemini-phone start" to launch voice-app'));
       console.log(chalk.gray('  2. Call extension ' + config.devices[0].extension + ' from your phone'));
-      console.log(chalk.gray('  3. Start talking to Claude!\n'));
+      console.log(chalk.gray('  3. Start talking to Gemini!\n'));
     } else {
       console.log(chalk.gray('Make sure your API server is running with:'));
-      console.log(chalk.gray('  claude-phone api-server (on the API server machine)\n'));
+      console.log(chalk.gray('  gemini-phone api-server (on the API server machine)\n'));
       console.log(chalk.gray('Next steps:'));
-      console.log(chalk.gray('  1. Run "claude-phone start" to launch voice services'));
+      console.log(chalk.gray('  1. Run "gemini-phone start" to launch voice services'));
       console.log(chalk.gray('  2. Call extension ' + config.devices[0].extension + ' from your phone'));
-      console.log(chalk.gray('  3. Start talking to Claude!\n'));
+      console.log(chalk.gray('  3. Start talking to Gemini!\n'));
     }
   } else {
     // Both
     console.log(chalk.gray('Next steps:'));
-    console.log(chalk.gray('  1. Run "claude-phone start" to launch all services'));
+    console.log(chalk.gray('  1. Run "gemini-phone start" to launch all services'));
     console.log(chalk.gray('  2. Call extension ' + config.devices[0].extension + ' from your phone'));
-    console.log(chalk.gray('  3. Start talking to Claude!\n'));
+    console.log(chalk.gray('  3. Start talking to Gemini!\n'));
   }
 }
 
@@ -273,8 +273,8 @@ async function setupApiServer(config) {
   const answers = await inquirer.prompt([{
     type: 'input',
     name: 'port',
-    message: 'API server port:',
-    default: config.server?.claudeApiPort || 3333,
+    message: 'Gemini API server port:',
+    default: config.server?.geminiApiPort || 3333,
     validate: (input) => {
       const port = parseInt(input, 10);
       if (isNaN(port) || port < 1024 || port > 65535) {
@@ -288,7 +288,7 @@ async function setupApiServer(config) {
     ...config,
     server: {
       ...config.server,
-      claudeApiPort: parseInt(answers.port, 10)
+      geminiApiPort: parseInt(answers.port, 10)
     }
   };
 }
@@ -315,7 +315,7 @@ async function setupVoiceServer(config) {
     config.deployment.mode = 'voice-server';
   }
 
-  // Step 1: 3CX/SIP Configuration
+  // Step 1: FreePBX/SIP Configuration
   console.log(chalk.bold('\n☎️  SIP Configuration'));
   config = await setupSIP(config);
 
@@ -341,7 +341,7 @@ async function setupVoiceServer(config) {
       type: 'input',
       name: 'apiServerPort',
       message: 'API Server port:',
-      default: config.server?.claudeApiPort || 3333,
+      default: config.server?.geminiApiPort || 3333,
       validate: (input) => {
         const port = parseInt(input, 10);
         if (isNaN(port) || port < 1024 || port > 65535) {
@@ -354,7 +354,7 @@ async function setupVoiceServer(config) {
 
   config.deployment.apiServerIp = apiServerAnswers.apiServerIp;
   config.server = config.server || {};
-  config.server.claudeApiPort = parseInt(apiServerAnswers.apiServerPort, 10);
+  config.server.geminiApiPort = parseInt(apiServerAnswers.apiServerPort, 10);
 
   // Step 3: API Keys (for TTS/STT)
   console.log(chalk.bold('\n📡 API Configuration'));
@@ -429,7 +429,7 @@ async function setupBoth(config) {
   console.log(chalk.bold('\n📡 API Configuration'));
   config = await setupAPIKeys(config);
 
-  // Step 2: 3CX/SIP Configuration
+  // Step 2: FreePBX/SIP Configuration
   console.log(chalk.bold('\n☎️  SIP Configuration'));
   config = await setupSIP(config);
 
@@ -451,7 +451,7 @@ async function setupBoth(config) {
  */
 async function setupPi(config) {
   console.log(chalk.bold.yellow('\n🥧 Raspberry Pi Split-Mode Setup\n'));
-  console.log(chalk.gray('In this mode, the Pi runs voice-app (Docker) and your API server runs claude-api-server.\n'));
+  console.log(chalk.gray('In this mode, the Pi runs voice-app (Docker) and your API server runs gemini-api-server.\n'));
 
   // AC23: Handle existing standard config migration
   if (config.deployment && config.deployment.mode === 'standard') {
@@ -518,54 +518,54 @@ async function setupPi(config) {
     }
   }
 
-  // Detect 3CX SBC (AC24: Handle port detection failure)
+  // Detect SBC/Proxy (AC24: Handle port detection failure)
   console.log(chalk.bold('\n🔍 Network Detection'));
-  const sbc3cxSpinner = ora('Checking for 3CX SBC (process + UDP/TCP port 5060)...').start();
+  const sbcSpinner = ora('Checking for SBC/Proxy (process + UDP/TCP port 5060)...').start();
 
-  let has3cxSbc;
+  let hasSbc;
   let portCheckError = false;
 
   try {
-    has3cxSbc = await detect3cxSbc();
-    if (has3cxSbc) {
-      sbc3cxSpinner.succeed('3CX SBC detected - will use port 5070 for drachtio');
+    hasSbc = await detectSbc();
+    if (hasSbc) {
+      sbcSpinner.succeed('SBC/PBX detected - will use port 5070 for drachtio');
     } else {
-      sbc3cxSpinner.succeed('No 3CX SBC detected - will use standard port 5060');
+      sbcSpinner.succeed('No SBC/PBX detected - will use standard port 5060');
     }
   } catch (err) {
     portCheckError = true;
-    sbc3cxSpinner.warn('Port detection failed: ' + err.message);
+    sbcSpinner.warn('Port detection failed: ' + err.message);
   }
 
   // AC24: Manual override when port detection fails
   if (portCheckError) {
-    console.log(chalk.yellow('\n⚠️  Could not automatically detect 3CX SBC'));
+    console.log(chalk.yellow('\n⚠️  Could not automatically detect SBC/PBX'));
     const { manualSbc } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'manualSbc',
-        message: 'Is 3CX SBC running on port 5060?',
+        message: 'Is a PBX/SBC running on port 5060?',
         default: false
       }
     ]);
-    has3cxSbc = manualSbc;
+    hasSbc = manualSbc;
 
-    if (has3cxSbc) {
+    if (hasSbc) {
       console.log(chalk.green('✓ Will use port 5070 for drachtio (avoid conflict with SBC)\n'));
     } else {
       console.log(chalk.green('✓ Will use port 5060 for drachtio\n'));
     }
   }
 
-  config.deployment.pi.has3cxSbc = has3cxSbc;
-  config.deployment.pi.drachtioPort = has3cxSbc ? 5070 : 5060;
+  config.deployment.pi.has3cxSbc = hasSbc;
+  config.deployment.pi.drachtioPort = hasSbc ? 5070 : 5060;
 
   // Ask for API server IP and port first, then check connectivity
   const apiServerAnswers = await inquirer.prompt([
     {
       type: 'input',
       name: 'macIp',
-      message: 'API server IP address (where claude-api-server runs):',
+      message: 'API server IP address (where gemini-api-server runs):',
       default: config.deployment.pi.macIp || '',
       validate: (input) => {
         if (!input || input.trim() === '') {
@@ -579,9 +579,9 @@ async function setupPi(config) {
     },
     {
       type: 'input',
-      name: 'claudeApiPort',
-      message: 'Claude API server port:',
-      default: String(config.server?.claudeApiPort || 3333),
+      name: 'geminiApiPort',
+      message: 'Gemini API server port:',
+      default: String(config.server?.geminiApiPort || 3333),
       validate: (input) => {
         const port = parseInt(input, 10);
         if (isNaN(port) || port < 1024 || port > 65535) {
@@ -592,22 +592,22 @@ async function setupPi(config) {
     }
   ]);
 
-  const { macIp, claudeApiPort } = apiServerAnswers;
+  const { macIp, geminiApiPort } = apiServerAnswers;
 
   config.deployment.pi.macIp = macIp;
   config.server = config.server || {};
-  config.server.claudeApiPort = parseInt(claudeApiPort, 10);
+  config.server.geminiApiPort = parseInt(geminiApiPort, 10);
 
   // Now check connectivity on the specified port
-  const reachSpinner = ora(`Checking API server at ${macIp}:${claudeApiPort}...`).start();
-  const apiUrl = `http://${macIp}:${claudeApiPort}`;
-  const apiHealth = await checkClaudeApiServer(apiUrl);
+  const reachSpinner = ora(`Checking API server at ${macIp}:${geminiApiPort}...`).start();
+  const apiUrl = `http://${macIp}:${geminiApiPort}`;
+  const apiHealth = await checkGeminiApiServer(apiUrl);
 
   if (apiHealth.healthy) {
     reachSpinner.succeed(`API server is healthy at ${apiUrl}`);
   } else if (apiHealth.reachable) {
     reachSpinner.warn(`API server reachable but not responding at ${apiUrl}`);
-    console.log(chalk.yellow('  ⚠️  Make sure claude-api-server is running\n'));
+    console.log(chalk.yellow('  ⚠️  Make sure gemini-api-server is running\n'));
   } else {
     reachSpinner.warn(`Cannot reach API server at ${apiUrl}`);
     console.log(chalk.yellow('  ⚠️  Make sure API server is running and port is open (firewall)\n'));
@@ -617,8 +617,8 @@ async function setupPi(config) {
   console.log(chalk.bold('\n📡 API Configuration'));
   config = await setupAPIKeys(config);
 
-  // Step 2: 3CX SBC Configuration (Pi mode uses SBC)
-  console.log(chalk.bold('\n📡 3CX SBC Connection'));
+  // Step 2: FreePBX SBC Configuration (Pi mode uses SBC)
+  console.log(chalk.bold('\n📡 FreePBX SBC Connection'));
   config = await setupSBC(config);
 
   // Step 3: Device Configuration
@@ -643,12 +643,12 @@ async function setupPi(config) {
   console.log(chalk.bold.green('\n✓ Pi Setup complete!\n'));
   console.log(chalk.bold.cyan('📋 API server instructions:\n'));
   console.log(chalk.gray('  On your API server, run:'));
-  console.log(chalk.white(`    claude-phone api-server --port ${config.server.claudeApiPort}\n`));
-  console.log(chalk.gray('  This starts the Claude API wrapper that the Pi will connect to.\n'));
+  console.log(chalk.white(`    gemini-phone api-server --port ${config.server.geminiApiPort}\n`));
+  console.log(chalk.gray('  This starts the Gemini API wrapper that the Pi will connect to.\n'));
   console.log(chalk.bold.cyan('📋 Pi-side next steps:\n'));
-  console.log(chalk.gray('  1. Run "claude-phone start" to launch voice-app'));
+  console.log(chalk.gray('  1. Run "gemini-phone start" to launch voice-app'));
   console.log(chalk.gray('  2. Call extension ' + config.devices[0].extension + ' from your phone'));
-  console.log(chalk.gray('  3. Start talking to Claude!\n'));
+  console.log(chalk.gray('  3. Start talking to Gemini!\n'));
 
   return config;
 }
@@ -678,7 +678,7 @@ function createDefaultConfig() {
       transport: 'udp'
     },
     server: {
-      claudeApiPort: 3333,
+      geminiApiPort: 3333,
       httpPort: 3000,
       externalIp: 'auto'
     },
@@ -689,7 +689,7 @@ function createDefaultConfig() {
     devices: [],
     paths: {
       voiceApp: path.join(getProjectRoot(), 'voice-app'),
-      claudeApiServer: path.join(getProjectRoot(), 'claude-api-server')
+      geminiApiServer: path.join(getProjectRoot(), 'gemini-api-server')
     }
   };
 }
@@ -1064,9 +1064,9 @@ async function setupServer(config) {
     },
     {
       type: 'input',
-      name: 'claudeApiPort',
-      message: 'Claude API server port:',
-      default: config.server.claudeApiPort,
+      name: 'geminiApiPort',
+      message: 'Gemini API server port:',
+      default: config.server.geminiApiPort,
       validate: (input) => {
         const port = parseInt(input, 10);
         if (isNaN(port) || port < 1024 || port > 65535) {
@@ -1091,7 +1091,7 @@ async function setupServer(config) {
   ]);
 
   config.server.externalIp = answers.externalIp;
-  config.server.claudeApiPort = parseInt(answers.claudeApiPort, 10);
+  config.server.geminiApiPort = parseInt(answers.geminiApiPort, 10);
   config.server.httpPort = parseInt(answers.httpPort, 10);
 
   return config;

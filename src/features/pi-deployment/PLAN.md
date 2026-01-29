@@ -11,11 +11,11 @@
 
 ### Architecture Decision
 
-Extend the existing CLI with **platform detection** and **conditional setup flows**. Rather than creating a separate Pi-specific installer, we enhance `claude-phone setup` to detect the platform and branch into the appropriate configuration path.
+Extend the existing CLI with **platform detection** and **conditional setup flows**. Rather than creating a separate Pi-specific installer, we enhance `<gemini-phone> setup` to detect the platform and branch into the appropriate configuration path.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  claude-phone setup                                              │
+│  <gemini-phone> setup                                              │
 │         │                                                        │
 │         ▼                                                        │
 │  ┌─────────────────┐                                            │
@@ -147,14 +147,14 @@ interface PortCheckResult {
 ### New CLI Commands
 
 ```bash
-# Mac-side: Start claude-api-server
-claude-phone api-server [--port 3333]
+# Mac-side: Start gemini-api-server
+<gemini-phone> api-server [--port 3333]
 
 # Enhanced status (shows Pi ↔ Mac connectivity)
-claude-phone status
+<gemini-phone> status
 
 # Enhanced doctor (validates Pi ↔ Mac connectivity)
-claude-phone doctor
+<gemini-phone> doctor
 ```
 
 ### New Module: Platform Detection
@@ -238,11 +238,11 @@ export async function detect3cxSbc();
 export async function isReachable(ip, timeout);
 
 /**
- * Check if claude-api-server is responding
+ * Check if gemini-api-server is responding
  * @param {string} url - e.g., 'http://192.168.1.100:3333'
  * @returns {Promise<{reachable: boolean, healthy: boolean}>}
  */
-export async function checkClaudeApiServer(url);
+export async function checkGeminiApiServer(url);
 ```
 
 ### New Command: api-server
@@ -251,7 +251,7 @@ export async function checkClaudeApiServer(url);
 // lib/commands/api-server.js
 
 /**
- * Start claude-api-server on Mac
+ * Start gemini-api-server on Mac
  * @param {object} options
  * @param {number} [options.port=3333]
  */
@@ -267,7 +267,7 @@ New and modified files:
 ```
 cli/
 ├── bin/
-│   └── claude-phone.js        # Add api-server command
+│   └── gemini-phone.js        # Add api-server command
 ├── lib/
 │   ├── platform.js            # NEW: Platform detection
 │   ├── prerequisites.js       # NEW: Docker checks
@@ -319,11 +319,11 @@ Test components working together.
 
 ### Manual Testing Checklist
 
-- [ ] Run `claude-phone setup` on actual Pi 4/5
+- [ ] Run `<gemini-phone> setup` on actual Pi 4/5
 - [ ] Verify 3CX SBC detection when SBC is running
 - [ ] Verify drachtio starts on port 5070 with SBC
 - [ ] Verify drachtio starts on port 5060 without SBC
-- [ ] Test `claude-phone api-server` on Mac
+- [ ] Test `<gemini-phone> api-server` on Mac
 - [ ] Test full call flow: Pi → Mac → Claude → response
 
 ---
@@ -355,7 +355,7 @@ Test components working together.
 
 For users with existing `standard` deployments who want to switch to `pi-split`:
 
-1. Run `claude-phone setup` on Pi
+1. Run `<gemini-phone> setup` on Pi
 2. Detect existing config → offer migration prompt
 3. Extract relevant fields (API keys, devices) to Pi config
 4. Generate Mac-only config for api-server

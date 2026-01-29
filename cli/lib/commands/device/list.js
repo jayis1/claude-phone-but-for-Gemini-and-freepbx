@@ -10,7 +10,7 @@ export async function deviceListCommand() {
 
   if (!configExists()) {
     console.log(chalk.red('✗ Not configured'));
-    console.log(chalk.gray('  Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" first\n'));
     process.exit(1);
   }
 
@@ -18,7 +18,7 @@ export async function deviceListCommand() {
 
   if (config.devices.length === 0) {
     console.log(chalk.yellow('No devices configured.'));
-    console.log(chalk.gray('  Run "claude-phone device add" to add a device\n'));
+    console.log(chalk.gray('  Run "gemini-phone device add" to add a device\n'));
     return;
   }
 

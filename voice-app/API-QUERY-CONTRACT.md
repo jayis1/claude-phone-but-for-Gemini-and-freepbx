@@ -111,7 +111,7 @@ Directly queries a device personality with a text prompt and receives a text or 
 | `device_not_found` | 404 | The `target` did not match any configured device. |
 | `validation_error` | 400 | Missing fields or invalid format. |
 | `llm_timeout` | 504 | The LLM did not respond within the timeout window. |
-| `llm_error` | 502 | The upstream Claude API server failed. |
+| `llm_error` | 502 | The upstream Gemini API server failed. |
 | `parse_error` | 422 | `format="json"` was requested, but the LLM returned invalid JSON. |
 
 ---
@@ -119,7 +119,7 @@ Directly queries a device personality with a text prompt and receives a text or 
 
 ## 5. Structured Output Strategy (JSON)
 
-When `format: "json"` is requested, the `voice-app` MUST inject specific instructions into the System Prompt sent to Claude.
+When `format: "json"` is requested, the `voice-app` MUST inject specific instructions into the System Prompt sent to Gemini.
 
 **System Prompt Injection:**
 

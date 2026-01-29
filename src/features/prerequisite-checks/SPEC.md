@@ -1,10 +1,10 @@
 # Feature: Prerequisite Checks with Auto-Fix
 
 ## Overview
-Add intelligent prerequisite checking at the start of `claude-phone setup` that detects missing or outdated dependencies and offers to automatically install/upgrade them with user consent.
+Add intelligent prerequisite checking at the start of `gemini-phone setup` that detects missing or outdated dependencies and offers to automatically install/upgrade them with user consent.
 
 ## User Story
-As a user installing claude-phone, I want the setup to check all prerequisites BEFORE asking me configuration questions, so I don't waste time on setup only to have it fail due to missing dependencies.
+As a user installing gemini-phone, I want the setup to check all prerequisites BEFORE asking me configuration questions, so I don't waste time on setup only to have it fail due to missing dependencies.
 
 ## Requirements
 
@@ -135,7 +135,7 @@ Detect and provide platform-specific instructions/commands for:
 ### AC15: Failure Path (Auto-Fix Fails)
 - [ ] Auto-fix command fails: Show error output
 - [ ] Provide fallback manual instructions
-- [ ] Log full error to ~/.claude-phone/prereq-install.log
+- [ ] Log full error to ~/.gemini-phone/prereq-install.log
 - [ ] Offer rollback if partial install occurred
 
 ### AC16: Rollback on Failure
@@ -146,7 +146,7 @@ Detect and provide platform-specific instructions/commands for:
 - [ ] If user declines rollback: Save state file for manual recovery
 
 ### AC17: Skip Option
-- [ ] `claude-phone setup --skip-prereqs` bypasses all checks
+- [ ] `gemini-phone setup --skip-prereqs` bypasses all checks
 - [ ] Shows warning that this may cause issues
 - [ ] Useful for advanced users who know what they're doing
 
@@ -164,7 +164,7 @@ Detect and provide platform-specific instructions/commands for:
 
 ### All Prerequisites Met
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
 
@@ -182,7 +182,7 @@ $ claude-phone setup
 
 ### Node.js Outdated - Auto-Fix Offered
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
 
@@ -219,7 +219,7 @@ Installing Node.js 20 LTS...
 
 ### macOS Docker Desktop Not Running
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
 
@@ -240,7 +240,7 @@ Waiting for Docker daemon (timeout 5m)...
 
 ### macOS Docker Desktop Not Installed
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
 
@@ -266,7 +266,7 @@ Waiting for Docker daemon (timeout 5m)...
 
 ### User Declines Auto-Fix
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
 
@@ -279,7 +279,7 @@ To install Node.js 20 manually on Ubuntu/Debian:
   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
   sudo apt-get install -y nodejs
 
-After installing, run 'claude-phone setup' again.
+After installing, run 'gemini-phone setup' again.
 ```
 
 ## Technical Notes
@@ -301,8 +301,8 @@ cli/lib/
 - Use `execSync` for version checks (fast, synchronous)
 - Use `spawn` for auto-fix with real-time output streaming
 - Download scripts to `/tmp/` before executing
-- Log all install commands to `~/.claude-phone/prereq-install.log`
-- Store pre-install state in `~/.claude-phone/prereq-state.json`
+- Log all install commands to `~/.gemini-phone/prereq-install.log`
+- Store pre-install state in `~/.gemini-phone/prereq-state.json`
 
 ### Security Measures
 - NEVER pipe curl directly to bash

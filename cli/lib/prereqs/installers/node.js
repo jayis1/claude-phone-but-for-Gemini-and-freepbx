@@ -250,5 +250,5 @@ function showNodeManualInstructions(platform) {
       console.log(chalk.gray('Download from: https://nodejs.org/\n'));
   }
 
-  console.log(chalk.gray('After installation, run "claude-phone setup" again.\n'));
+  console.log(chalk.gray('After installation, run "gemini-phone setup" again.\n'));
 }

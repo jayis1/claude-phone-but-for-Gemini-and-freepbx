@@ -95,11 +95,11 @@ Verify before writing any code.
 - [ ] Implement unreachable handling
 - [ ] Write failing test: `isReachable()` times out after 3 seconds
 - [ ] Implement timeout
-- [ ] Write failing test: `checkClaudeApiServer('http://192.168.1.100:3333')` returns `{ reachable: true, healthy: true }` when server responds
+- [ ] Write failing test: `checkGeminiApiServer('http://192.168.1.100:3333')` returns `{ reachable: true, healthy: true }` when server responds
 - [ ] Implement API server health check
-- [ ] Write failing test: `checkClaudeApiServer()` returns `{ reachable: true, healthy: false }` when server responds but unhealthy
+- [ ] Write failing test: `checkGeminiApiServer()` returns `{ reachable: true, healthy: false }` when server responds but unhealthy
 - [ ] Implement unhealthy detection
-- [ ] Write failing test: `checkClaudeApiServer()` returns `{ reachable: false }` when server unreachable
+- [ ] Write failing test: `checkGeminiApiServer()` returns `{ reachable: false }` when server unreachable
 - [ ] Implement unreachable handling
 - [ ] Refactor while green
 
@@ -161,14 +161,14 @@ Verify before writing any code.
 
 ### AC6: Generate Pi config
 
-- [ ] Generate `.env` with `CLAUDE_API_URL=http://[mac-ip]:3333`
+- [ ] Generate `.env` with `GEMINI_API_URL=http://[mac-ip]:3333`
 - [ ] Set correct drachtio port in docker-compose
 - [ ] Save deployment mode to config
 
 ### AC17: Mac setup instructions
 
 - [ ] Display Mac-side setup instructions at end of Pi setup
-- [ ] Show: "On your Mac, run: claude-phone api-server"
+- [ ] Show: "On your Mac, run: gemini-phone api-server"
 
 ---
 
@@ -187,7 +187,7 @@ Verify before writing any code.
 - [ ] Implement status message
 - [ ] Write failing test: Server handles graceful shutdown on SIGINT
 - [ ] Implement shutdown handling
-- [ ] Add command to `bin/claude-phone.js`
+- [ ] Add command to `bin/gemini-phone.js`
 - [ ] Refactor while green
 
 ---
@@ -200,7 +200,7 @@ Verify before writing any code.
 
 - [ ] Detect if config is `pi-split` mode
 - [ ] If Pi mode: check remote `macApiUrl` connectivity
-- [ ] Display connection status: "Claude API Server: Connected" or "Disconnected"
+- [ ] Display connection status: "Gemini API Server: Connected" or "Disconnected"
 - [ ] Show Mac IP and port in status output
 
 ---
@@ -213,7 +213,7 @@ Verify before writing any code.
 
 - [ ] Add Pi-specific checks when in `pi-split` mode
 - [ ] Check: Is Mac IP reachable?
-- [ ] Check: Is claude-api-server responding on Mac?
+- [ ] Check: Is gemini-api-server responding on Mac?
 - [ ] Check: Is drachtio running on correct port?
 - [ ] Display clear pass/fail for each check
 - [ ] Provide remediation steps for failures
@@ -299,7 +299,7 @@ All must pass before review.
 
 Must complete on actual hardware.
 
-- [ ] Run `claude-phone setup` on Raspberry Pi 4 or 5
+- [ ] Run `gemini-phone setup` on Raspberry Pi 4 or 5
 - [ ] Verify Pi detection works correctly
 - [ ] Verify Docker prerequisite check (with and without Docker)
 - [ ] Test 3CX SBC detection (with SBC running)
@@ -307,9 +307,9 @@ Must complete on actual hardware.
 - [ ] Verify port 5070 configured when SBC present
 - [ ] Verify port 5060 configured when no SBC
 - [ ] Test Mac IP validation (reachable and unreachable)
-- [ ] Run `claude-phone api-server` on Mac
-- [ ] Verify `claude-phone status` shows Pi ↔ Mac connectivity
-- [ ] Run `claude-phone doctor` and verify all checks pass
+- [ ] Run `gemini-phone api-server` on Mac
+- [ ] Verify `gemini-phone status` shows Pi ↔ Mac connectivity
+- [ ] Run `gemini-phone doctor` and verify all checks pass
 - [ ] Make test call: phone → Pi → Mac → Claude → response
 - [ ] Test error case: Mac unreachable during call
 

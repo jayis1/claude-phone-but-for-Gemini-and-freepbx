@@ -50,7 +50,7 @@ async function launchDockerDesktop() {
   ]);
 
   if (!launch) {
-    console.log(chalk.gray('\nPlease launch Docker Desktop manually and run "claude-phone setup" again.\n'));
+    console.log(chalk.gray('\nPlease launch Docker Desktop manually and run "gemini-phone setup" again.\n'));
     return { success: false, cancelled: true };
   }
 
@@ -136,7 +136,7 @@ async function installViaHomebrew() {
     ]);
 
     if (!launch) {
-      console.log(chalk.gray('\nPlease launch Docker Desktop manually and run "claude-phone setup" again.\n'));
+      console.log(chalk.gray('\nPlease launch Docker Desktop manually and run "gemini-phone setup" again.\n'));
       return { success: false, cancelled: true };
     }
 
@@ -207,7 +207,7 @@ async function waitForDockerDaemon(timeout = 300000) {
   // Timeout
   spinner.fail('Timeout waiting for Docker daemon');
   console.log(chalk.yellow('\n⚠️  Docker Desktop is taking longer than expected to start.'));
-  console.log(chalk.gray('Please check Docker Desktop and run "claude-phone setup" again.\n'));
+  console.log(chalk.gray('Please check Docker Desktop and run "gemini-phone setup" again.\n'));
 
   return { success: false };
 }

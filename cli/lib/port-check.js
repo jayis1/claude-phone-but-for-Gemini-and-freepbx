@@ -99,11 +99,12 @@ export async function checkUdpPort(port, timeout = 1000) {
 }
 
 /**
- * Check if 3CX SBC process is running
- * @returns {Promise<boolean>} True if 3cxsbc process is running
+ * Check if SBC process is running
+ * @returns {Promise<boolean>} True if sbc process is running
  */
-export async function check3cxSbcProcess() {
+export async function checkSbcProcess() {
   try {
+    // Check for 3CX SBC (legacy) or potentially other common SBCs
     const { stdout } = await execAsync('pgrep -x 3cxsbc || systemctl is-active 3cxsbc 2>/dev/null');
     return stdout.trim().length > 0 || stdout.includes('active');
   } catch {
@@ -112,13 +113,13 @@ export async function check3cxSbcProcess() {
 }
 
 /**
- * Detect if 3CX SBC is running
- * Checks: 1) 3cxsbc process, 2) UDP port 5060, 3) TCP port 5060
- * @returns {Promise<boolean>} True if 3CX SBC detected
+ * Detect if SBC/PBX is running (conflicting with port 5060)
+ * Checks: 1) SBC process, 2) UDP port 5060, 3) TCP port 5060
+ * @returns {Promise<boolean>} True if SBC/PBX detected
  */
-export async function detect3cxSbc() {
-  // Check for 3cxsbc process first (most reliable)
-  const processRunning = await check3cxSbcProcess();
+export async function detectSbc() {
+  // Check for SBC process first (most reliable)
+  const processRunning = await checkSbcProcess();
   if (processRunning) {
     return true;
   }

@@ -41,9 +41,9 @@ module.exports = [
       'semi': ['warn', 'always']
     }
   },
-  // voice-app and claude-api-server use ES5-style CommonJS
+  // voice-app and gemini-api-server use ES5-style CommonJS
   {
-    files: ['voice-app/**/*.js', 'claude-api-server/**/*.js'],
+    files: ['voice-app/**/*.js', 'gemini-api-server/**/*.js'],
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'commonjs',

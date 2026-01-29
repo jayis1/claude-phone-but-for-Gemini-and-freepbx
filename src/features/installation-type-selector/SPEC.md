@@ -1,10 +1,10 @@
 # Feature: Installation Type Selector
 
 ## Overview
-Add a prompt at the start of `claude-phone setup` (after prereq checks) that asks users what type of installation they're performing. This allows the setup wizard to show only relevant configuration questions for their deployment type.
+Add a prompt at the start of `<gemini-phone> setup` (after prereq checks) that asks users what type of installation they're performing. This allows the setup wizard to show only relevant configuration questions for their deployment type.
 
 ## User Story
-As a user installing claude-phone, I want to specify whether I'm setting up a Voice Server, API Server, or Both, so I only see the configuration questions relevant to my deployment.
+As a user installing <gemini-phone>, I want to specify whether I'm setting up a Voice Server, API Server, or Both, so I only see the configuration questions relevant to my deployment.
 
 ## Background
 
@@ -13,7 +13,7 @@ Claude Phone supports split-mode deployment:
 - **API Server** runs on a machine with Claude Code CLI (wraps Claude for voice queries)
 - **Both** runs everything on one machine (all-in-one deployment)
 
-Currently, `claude-phone setup` always asks all questions, which is confusing when:
+Currently, `<gemini-phone> setup` always asks all questions, which is confusing when:
 - Pi user doesn't need API server questions
 - API server user doesn't need SIP/device config
 - Users don't know which questions apply to them
@@ -32,7 +32,7 @@ Currently, `claude-phone setup` always asks all questions, which is confusing wh
 
 | Type | Node.js | Docker | Docker Compose | Network |
 |------|---------|--------|----------------|---------|
-| Voice Server | ✅ | ✅ | ✅ | ✅ |
+| Voice Server | ✅ | ✅ | ✅ | ✅ | 
 | API Server | ✅ | ❌ | ❌ | ❌ |
 | Both | ✅ | ✅ | ✅ | ✅ |
 
@@ -59,14 +59,14 @@ Currently, `claude-phone setup` always asks all questions, which is confusing wh
 - [ ] Skip ElevenLabs/OpenAI keys
 - [ ] Skip device configuration
 - [ ] Ask: API server port (default 3333)
-- [ ] Only configure claude-api-server
-- [ ] `claude-phone start` only starts API server
-- [ ] `claude-phone stop` only stops API server
+- [ ] Only configure gemini-api-server
+- [ ] `<gemini-phone> start` only starts API server
+- [ ] `<gemini-phone> stop` only stops API server
 
 ### AC4: Both Flow (All-in-One)
 - [ ] Current behavior - ask all questions
 - [ ] Configure both Voice Server and API Server
-- [ ] `claude-phone start` starts everything
+- [ ] `<gemini-phone> start` starts everything
 - [ ] This is the default selection
 
 ### AC5: Prereq Check Adjustment
@@ -81,9 +81,9 @@ Currently, `claude-phone setup` always asks all questions, which is confusing wh
 - [ ] Subsequent commands respect this setting
 
 ### AC7: Start/Stop Respect Type
-- [ ] `claude-phone start` starts only relevant services
-- [ ] `claude-phone stop` stops only relevant services
-- [ ] `claude-phone status` shows only relevant services
+- [ ] `<gemini-phone> start` starts only relevant services
+- [ ] `<gemini-phone> stop` stops only relevant services
+- [ ] `<gemini-phone> status` shows only relevant services
 
 ### AC8: Re-run Setup
 - [ ] Running setup again shows current type as default
@@ -91,7 +91,7 @@ Currently, `claude-phone setup` always asks all questions, which is confusing wh
 - [ ] Changing type reconfigures appropriately
 
 ### AC9: Doctor Command
-- [ ] `claude-phone doctor` checks only relevant services
+- [ ] `<gemini-phone> doctor` checks only relevant services
 - [ ] API Server: Only check API server health
 - [ ] Voice Server: Check Docker, SIP registration, API server reachability
 - [ ] Both: Check everything
@@ -108,7 +108,7 @@ $ claude-phone setup
 📦 Installation Type
 ? What are you installing?
   ❯ Voice Server (Pi/Linux) - Handles calls, needs Docker
-    API Server - Claude Code wrapper, minimal setup
+    API Server - Gemini Phone wrapper, minimal setup
     Both (all-in-one) - Full stack on one machine
 
 You selected: Voice Server
@@ -130,7 +130,7 @@ You selected: Voice Server
 
 ### API Server Only
 ```
-$ claude-phone setup
+$ gemini-phone setup
 
 🔍 Checking prerequisites...
   ✓ Node.js v20.11.0 (requires ≥18)
@@ -149,7 +149,7 @@ You selected: API Server
 ✅ Setup complete!
 
 To start the API server:
-  claude-phone start
+  <gemini-phone> start
 
 The API server will listen on port 3333.
 Voice servers can connect to: http://YOUR_IP:3333

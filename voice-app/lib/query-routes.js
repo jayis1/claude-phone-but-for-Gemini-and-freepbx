@@ -1,6 +1,6 @@
 /**
  * Query API Routes
- * Express routes for programmatic Claude queries from n8n or other systems
+ * Express routes for programmatic Gemini queries from n8n or other systems
  * Supports both text and structured JSON responses with device-specific context
  *
  * v2: Uses /ask-structured for JSON format, proper callId for skills access
@@ -14,13 +14,13 @@ const logger = require('./logger');
 const deviceRegistry = require('./device-registry');
 
 // Dependencies injected via setupRoutes()
-let claudeBridge = null;
+let geminiBridge = null;
 
-// Claude API server URL (same as used by claudeBridge)
-const CLAUDE_API_URL = process.env.CLAUDE_API_URL || 'http://localhost:3333';
+// Gemini API server URL (same as used by geminiBridge)
+const GEMINI_API_URL = process.env.GEMINI_API_URL || 'http://localhost:3333';
 
 /**
- * Extract voice-friendly line from Claude response
+ * Extract voice-friendly line from Gemini response
  * Copied from conversation-loop.js for consistency
  */
 function extractVoiceLine(response) {
@@ -76,21 +76,21 @@ function extractVoiceLine(response) {
 }
 
 /**
- * Extract JSON from Claude response
+ * Extract JSON from Gemini response
  * Handles markdown code fences and inline JSON
  */
 function extractJson(text) {
   // Try direct parse
   try {
     return JSON.parse(text.trim());
-  } catch {}
+  } catch { }
 
   // Try extracting from markdown fence
   const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenceMatch) {
     try {
       return JSON.parse(fenceMatch[1].trim());
-    } catch {}
+    } catch { }
   }
 
   // Try finding balanced braces
@@ -98,7 +98,7 @@ function extractJson(text) {
   if (braceMatch) {
     try {
       return JSON.parse(braceMatch[0]);
-    } catch {}
+    } catch { }
   }
 
   return null;
@@ -106,7 +106,7 @@ function extractJson(text) {
 
 /**
  * Build query context for JSON format
- * Forces Claude to return structured JSON with specified schema
+ * Forces Gemini to return structured JSON with specified schema
  */
 function buildJsonQueryContext(schema) {
   if (!schema || !schema.requiredFields) {
@@ -179,7 +179,7 @@ function validateQueryRequest(body) {
 
 /**
  * POST /query
- * Execute a Claude query with optional device context and structured output
+ * Execute a Gemini query with optional device context and structured output
  *
  * v2: Each query gets a unique callId for skills access
  *     JSON format uses /ask-structured endpoint for reliable parsing
@@ -214,7 +214,7 @@ router.post('/query', async (req, res) => {
     } = req.body;
 
     // Generate unique callId for this query (enables skills access)
-    // Must be a bare UUID - Claude CLI rejects prefixes
+    // Must be a bare UUID - Gemini CLI rejects prefixes
     const callId = crypto.randomUUID();
 
     // Resolve device if specified
@@ -262,7 +262,7 @@ router.post('/query', async (req, res) => {
       logger.info('Using /ask-structured endpoint for JSON format');
 
       const structuredResponse = await axios.post(
-        `${CLAUDE_API_URL}/ask-structured`,
+        `${GEMINI_API_URL}/ask-structured`,
         {
           prompt: fullPrompt,
           callId,
@@ -294,19 +294,19 @@ router.post('/query', async (req, res) => {
         });
       }
     } else {
-      // Use /ask endpoint for text format (via claudeBridge)
-      // Check if Claude bridge is available
-      if (!claudeBridge) {
-        logger.error('Claude bridge not available');
+      // Use /ask endpoint for text format (via geminiBridge)
+      // Check if Gemini bridge is available
+      if (!geminiBridge) {
+        logger.error('Gemini bridge not available');
 
         return res.status(503).json({
           success: false,
           error: 'service_unavailable',
-          message: 'Claude API is not ready'
+          message: 'Gemini API is not ready'
         });
       }
 
-      response = await claudeBridge.query(fullPrompt, {
+      response = await geminiBridge.query(fullPrompt, {
         callId,
         devicePrompt,
         timeout
@@ -350,7 +350,7 @@ router.post('/query', async (req, res) => {
         responseObj.structured = fallbackStructured;
 
         if (!fallbackStructured) {
-          responseObj.warning = 'Failed to parse JSON from Claude response';
+          responseObj.warning = 'Failed to parse JSON from Gemini response';
         }
 
         logger.warn('Used client-side JSON extraction', {
@@ -468,13 +468,13 @@ router.get('/device/:identifier', (req, res) => {
  * Setup routes with dependencies
  *
  * @param {Object} deps - Dependencies
- * @param {Object} deps.claudeBridge - Claude API bridge
+ * @param {Object} deps.geminiBridge - Gemini API bridge
  */
 function setupRoutes(deps) {
-  claudeBridge = deps.claudeBridge;
+  geminiBridge = deps.geminiBridge;
 
   logger.info('Query routes initialized', {
-    claudeBridge: !!claudeBridge
+    geminiBridge: !!geminiBridge
   });
 }
 

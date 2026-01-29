@@ -1,14 +1,14 @@
 /**
- * Claude HTTP API Server
+ * Gemini HTTP API Server
  *
- * HTTP server that wraps Claude Code CLI with session management
+ * HTTP server that wraps Gemini CLI with session management
  * Runs on the API server to handle voice interface queries
  *
  * Usage:
  *   node server.js
  *
  * Endpoints:
- *   POST /ask - Send a prompt to Claude (with optional callId for session)
+ *   POST /ask - Send a prompt to Gemini (with optional callId for session)
  *   POST /end-session - Clean up session for a call
  *   GET /health - Health check
  */
@@ -29,15 +29,15 @@ const app = express();
 const PORT = process.env.PORT || 3333;
 
 /**
- * Build the full environment that Claude Code expects
- * This mimics what happens when you run `claude` in a terminal
+ * Build the full environment that Gemini CLI expects
+ * This mimics what happens when you run `gemini` in a terminal
  * with your zsh profile fully loaded.
  */
-function buildClaudeEnvironment() {
-  const HOME = process.env.HOME || '/Users/networkchuck';
-  const PAI_DIR = path.join(HOME, '.claude');
+function buildGeminiEnvironment() {
+  const HOME = process.env.HOME || '/Users/MadLAbs';
+  const PAI_DIR = path.join(HOME, '.gemini');
 
-  // Load ~/.claude/.env (all API keys)
+  // Load ~/.gemini/.env (all API keys)
   const envPath = path.join(PAI_DIR, '.env');
   const paiEnv = {};
   if (fs.existsSync(envPath)) {
@@ -87,37 +87,37 @@ function buildClaudeEnvironment() {
     GOPATH: path.join(HOME, 'go'),
     PYENV_ROOT: path.join(HOME, '.pyenv'),
     BUN_INSTALL: path.join(HOME, '.bun'),
-    // CRITICAL: These tell Claude Code it's running in the proper environment
-    CLAUDECODE: '1',
-    CLAUDE_CODE_ENTRYPOINT: 'cli',
+    // CRITICAL: These tell Gemini it's running in the proper environment
+    GEMINI: '1',
+    GEMINI_ENTRYPOINT: 'cli',
   };
 
-  // CRITICAL: Remove ANTHROPIC_API_KEY so Claude CLI uses subscription auth
-  // If ANTHROPIC_API_KEY is set (even to placeholder), CLI tries API auth instead
-  delete env.ANTHROPIC_API_KEY;
+  // CRITICAL: Remove GEMINI_API_KEY so Gemini CLI uses subscription auth
+  // If GEMINI_API_KEY is set (even to placeholder), CLI tries API auth instead
+  delete env.GEMINI_API_KEY;
 
   return env;
 }
 
 // Pre-build the environment once at startup
-const claudeEnv = buildClaudeEnvironment();
-console.log('[STARTUP] Loaded environment with', Object.keys(claudeEnv).length, 'variables');
-console.log('[STARTUP] PATH includes:', claudeEnv.PATH.split(':').slice(0, 5).join(', '), '...');
+const geminiEnv = buildGeminiEnvironment();
+console.log('[STARTUP] Loaded environment with', Object.keys(geminiEnv).length, 'variables');
+console.log('[STARTUP] PATH includes:', geminiEnv.PATH.split(':').slice(0, 5).join(', '), '...');
 
 // Log which API keys are available (without showing values)
-const apiKeys = Object.keys(claudeEnv).filter(k =>
+const apiKeys = Object.keys(geminiEnv).filter(k =>
   k.includes('API_KEY') || k.includes('TOKEN') || k.includes('SECRET') || k === 'PAI_DIR'
 );
 console.log('[STARTUP] API keys loaded:', apiKeys.join(', '));
 
-// Session storage: callId -> claudeSessionId
+// Session storage: callId -> geminiSessionId
 const sessions = new Map();
 
 // Model selection - Sonnet for balanced speed/quality
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp';
 
-function parseClaudeStdout(stdout) {
-  // Claude Code CLI may output JSONL; when it does, extract the `result` message.
+function parseGeminiStdout(stdout) {
+  // Gemini Code CLI may output JSONL; when it does, extract the `result` message.
   // Otherwise, fall back to raw stdout.
   let response = '';
   let sessionId = null;
@@ -144,13 +144,13 @@ function parseClaudeStdout(stdout) {
   return { response, sessionId };
 }
 
-function runClaudeOnce({ fullPrompt, callId, timestamp }) {
+function runGeminiOnce({ fullPrompt, callId, timestamp }) {
   const startTime = Date.now();
 
   const args = [
     '--dangerously-skip-permissions',
     '-p', fullPrompt,
-    '--model', CLAUDE_MODEL
+    '--model', GEMINI_MODEL
   ];
 
   if (callId) {
@@ -165,24 +165,24 @@ function runClaudeOnce({ fullPrompt, callId, timestamp }) {
   }
 
   return new Promise((resolve, reject) => {
-    const claude = spawn('claude', args, {
+    const gemini = spawn('gemini', args, {
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: false,
-      env: claudeEnv
+      env: geminiEnv
     });
 
     let stdout = '';
     let stderr = '';
 
-    claude.stdin.end();
-    claude.stdout.on('data', (data) => { stdout += data.toString(); });
-    claude.stderr.on('data', (data) => { stderr += data.toString(); });
+    gemini.stdin.end();
+    gemini.stdout.on('data', (data) => { stdout += data.toString(); });
+    gemini.stderr.on('data', (data) => { stderr += data.toString(); });
 
-    claude.on('error', (error) => {
+    gemini.on('error', (error) => {
       reject(error);
     });
 
-    claude.on('close', (code) => {
+    gemini.on('close', (code) => {
       const duration_ms = Date.now() - startTime;
       resolve({ code, stdout, stderr, duration_ms });
     });
@@ -192,7 +192,7 @@ function runClaudeOnce({ fullPrompt, callId, timestamp }) {
 /**
  * Voice Context - Prepended to all voice queries
  *
- * This tells Claude how to handle voice-specific patterns:
+ * This tells Gemini how to handle voice-specific patterns:
  * - Output VOICE_RESPONSE for TTS (conversational, 40 words max)
  * - Output COMPLETED for status logging (12 words max)
  * - For Slack delivery requests: do the work, send to Slack, then acknowledge
@@ -269,7 +269,7 @@ app.post('/ask', async (req, res) => {
   const existingSession = callId ? sessions.get(callId) : null;
 
   console.log(`[${timestamp}] QUERY: "${prompt.substring(0, 100)}..."`);
-  console.log(`[${timestamp}] MODEL: ${CLAUDE_MODEL}`);
+  console.log(`[${timestamp}] MODEL: ${GEMINI_MODEL}`);
   console.log(`[${timestamp}] SESSION: callId=${callId || 'none'}, existing=${existingSession || 'none'}`);
   console.log(`[${timestamp}] DEVICE PROMPT: ${devicePrompt ? 'Yes (' + devicePrompt.substring(0, 30) + '...)' : 'No'}`);
 
@@ -289,17 +289,17 @@ app.post('/ask', async (req, res) => {
     fullPrompt += VOICE_CONTEXT;
     fullPrompt += prompt;
 
-    const { code, stdout, stderr, duration_ms } = await runClaudeOnce({ fullPrompt, callId, timestamp });
+    const { code, stdout, stderr, duration_ms } = await runGeminiOnce({ fullPrompt, callId, timestamp });
 
     if (code !== 0) {
-      console.error(`[${new Date().toISOString()}] ERROR: Claude CLI exited with code ${code}`);
+      console.error(`[${new Date().toISOString()}] ERROR: Gemini CLI exited with code ${code}`);
       console.error(`STDERR: ${stderr}`);
       console.error(`STDOUT: ${stdout.substring(0, 500)}`);
       const errorMsg = stderr || stdout || `Exit code ${code}`;
-      return res.json({ success: false, error: `Claude CLI failed: ${errorMsg}`, duration_ms });
+      return res.json({ success: false, error: `Gemini CLI failed: ${errorMsg}`, duration_ms });
     }
 
-    const { response, sessionId } = parseClaudeStdout(stdout);
+    const { response, sessionId } = parseGeminiStdout(stdout);
 
     if (sessionId && callId) {
       sessions.set(callId, sessionId);
@@ -377,7 +377,7 @@ app.post('/ask-structured', async (req, res) => {
   });
 
   console.log(`[${timestamp}] STRUCTURED QUERY: "${String(prompt).substring(0, 100)}..."`);
-  console.log(`[${timestamp}] MODEL: ${CLAUDE_MODEL}`);
+  console.log(`[${timestamp}] MODEL: ${GEMINI_MODEL}`);
   console.log(`[${timestamp}] SESSION: callId=${callId || 'none'}, existing=${callId ? (sessions.has(callId) ? 'yes' : 'no') : 'none'}`);
 
   try {
@@ -389,11 +389,11 @@ app.post('/ask-structured', async (req, res) => {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       attemptsMade = attempt + 1;
-      const { code, stdout, stderr, duration_ms } = await runClaudeOnce({ fullPrompt, callId, timestamp });
+      const { code, stdout, stderr, duration_ms } = await runGeminiOnce({ fullPrompt, callId, timestamp });
       totalDuration += duration_ms;
 
       if (code !== 0) {
-        lastError = `Claude CLI failed: ${stderr}`;
+        lastError = `Gemini CLI failed: ${stderr}`;
         lastRaw = String(stdout || '').trim();
         return res.status(502).json({
           success: false,
@@ -404,7 +404,7 @@ app.post('/ask-structured', async (req, res) => {
         });
       }
 
-      const { response, sessionId } = parseClaudeStdout(stdout);
+      const { response, sessionId } = parseGeminiStdout(stdout);
       lastRaw = response;
 
       if (sessionId && callId) sessions.set(callId, sessionId);
@@ -487,7 +487,7 @@ app.post('/end-session', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'claude-api-server',
+    service: 'gemini-api-server',
     timestamp: new Date().toISOString()
   });
 });
@@ -498,10 +498,10 @@ app.get('/health', (req, res) => {
  */
 app.get('/', (req, res) => {
   res.json({
-    service: 'Claude HTTP API Server',
+    service: 'Gemini HTTP API Server',
     version: '1.0.0',
     endpoints: {
-      'POST /ask': 'Send a prompt to Claude',
+      'POST /ask': 'Send a prompt to Gemini',
       'POST /ask-structured': 'Send a prompt and return validated JSON (n8n)',
       'GET /health': 'Health check'
     }
@@ -511,11 +511,11 @@ app.get('/', (req, res) => {
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log('='.repeat(64));
-  console.log('Claude HTTP API Server');
+  console.log('Gemini HTTP API Server');
   console.log('='.repeat(64));
   console.log(`\nListening on: http://0.0.0.0:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log('\nReady to receive Claude queries from voice interface.\n');
+  console.log('\nReady to receive Gemini queries from voice interface.\n');
 });
 
 // Graceful shutdown

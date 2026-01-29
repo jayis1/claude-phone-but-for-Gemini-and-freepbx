@@ -11,7 +11,7 @@ const projectRoot = path.resolve(__dirname, '../..');
  * Test suite for api-server command
  *
  * Note: These tests verify the command logic but don't actually start
- * the server (would require Claude CLI installed and running).
+ * the server (would require Gemini CLI installed and running).
  */
 
 describe('api-server command', () => {
@@ -42,10 +42,10 @@ describe('api-server command', () => {
   });
 
   it('can find server.js in project', async () => {
-    const serverPath = path.join(projectRoot, 'claude-api-server', 'server.js');
+    const serverPath = path.join(projectRoot, 'gemini-api-server', 'server.js');
 
     // Check if path construction is correct
-    assert.ok(serverPath.includes('claude-api-server'));
+    assert.ok(serverPath.includes('gemini-api-server'));
     assert.ok(serverPath.endsWith('server.js'));
   });
 

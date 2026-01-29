@@ -21,7 +21,7 @@
 
 - [ ] **2.2** Add type descriptions
   - [ ] Voice Server: "Handles calls, needs Docker"
-  - [ ] API Server: "Claude Code wrapper, minimal setup"
+  - [ ] API Server: "Gemini Phone wrapper, minimal setup"
   - [ ] Both: "Full stack on one machine"
 
 ### Phase 3: Conditional Prereq Checks (AC5)

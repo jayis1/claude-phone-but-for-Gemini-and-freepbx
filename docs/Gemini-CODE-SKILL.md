@@ -1,10 +1,10 @@
-# Claude Code Call Skill
+# Gemini Code Call Skill
 
-A Claude Code skill that enables voice calling from your AI assistant. Say "call me when done" and your AI will actually call you.
+A Gemini Code skill that enables voice calling from your AI assistant. Say "call me when done" and your AI will actually call you.
 
 ## Overview
 
-This skill wraps the Claude Phone outbound API, allowing natural language commands like:
+This skill wraps the Gemini Phone outbound API, allowing natural language commands like:
 - "Call me when the backup finishes"
 - "Have Cephanie call me about disk usage"
 - "Call me and let's discuss the results"
@@ -12,7 +12,7 @@ This skill wraps the Claude Phone outbound API, allowing natural language comman
 ## Skill Structure
 
 ```
-~/.claude/skills/Call/
+~/.gemini/skills/Call/
 ├── SKILL.md              # Skill definition and routing
 ├── bin/
 │   └── call              # CLI entry point
@@ -26,24 +26,24 @@ This skill wraps the Claude Phone outbound API, allowing natural language comman
 
 1. Create the skill directory:
 ```bash
-mkdir -p ~/.claude/skills/Call/{bin,lib,workflows}
+mkdir -p ~/.gemini/skills/Call/{bin,lib,workflows}
 ```
 
 2. Copy the files below into place
 
 3. Make the CLI executable:
 ```bash
-chmod +x ~/.claude/skills/Call/bin/call
+chmod +x ~/.gemini/skills/Call/bin/call
 ```
 
-4. Update the `API_BASE_URL` in `lib/api.py` to point to your Claude Phone server
+4. Update the `API_BASE_URL` in `lib/api.py` to point to your Gemini Phone server
 
 ## Configuration
 
 Edit `lib/api.py` to configure:
 
 ```python
-# Your Claude Phone server
+# Your Gemini Phone server
 API_BASE_URL = "http://YOUR_SERVER:3000"
 
 # Contact directory - map names to numbers

@@ -9,7 +9,7 @@ import { stopServer, isServerRunning } from '../process-manager.js';
  * @returns {Promise<void>}
  */
 export async function stopCommand() {
-  console.log(chalk.bold.cyan('\n⏹️  Stopping Claude Phone\n'));
+  console.log(chalk.bold.cyan('\n⏹️  Stopping Gemini Phone\n'));
 
   // Check if configured
   if (!configExists()) {
@@ -45,13 +45,13 @@ export async function stopCommand() {
  * @returns {Promise<void>}
  */
 async function stopApiServer() {
-  const spinner = ora('Stopping Claude API server...').start();
+  const spinner = ora('Stopping Gemini API server...').start();
   try {
     if (await isServerRunning()) {
       await stopServer();
-      spinner.succeed('Claude API server stopped');
+      spinner.succeed('Gemini API server stopped');
     } else {
-      spinner.info('Claude API server not running');
+      spinner.info('Gemini API server not running');
     }
   } catch (error) {
     spinner.fail(`Failed to stop server: ${error.message}`);
@@ -77,14 +77,14 @@ async function stopVoiceServer() {
  * @returns {Promise<void>}
  */
 async function stopBoth() {
-  // Stop claude-api-server
-  const spinner = ora('Stopping Claude API server...').start();
+  // Stop gemini-api-server
+  const spinner = ora('Stopping Gemini API server...').start();
   try {
     if (await isServerRunning()) {
       await stopServer();
-      spinner.succeed('Claude API server stopped');
+      spinner.succeed('Gemini API server stopped');
     } else {
-      spinner.info('Claude API server not running');
+      spinner.info('Gemini API server not running');
     }
   } catch (error) {
     spinner.fail(`Failed to stop server: ${error.message}`);

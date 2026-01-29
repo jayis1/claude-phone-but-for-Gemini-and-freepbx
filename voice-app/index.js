@@ -16,7 +16,7 @@ var sipHandler = require("./lib/sip-handler");
 var handleInvite = sipHandler.handleInvite;
 var extractCallerId = sipHandler.extractCallerId;
 var whisperClient = require("./lib/whisper-client");
-var claudeBridge = require("./lib/claude-bridge");
+var geminiBridge = require("./lib/gemini-bridge");
 var ttsService = require("./lib/tts-service");
 
 // Multi-extension support
@@ -64,8 +64,14 @@ var config = {
   external_ip: process.env.EXTERNAL_IP || "10.70.7.81",
   http_port: parseInt(process.env.HTTP_PORT) || 3000,
   ws_port: parseInt(process.env.WS_PORT) || 3001,
-  audio_dir: process.env.AUDIO_DIR || "/tmp/voice-audio"
+  audio_dir: process.env.AUDIO_DIR || "/tmp/voice-audio",
+  n8n: {
+    webhook_url: process.env.N8N_WEBHOOK_URL
+  }
 };
+
+// Global state for active calls
+var activeCalls = new Map();
 
 // Initialize drachtio SRF
 var srf = new Srf();
@@ -102,7 +108,7 @@ srf.connect({
   secret: config.drachtio.secret
 });
 
-srf.on("connect", function(err, hostport) {
+srf.on("connect", function (err, hostport) {
   console.log("[" + new Date().toISOString() + "] DRACHTIO Connected at " + hostport);
   drachtioConnected = true;
 
@@ -131,7 +137,7 @@ srf.on("connect", function(err, hostport) {
   checkReadyState();
 });
 
-srf.on("error", function(err) {
+srf.on("error", function (err) {
   console.error("[" + new Date().toISOString() + "] DRACHTIO error: " + err.message);
   drachtioConnected = false;
 });
@@ -155,20 +161,20 @@ connectWithRetry(connectToFreeswitch, {
   retryDelays: [1000, 2000, 3000, 5000, 5000, 5000, 10000, 10000, 10000, 10000],
   name: 'FREESWITCH'
 })
-.then(function(ms) {
-  mediaServer = ms;
-  freeswitchConnected = true;
-  console.log("[" + new Date().toISOString() + "] FREESWITCH Ready for calls");
-  checkReadyState();
-})
-.catch(function(err) {
-  console.error("[" + new Date().toISOString() + "] FREESWITCH Connection failed permanently: " + err.message);
-  console.error("[" + new Date().toISOString() + "] Please check:");
-  console.error("  1. FreeSWITCH container is running: docker ps | grep freeswitch");
-  console.error("  2. ESL port 8021 is accessible");
-  console.error("  3. EXTERNAL_IP is set correctly in .env");
-  process.exit(1);
-});
+  .then(function (ms) {
+    mediaServer = ms;
+    freeswitchConnected = true;
+    console.log("[" + new Date().toISOString() + "] FREESWITCH Ready for calls");
+    checkReadyState();
+  })
+  .catch(function (err) {
+    console.error("[" + new Date().toISOString() + "] FREESWITCH Connection failed permanently: " + err.message);
+    console.error("[" + new Date().toISOString() + "] Please check:");
+    console.error("  1. FreeSWITCH container is running: docker ps | grep freeswitch");
+    console.error("  2. ESL port 8021 is accessible");
+    console.error("  3. EXTERNAL_IP is set correctly in .env");
+    process.exit(1);
+  });
 
 // Initialize servers
 function initializeServers() {
@@ -184,10 +190,10 @@ function initializeServers() {
   // WebSocket server for audio fork
   audioForkServer = new AudioForkServer({ port: config.ws_port });
   audioForkServer.start();
-  audioForkServer.on("listening", function() {
+  audioForkServer.on("listening", function () {
     console.log("[" + new Date().toISOString() + "] WEBSOCKET Audio fork server started on port " + config.ws_port);
   });
-  audioForkServer.on("session", function(session) {
+  audioForkServer.on("session", function (session) {
     console.log("[AUDIO] New session for call " + session.callUuid);
   });
 
@@ -202,7 +208,7 @@ function initializeServers() {
     deviceRegistry: deviceRegistry,  // Required for device lookup
     audioForkServer: audioForkServer,
     whisperClient: whisperClient,
-    claudeBridge: claudeBridge,
+    geminiBridge: geminiBridge,
     ttsService: ttsService,
     wsPort: config.ws_port
   });
@@ -210,9 +216,14 @@ function initializeServers() {
   httpServer.app.use("/api", outboundRouter);
   console.log("[" + new Date().toISOString() + "] OUTBOUND Calling API enabled");
 
+  // ========== N8N CONTROL ROUTES ==========
+  var n8nControl = require("./lib/n8n-control");
+  httpServer.app.use("/api", n8nControl.createN8nRouter(activeCalls));
+  console.log("[" + new Date().toISOString() + "] N8N CONTROL API enabled (/api/calls/:callId/command)");
+
   // ========== QUERY API ROUTES ==========
   setupQueryRoutes({
-    claudeBridge: claudeBridge
+    geminiBridge: geminiBridge
   });
 
   httpServer.app.use("/api", queryRouter);
@@ -222,7 +233,7 @@ function initializeServers() {
   httpServer.finalize();
 
   // Cleanup old files periodically
-  setInterval(function() {
+  setInterval(function () {
     cleanupOldFiles(config.audio_dir, 5 * 60 * 1000);
   }, 60 * 1000);
 }
@@ -237,18 +248,20 @@ function checkReadyState() {
     initializeServers();
 
     // Register SIP INVITE handler
-    srf.invite(function(req, res) {
+    srf.invite(function (req, res) {
       handleInvite(req, res, {
         audioForkServer: audioForkServer,
         mediaServer: mediaServer,
         deviceRegistry: deviceRegistry,
         config: config,
         whisperClient: whisperClient,
-        claudeBridge: claudeBridge,
+        geminiBridge: geminiBridge,
         ttsService: ttsService,
         wsPort: config.ws_port,
-        externalIp: config.external_ip
-      }).catch(function(err) {
+        externalIp: config.external_ip,
+        activeCalls: activeCalls,
+        n8nConfig: config.n8n
+      }).catch(function (err) {
         console.error("[" + new Date().toISOString() + "] CALL Error: " + err.message);
       });
     });
@@ -266,8 +279,8 @@ function shutdown(signal) {
   if (audioForkServer) audioForkServer.stop();
   if (mediaServer) mediaServer.disconnect();
   srf.disconnect();
-  setTimeout(function() { process.exit(0); }, 1000);
+  setTimeout(function () { process.exit(0); }, 1000);
 }
 
-process.on("SIGTERM", function() { shutdown("SIGTERM"); });
-process.on("SIGINT", function() { shutdown("SIGINT"); });
+process.on("SIGTERM", function () { shutdown("SIGTERM"); });
+process.on("SIGINT", function () { shutdown("SIGINT"); });

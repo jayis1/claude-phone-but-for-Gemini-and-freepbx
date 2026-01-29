@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import net from 'net';
 import {
   checkPort,
-  detect3cxSbc
+  detectSbc
 } from '../lib/port-check.js';
 
 test('port-check module', async (t) => {
@@ -57,22 +57,22 @@ test('port-check module', async (t) => {
     assert.ok(duration < 2000, 'Port check should complete within 2 seconds');
   });
 
-  await t.test('detect3cxSbc returns boolean', async () => {
-    const result = await detect3cxSbc();
+  await t.test('detectSbc returns boolean', async () => {
+    const result = await detectSbc();
 
-    assert.ok(typeof result === 'boolean', 'detect3cxSbc should return boolean');
+    assert.ok(typeof result === 'boolean', 'detectSbc should return boolean');
   });
 
-  await t.test('detect3cxSbc checks port 5060', async () => {
-    // This test checks that detect3cxSbc is checking the right port
-    // We can't guarantee 3CX is installed, so we just verify it returns a boolean
-    const result = await detect3cxSbc();
+  await t.test('detectSbc checks port 5060', async () => {
+    // This test checks that detectSbc is checking the right port
+    // We can't guarantee SBC is installed, so we just verify it returns a boolean
+    const result = await detectSbc();
 
     // Should return true if port 5060 is in use, false otherwise
     assert.ok(typeof result === 'boolean', 'Should return boolean result');
   });
 
-  await t.test('detect3cxSbc returns true when 5060 is in use', async () => {
+  await t.test('detectSbc returns true when 5060 is in use', async () => {
     // Start a test server on port 5060 (if we have permission)
     const server = net.createServer();
     let serverStarted = false;
@@ -95,7 +95,7 @@ test('port-check module', async (t) => {
       });
 
       if (serverStarted) {
-        const result = await detect3cxSbc();
+        const result = await detectSbc();
         assert.strictEqual(result, true, 'Should detect 5060 in use');
       }
       // If server didn't start (no permission), skip assertion

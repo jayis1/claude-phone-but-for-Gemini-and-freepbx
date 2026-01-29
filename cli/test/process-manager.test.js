@@ -11,7 +11,7 @@ import {
 } from '../lib/process-manager.js';
 
 // Test PID file location
-const TEST_HOME = path.join(os.tmpdir(), 'claude-phone-pm-test-' + Date.now());
+const TEST_HOME = path.join(os.tmpdir(), 'gemini-phone-pm-test-' + Date.now());
 const TEST_PID_FILE = path.join(TEST_HOME, 'server.pid');
 
 test('process-manager module', async (t) => {

@@ -8,7 +8,7 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       paths: {
         voiceApp: '/app/voice-app'
@@ -31,7 +31,7 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       paths: {
         voiceApp: '/app/voice-app'
@@ -59,7 +59,7 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       paths: {
         voiceApp: '/app/voice-app'
@@ -86,7 +86,7 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       paths: {
         voiceApp: '/app/voice-app'
@@ -116,10 +116,10 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'freepbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -149,9 +149,9 @@ test('docker compose generation', async (t) => {
     const envFile = generateEnvFile(config);
 
     // Should use Mac API URL instead of localhost
-    assert.ok(envFile.includes('CLAUDE_API_URL=http://192.168.1.100:3333'),
+    assert.ok(envFile.includes('GEMINI_API_URL=http://192.168.1.100:3333'),
       'Should use Mac API URL for pi-split mode');
-    assert.ok(!envFile.includes('CLAUDE_API_URL=http://localhost:'),
+    assert.ok(!envFile.includes('GEMINI_API_URL=http://localhost:'),
       'Should not use localhost for pi-split mode');
   });
 
@@ -160,10 +160,10 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'freepbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -190,7 +190,7 @@ test('docker compose generation', async (t) => {
     const envFile = generateEnvFile(config);
 
     // Should use localhost for standard mode
-    assert.ok(envFile.includes('CLAUDE_API_URL=http://localhost:3333'),
+    assert.ok(envFile.includes('GEMINI_API_URL=http://localhost:3333'),
       'Should use localhost for standard mode');
   });
 
@@ -199,10 +199,10 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'freepbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -229,11 +229,11 @@ test('docker compose generation', async (t) => {
     const envFile = generateEnvFile(config);
 
     // Should use localhost for both mode (all services on same machine)
-    assert.ok(envFile.includes('CLAUDE_API_URL=http://localhost:3333'),
+    assert.ok(envFile.includes('GEMINI_API_URL=http://localhost:3333'),
       'Should use localhost for both mode (all-in-one installation)');
 
     // Should NOT use any remote IP
-    assert.ok(!envFile.includes('CLAUDE_API_URL=http://192.168.'),
+    assert.ok(!envFile.includes('GEMINI_API_URL=http://192.168.'),
       'Should not use remote IP for both mode');
   });
 
@@ -242,10 +242,10 @@ test('docker compose generation', async (t) => {
       server: {
         externalIp: '192.168.1.50',
         httpPort: 3000,
-        claudeApiPort: 3333
+        geminiApiPort: 3333
       },
       sip: {
-        domain: '3cx.local',
+        domain: 'freepbx.local',
         registrar: '192.168.1.10'
       },
       devices: [
@@ -273,10 +273,10 @@ test('docker compose generation', async (t) => {
     const envFile = generateEnvFile(config);
 
     // Voice server mode should use the remote API server IP, not localhost
-    assert.ok(envFile.includes('CLAUDE_API_URL=http://192.168.1.200:3333'),
+    assert.ok(envFile.includes('GEMINI_API_URL=http://192.168.1.200:3333'),
       'voice-server mode should use remote apiServerIp');
 
-    assert.ok(!envFile.includes('CLAUDE_API_URL=http://localhost:'),
+    assert.ok(!envFile.includes('GEMINI_API_URL=http://localhost:'),
       'voice-server mode should NOT use localhost when apiServerIp is set');
   });
 });

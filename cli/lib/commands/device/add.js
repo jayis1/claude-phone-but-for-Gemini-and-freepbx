@@ -14,7 +14,7 @@ export async function deviceAddCommand() {
 
   if (!configExists()) {
     console.log(chalk.red('✗ Not configured'));
-    console.log(chalk.gray('  Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" first\n'));
     process.exit(1);
   }
 
@@ -130,6 +130,6 @@ export async function deviceAddCommand() {
   console.log(chalk.gray(`  Extension: ${newDevice.extension}`));
   console.log(chalk.gray(`  Voice: ${voiceResult.name} (${newDevice.voiceId})`));
   console.log(chalk.yellow('\n⚠ Restart services to apply changes:'));
-  console.log(chalk.gray('  claude-phone stop'));
-  console.log(chalk.gray('  claude-phone start\n'));
+  console.log(chalk.gray('  gemini-phone stop'));
+  console.log(chalk.gray('  gemini-phone start\n'));
 }

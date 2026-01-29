@@ -11,7 +11,7 @@ import { checkCompose } from '../checks/compose.js';
  * @returns {string} Path to state file
  */
 function getStateFile() {
-  const configDir = path.join(os.homedir(), '.claude-phone');
+  const configDir = path.join(os.homedir(), '.gemini-phone');
 
   // Ensure config directory exists
   if (!fs.existsSync(configDir)) {

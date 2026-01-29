@@ -178,7 +178,7 @@ async function offerAutoFix(results, platform) {
     if (!fixResult.success) {
       if (fixResult.cancelled) {
         console.log(chalk.gray('\nSetup cancelled by user.'));
-        console.log(chalk.gray('Run "claude-phone setup" again after installing prerequisites manually.\n'));
+        console.log(chalk.gray('Run "gemini-phone setup" again after installing prerequisites manually.\n'));
         return { success: false };
       }
 

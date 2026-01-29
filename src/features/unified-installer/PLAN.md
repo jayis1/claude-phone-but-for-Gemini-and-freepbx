@@ -21,12 +21,12 @@ Build a **Node.js CLI tool** distributed via a bash install script. The CLI wrap
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  install.sh                                              │   │
 │  │  - Detect OS (mac/linux)                                 │   │
-│  │  - Download claude-phone CLI                             │   │
+│  │  - Download gemini-phone CLI                             │   │
 │  │  - Add to PATH (~/.local/bin or /usr/local/bin)          │   │
 │  │  - Verify prerequisites (Docker, Claude CLI)             │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
-│  User runs: claude-phone setup                                  │
+│  User runs: gemini-phone setup                                  │
 │      │                                                          │
 │      ↓                                                          │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -35,17 +35,17 @@ Build a **Node.js CLI tool** distributed via a bash install script. The CLI wrap
 │  │  - Validate each key with test API call                  │   │
 │  │  - Collect 3CX credentials                               │   │
 │  │  - Create first device                                   │   │
-│  │  - Write ~/.claude-phone/config.json                     │   │
+│  │  - Write ~/.gemini-phone/config.json                     │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
-│  User runs: claude-phone start                                  │
+│  User runs: gemini-phone start                                  │
 │      │                                                          │
 │      ↓                                                          │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  Start Services                                          │   │
 │  │  1. Generate .env from config.json                       │   │
 │  │  2. docker compose up -d (voice-app)                     │   │
-│  │  3. Fork claude-api-server, write PID                    │   │
+│  │  3. Fork gemini-api-server, write PID                    │   │
 │  │  4. Health check all services                            │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
@@ -67,12 +67,12 @@ Build a **Node.js CLI tool** distributed via a bash install script. The CLI wrap
 ## Project Structure
 
 ```
-claude-phone/
+gemini-phone/
 ├── install.sh                    # Curl-able install script
 ├── cli/                          # NEW: CLI tool source
 │   ├── package.json
 │   ├── bin/
-│   │   └── claude-phone.js       # Entry point (#!/usr/bin/env node)
+│   │   └── gemini-phone.js       # Entry point (#!/usr/bin/env node)
 │   ├── lib/
 │   │   ├── commands/
 │   │   │   ├── setup.js          # Setup wizard
@@ -95,7 +95,7 @@ claude-phone/
 │       ├── config.default.json   # Default config structure
 │       └── docker-compose.yml    # Template for voice-app
 ├── voice-app/                    # EXISTING: Unchanged
-├── claude-api-server/            # EXISTING: Unchanged
+├── gemini-api-server/            # EXISTING: Unchanged
 └── docker-compose.yml            # EXISTING: Can be generated from template
 ```
 
@@ -116,7 +116,7 @@ claude-phone/
 ### Internal
 
 - Existing `voice-app/` - runs in Docker, no changes needed
-- Existing `claude-api-server/` - runs natively, no changes needed
+- Existing `gemini-api-server/` - runs natively, no changes needed
 - Existing `docker-compose.yml` - template for generation
 
 ### Blockers
@@ -128,7 +128,7 @@ claude-phone/
 
 ## Data Model
 
-### Config File (~/.claude-phone/config.json)
+### Config File (~/.gemini-phone/config.json)
 
 ```javascript
 {
@@ -149,7 +149,7 @@ claude-phone/
     "transport": "udp"
   },
   "server": {
-    "claudeApiPort": 3333,
+    "geminiApiPort": 3333,
     "httpPort": 3000,
     "externalIp": "auto"  // or specific IP
   },
@@ -165,17 +165,17 @@ claude-phone/
   ],
   "paths": {
     "voiceApp": "/path/to/voice-app",
-    "claudeApiServer": "/path/to/claude-api-server"
+    "geminiApiServer": "/path/to/gemini-api-server"
   }
 }
 ```
 
-### Runtime Files (~/.claude-phone/)
+### Runtime Files (~/.gemini-phone/)
 
 | File | Purpose |
 |------|---------|
 | config.json | Main configuration |
-| server.pid | PID of claude-api-server process |
+| server.pid | PID of gemini-api-server process |
 | docker-compose.yml | Generated compose file |
 | .env | Generated environment file |
 | logs/ | Log files directory |
@@ -187,7 +187,7 @@ claude-phone/
 ### Command Tree
 
 ```
-claude-phone
+gemini-phone
 ├── setup              # Interactive setup wizard
 ├── start              # Start all services
 ├── stop               # Stop all services
@@ -211,8 +211,8 @@ claude-phone
 ```javascript
 // Main entry point
 program
-  .name('claude-phone')
-  .description('Voice interface for Claude Code')
+  .name('gemini-phone')
+  .description('Voice interface for Gemini Code')
   .version(version);
 
 // Setup command
@@ -225,7 +225,7 @@ program
 // Start command
 program
   .command('start')
-  .description('Start Claude Phone services')
+  .description('Start Gemini Phone services')
   .option('--foreground', 'Run API server in foreground')
   .action(startCommand);
 
@@ -247,13 +247,13 @@ device.command('remove <name>').description('Remove device').action(deviceRemove
 1. Detect OS (uname -s)
 2. Check prerequisites:
    - docker --version || exit "Install Docker first"
-   - claude --version || warn "Claude CLI not found, needed for API server"
+   - gemini-phone --version || warn "Gemini Phone CLI not found, needed for API server"
    - node --version >= 18 || exit "Node.js 18+ required"
 3. Create temp directory
 4. Download latest release tarball from GitHub
-5. Extract to ~/.claude-phone/cli/
-6. Symlink bin/claude-phone to ~/.local/bin/ or /usr/local/bin/
-7. Verify: claude-phone --version
+5. Extract to ~/.gemini-phone/cli/
+6. Symlink bin/gemini-phone to ~/.local/bin/ or /usr/local/bin/
+7. Verify: gemini-phone --version
 8. Print success + next steps
 ```
 
@@ -282,12 +282,12 @@ device.command('remove <name>').description('Remove device').action(deviceRemove
    - System prompt (default provided, can customize)
 7. Detect paths:
    - voice-app directory
-   - claude-api-server directory
+   - gemini-api-server directory
    - External IP (auto-detect or prompt)
 8. Write config.json
 9. Generate .env and docker-compose.yml
 10. Run doctor to verify
-11. Print success + "Run 'claude-phone start' to begin"
+11. Print success + "Run 'gemini-phone start' to begin"
 ```
 
 ### Start Flow
@@ -298,14 +298,14 @@ device.command('remove <name>').description('Remove device').action(deviceRemove
 2. Verify not already running (check PID file, docker ps)
 3. Generate fresh .env from config
 4. Start voice-app:
-   - docker compose -f ~/.claude-phone/docker-compose.yml up -d
+   - docker compose -f ~/.gemini-phone/docker-compose.yml up -d
    - Wait for healthy
-5. Start claude-api-server:
+5. Start gemini-api-server:
    - spawn('node', ['server.js'], { detached: true, stdio: 'ignore' })
    - Write PID to server.pid
    - Wait for healthy (GET /health)
 6. Print status table
-7. Print "Claude Phone is running. Call extension XXXX to connect."
+7. Print "Gemini Phone is running. Call extension XXXX to connect."
 ```
 
 ### Doctor Flow
@@ -314,11 +314,11 @@ device.command('remove <name>').description('Remove device').action(deviceRemove
 // lib/commands/doctor.js pseudocode
 checks = [
   { name: 'Docker running', fn: checkDocker },
-  { name: 'Claude CLI installed', fn: checkClaudeCli },
+  { name: 'Gemini Phone CLI installed', fn: checkGeminiPhoneCli },
   { name: 'ElevenLabs API', fn: checkElevenLabs },
   { name: 'OpenAI API', fn: checkOpenAI },
   { name: 'Voice-app container', fn: checkVoiceAppContainer },
-  { name: 'Claude API server', fn: checkClaudeApiServer },
+  { name: 'Gemini API server', fn: checkGeminiApiServer },
   { name: 'SIP registration', fn: checkSipRegistration },
 ]
 

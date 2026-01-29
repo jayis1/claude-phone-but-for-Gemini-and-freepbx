@@ -54,8 +54,8 @@ export async function isServerRunning(pidPath = null) {
 }
 
 /**
- * Start the claude-api-server
- * @param {string} serverPath - Path to claude-api-server directory
+ * Start the gemini-api-server
+ * @param {string} serverPath - Path to gemini-api-server directory
  * @param {number} port - Port to listen on
  * @param {string} [pidPath] - Optional PID file path (for testing)
  * @returns {Promise<number>} Process PID
@@ -101,7 +101,7 @@ export async function startServer(serverPath, port, pidPath = null) {
 }
 
 /**
- * Stop the claude-api-server
+ * Stop the gemini-api-server
  * @param {string} [pidPath] - Optional PID file path (for testing)
  * @returns {Promise<void>}
  */
@@ -151,7 +151,7 @@ export async function stopServer(pidPath = null) {
 
 /**
  * Save a PID file for a named service
- * @param {string} name - Service name (e.g., 'claude-api-server')
+ * @param {string} name - Service name (e.g., 'gemini-api-server')
  * @param {number} pid - Process ID
  */
 export function savePid(name, pid) {
@@ -165,7 +165,7 @@ export function savePid(name, pid) {
 
 /**
  * Remove a PID file for a named service
- * @param {string} name - Service name (e.g., 'claude-api-server')
+ * @param {string} name - Service name (e.g., 'gemini-api-server')
  */
 export function removePid(name) {
   const configDir = getConfigDir();

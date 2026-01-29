@@ -14,11 +14,11 @@ describe('Doctor command', () => {
     assert.strictEqual(dockerCheck.running, true);
   });
 
-  it('should check Claude CLI installation', async () => {
-    // Mock test for Claude CLI check
-    const claudeCheck = { installed: true, version: '1.0.0' };
-    assert.strictEqual(claudeCheck.installed, true);
-    assert.ok(claudeCheck.version);
+  it('should check Gemini CLI installation', async () => {
+    // Mock test for Gemini CLI check
+    const geminiCheck = { installed: true, version: '1.0.0' };
+    assert.strictEqual(geminiCheck.installed, true);
+    assert.ok(geminiCheck.version);
   });
 
   it('should check ElevenLabs API connectivity', async () => {
@@ -39,7 +39,7 @@ describe('Doctor command', () => {
     assert.strictEqual(containerCheck.running, true);
   });
 
-  it('should check claude-api-server status', async () => {
+  it('should check gemini-api-server status', async () => {
     // Mock test for API server check
     const serverCheck = { running: true, pid: 12345, healthy: true };
     assert.strictEqual(serverCheck.running, true);

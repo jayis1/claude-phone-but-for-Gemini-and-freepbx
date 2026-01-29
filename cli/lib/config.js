@@ -4,15 +4,15 @@ import os from 'os';
 
 /**
  * Get the config directory path
- * @returns {string} Path to ~/.claude-phone
+ * @returns {string} Path to ~/.gemini-phone
  */
 export function getConfigDir() {
-  return path.join(os.homedir(), '.claude-phone');
+  return path.join(os.homedir(), '.gemini-phone');
 }
 
 /**
  * Get the config file path
- * @returns {string} Path to ~/.claude-phone/config.json
+ * @returns {string} Path to ~/.  gemini-phone/config.json
  */
 export function getConfigPath() {
   return path.join(getConfigDir(), 'config.json');
@@ -34,7 +34,7 @@ export async function loadConfig() {
   const configPath = getConfigPath();
 
   if (!fs.existsSync(configPath)) {
-    throw new Error('Configuration not found. Run "claude-phone setup" first.');
+    throw new Error('Configuration not found. Run "gemini-phone setup" first.');
   }
 
   const data = await fs.promises.readFile(configPath, 'utf8');

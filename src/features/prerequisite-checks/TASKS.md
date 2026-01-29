@@ -194,7 +194,7 @@
   - [ ] Document --skip-prereqs flag
   - [ ] Add troubleshooting section for common issues
 
-- [ ] **9.2** Update CLAUDE.md
+- [ ] **9.2** Update GEMINI.md
   - [ ] Mark feature as complete
   - [ ] Document new files added
   - [ ] Update CLI command reference

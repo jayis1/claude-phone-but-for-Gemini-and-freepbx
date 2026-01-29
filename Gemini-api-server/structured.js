@@ -1,7 +1,7 @@
 /**
- * Structured JSON Output helpers for Claude responses.
+ * Structured JSON Output helpers for Gemini responses.
  *
- * Goal: make Claude usable from automation (n8n) by:
+ * Goal: make Gemini usable from automation (n8n) by:
  * - Prompting for a single JSON object
  * - Extracting JSON from mixed prose/markdown responses
  * - Validating required fields

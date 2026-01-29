@@ -13,7 +13,7 @@ const HOLD_MUSIC_URL = 'http://127.0.0.1:3000/static/hold-music.mp3';
 // Default voice ID (Morpheus)
 const DEFAULT_VOICE_ID = 'JAgnJveGGUh4qy4kh6dF';
 
-// Claude Code-style thinking phrases
+// Gemini Code-style thinking phrases
 const THINKING_PHRASES = [
   "Pondering...",
   "Elucidating...",
@@ -60,14 +60,14 @@ function extractDialedExtension(req) {
 function isGoodbye(transcript) {
   const lower = transcript.toLowerCase().trim();
   const goodbyePhrases = ['goodbye', 'good bye', 'bye', 'hang up', 'end call', "that's all", 'thats all'];
-  return goodbyePhrases.some(function(phrase) {
+  return goodbyePhrases.some(function (phrase) {
     return lower === phrase || lower.includes(' ' + phrase) ||
-           lower.startsWith(phrase + ' ') || lower.endsWith(' ' + phrase);
+      lower.startsWith(phrase + ' ') || lower.endsWith(' ' + phrase);
   });
 }
 
 /**
- * Extract voice-friendly line from Claude's response
+ * Extract voice-friendly line from Gemini's response
  * Priority: VOICE_RESPONSE > CUSTOM COMPLETED > COMPLETED > first sentence
  */
 function extractVoiceLine(response) {
@@ -109,7 +109,7 @@ function extractVoiceLine(response) {
  * @param {Object} deviceConfig - Device configuration (name, prompt, voiceId, etc.) or null for default
  */
 async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfig) {
-  const { ttsService, whisperClient, claudeBridge, wsPort, audioForkServer } = options;
+  const { ttsService, whisperClient, geminiBridge, wsPort, audioForkServer, activeCalls, n8nConfig } = options;
 
   let session = null;
   let forkRunning = false;
@@ -124,6 +124,39 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
   try {
     console.log('[' + new Date().toISOString() + '] CONVERSATION Starting (session: ' + callUuid + ', device: ' + deviceName + ', voice: ' + voiceId + ')...');
+
+    // Register session with activeCalls for n8n control
+    if (activeCalls) {
+      activeCalls.set(callUuid, {
+        processCommand: async (cmd) => {
+          console.log(`[${new Date().toISOString()}] COMMAND Received:`, cmd);
+          if (cmd.type === 'speak' && cmd.text) {
+            const url = await ttsService.generateSpeech(cmd.text, voiceId);
+            await endpoint.play(url);
+          } else if (cmd.type === 'hangup') {
+            await endpoint.api('uuid_kill', callUuid);
+          }
+        }
+      });
+    }
+
+    // Helper to send webhooks
+    const sendWebhook = async (event, payload) => {
+      if (!n8nConfig || !n8nConfig.webhook_url) return;
+      try {
+        const axios = require('axios');
+        await axios.post(n8nConfig.webhook_url, {
+          event,
+          callId: callUuid,
+          timestamp: new Date().toISOString(),
+          ...payload
+        });
+      } catch (err) {
+        console.error(`[Webhook] Failed to send ${event}:`, err.message);
+      }
+    };
+
+    await sendWebhook('start', { from: 'unknown', to: 'unknown' }); // TODO: extract these if needed
 
     // Play device-specific greeting with device voice
     const greetingUrl = await ttsService.generateSpeech(greeting, voiceId);
@@ -192,6 +225,8 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
       console.log('[' + new Date().toISOString() + '] WHISPER: "' + transcript + '"');
 
+      await sendWebhook('speech', { transcript });
+
       if (!transcript || transcript.trim().length < 2) {
         const clarifyUrl = await ttsService.generateSpeech("Sorry, I didn't catch that. Could you repeat?", voiceId);
         await endpoint.play(clarifyUrl);
@@ -206,20 +241,21 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
       // THINKING FEEDBACK
       const thinkingPhrase = getRandomThinkingPhrase();
+      // ... thinking logic ...
       console.log('[' + new Date().toISOString() + '] THINKING: "' + thinkingPhrase + '"');
       const thinkingUrl = await ttsService.generateSpeech(thinkingPhrase, voiceId);
       await endpoint.play(thinkingUrl);
 
       // Hold music in background
       let musicPlaying = false;
-      endpoint.play(HOLD_MUSIC_URL).catch(function(e) {
+      endpoint.play(HOLD_MUSIC_URL).catch(function (e) {
         console.log('[' + new Date().toISOString() + '] MUSIC: Hold music failed, continuing');
       });
       musicPlaying = true;
 
-      // Query Claude with device-specific prompt
-      console.log('[' + new Date().toISOString() + '] CLAUDE Querying (device: ' + deviceName + ')...');
-      const claudeResponse = await claudeBridge.query(
+      // Query Gemini with device-specific prompt
+      console.log('[' + new Date().toISOString() + '] GEMINI Querying (device: ' + deviceName + ')...');
+      const geminiResponse = await geminiBridge.query(
         transcript,
         { callId: callUuid, devicePrompt: devicePrompt }
       );
@@ -228,13 +264,13 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
       if (musicPlaying) {
         try {
           await endpoint.api('uuid_break', endpoint.uuid);
-        } catch (e) {}
+        } catch (e) { }
       }
 
-      console.log('[' + new Date().toISOString() + '] CLAUDE Response received');
+      console.log('[' + new Date().toISOString() + '] G EMINI Response received');
 
       // Extract and play voice line with device voice
-      const voiceLine = extractVoiceLine(claudeResponse);
+      const voiceLine = extractVoiceLine(geminiResponse);
       console.log('[' + new Date().toISOString() + '] VOICE: "' + voiceLine + '"');
 
       const responseUrl = await ttsService.generateSpeech(voiceLine, voiceId);
@@ -254,21 +290,38 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
       if (session) session.setCaptureEnabled(false);
       const errUrl = await ttsService.generateSpeech("Sorry, something went wrong.", voiceId);
       await endpoint.play(errUrl);
-    } catch (e) {}
+    } catch (e) { }
   } finally {
     console.log('[' + new Date().toISOString() + '] CONVERSATION Cleanup...');
 
+    if (activeCalls) activeCalls.delete(callUuid);
+
+    // We can't access sendWebhook here easily without redefining, or we can assume it was defined in scope.
+    // Ideally we define sendWebhook outside/top of function or reuse. 
+    // Re-instantiating axios for cleanup webhook if needed, or just skip for now to avoid complexity in this replace block.
+    // But let's try to be clean.
+    if (n8nConfig && n8nConfig.webhook_url) {
+      try {
+        const axios = require('axios');
+        axios.post(n8nConfig.webhook_url, {
+          event: 'end',
+          callId: callUuid,
+          timestamp: new Date().toISOString()
+        }).catch(e => console.error('Webhook end fail', e.message));
+      } catch (e) { }
+    }
+
     try {
-      await claudeBridge.endSession(callUuid);
-    } catch (e) {}
+      await geminiBridge.endSession(callUuid);
+    } catch (e) { }
 
     if (forkRunning) {
       try {
         await endpoint.forkAudioStop();
-      } catch (e) {}
+      } catch (e) { }
     }
 
-    try { dialog.destroy(); } catch (e) {}
+    try { dialog.destroy(); } catch (e) { }
   }
 }
 
@@ -343,17 +396,18 @@ async function handleInvite(req, res, options) {
 
     console.log('[' + new Date().toISOString() + '] CALL Connected: ' + callUuid);
 
-    dialog.on('destroy', function() {
+    dialog.on('destroy', function () {
       console.log('[' + new Date().toISOString() + '] CALL Ended');
-      if (endpoint) endpoint.destroy().catch(function() {});
+      if (endpoint) endpoint.destroy().catch(function () { });
     });
 
+    // Pass activeCalls and n8nConfig (already in options)
     await conversationLoop(endpoint, dialog, callUuid, options, deviceConfig);
     return { endpoint: endpoint, dialog: dialog, callerId: callerId, callUuid: callUuid };
 
   } catch (error) {
     console.error('[' + new Date().toISOString() + '] CALL Error:', error.message);
-    try { res.send(500); } catch (e) {}
+    try { res.send(500); } catch (e) { }
     throw error;
   }
 }

@@ -8,7 +8,7 @@ import { loadConfig, saveConfig, configExists } from '../config.js';
 
 /**
  * Check for git repository
- * @param {string} projectRoot - Root directory of claude-phone
+ * @param {string} projectRoot - Root directory of gemini-phone
  * @returns {boolean} True if git repo
  */
 function isGitRepo(projectRoot) {
@@ -25,7 +25,7 @@ function isGitRepo(projectRoot) {
 
 /**
  * Get current git branch
- * @param {string} projectRoot - Root directory of claude-phone
+ * @param {string} projectRoot - Root directory of gemini-phone
  * @returns {string} Branch name
  */
 function getCurrentBranch(projectRoot) {
@@ -60,10 +60,10 @@ function getProjectRoot() {
 async function fetchLatestRelease() {
   try {
     const response = await fetch(
-      'https://api.github.com/repos/networkchuck/claude-phone/releases/latest',
+      'https://api.github.com/repos/networkchuck/gemini-phone/releases/latest',
       {
         headers: {
-          'User-Agent': 'claude-phone-cli',
+          'User-Agent': 'gemini-phone-cli',
           'Accept': 'application/vnd.github.v3+json'
         }
       }
@@ -135,7 +135,7 @@ async function updateViaGit(projectRoot) {
     });
 
     console.log(chalk.green('\n✓ Update complete\n'));
-    console.log(chalk.gray('Run "claude-phone status" to verify services\n'));
+    console.log(chalk.gray('Run "gemini-phone status" to verify services\n'));
   } catch (error) {
     throw new Error(`Git update failed: ${error.message}`);
   }
@@ -154,26 +154,26 @@ function showManualInstructions(release) {
 
   console.log(chalk.bold('To update manually:\n'));
   console.log(chalk.gray('1. Stop all services:'));
-  console.log(chalk.bold('   claude-phone stop\n'));
+  console.log(chalk.bold('   gemini-phone stop\n'));
 
   console.log(chalk.gray('2. Backup your configuration:'));
-  console.log(chalk.bold('   cp ~/.claude-phone/config.json ~/config.json.backup\n'));
+  console.log(chalk.bold('   cp ~/.gemini-phone/config.json ~/config.json.backup\n'));
 
   console.log(chalk.gray('3. Run the installer:'));
-  console.log(chalk.bold('   curl -sSL https://raw.githubusercontent.com/theNetworkChuck/claude-phone/main/install.sh | bash\n'));
+  console.log(chalk.bold('   curl -sSL https://raw.githubusercontent.com/theNetworkChuck/gemini-phone/main/install.sh | bash\n'));
 
   console.log(chalk.gray('4. Start services:'));
-  console.log(chalk.bold('   claude-phone start\n'));
+  console.log(chalk.bold('   gemini-phone start\n'));
 
   console.log(chalk.yellow('⚠️  Your configuration will be preserved automatically\n'));
 }
 
 /**
- * Update command - Update Claude Phone to latest version
+ * Update command - Update Gemini Phone to latest version
  * @returns {Promise<void>}
  */
 export async function updateCommand() {
-  console.log(chalk.bold.cyan('\n🔄 Update Claude Phone\n'));
+  console.log(chalk.bold.cyan('\n🔄 Update Gemini Phone\n'));
 
   const projectRoot = getProjectRoot();
 
@@ -181,7 +181,7 @@ export async function updateCommand() {
   if (configExists()) {
     console.log(chalk.gray('Backing up configuration...'));
     const config = await loadConfig();
-    const backupPath = `${process.env.HOME}/.claude-phone/config.json.pre-update`;
+    const backupPath = `${process.env.HOME}/.gemini-phone/config.json.pre-update`;
     await saveConfig(config); // This creates a backup automatically
     console.log(chalk.green(`✓ Config backed up to: ${backupPath}`));
   }
@@ -199,7 +199,7 @@ export async function updateCommand() {
       showManualInstructions(release);
     } catch (error) {
       console.log(chalk.red(`\n✗ ${error.message}\n`));
-      console.log(chalk.gray('Visit https://github.com/networkchuck/claude-phone for manual update\n'));
+      console.log(chalk.gray('Visit https://github.com/networkchuck/gemini-phone for manual update\n'));
     }
   }
 }

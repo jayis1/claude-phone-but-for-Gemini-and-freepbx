@@ -6,16 +6,16 @@ import { loadConfig, configExists, getInstallationType } from '../config.js';
 import { checkDocker, getContainerStatus } from '../docker.js';
 import { isServerRunning, getServerPid } from '../process-manager.js';
 import { validateElevenLabsKey, validateOpenAIKey } from '../validators.js';
-import { isReachable, checkClaudeApiServer as checkClaudeApiHealth } from '../network.js';
+import { isReachable, checkGeminiApiServer as checkGeminiApiHealth } from '../network.js';
 import { checkPort } from '../port-check.js';
 
 /**
- * Check if Claude CLI is installed
+ * Check if Gemini CLI is installed
  * @returns {Promise<{installed: boolean, version?: string, error?: string}>}
  */
-async function checkClaudeCLI() {
+async function checkGeminiCLI() {
   return new Promise((resolve) => {
-    const child = spawn('claude', ['--version'], {
+    const child = spawn('gemini', ['--version'], {
       stdio: 'pipe'
     });
 
@@ -39,7 +39,7 @@ async function checkClaudeCLI() {
       } else {
         resolve({
           installed: false,
-          error: 'Claude CLI not found in PATH'
+          error: 'Gemini CLI not found in PATH'
         });
       }
     });
@@ -47,7 +47,7 @@ async function checkClaudeCLI() {
     child.on('error', () => {
       resolve({
         installed: false,
-        error: 'Claude CLI not found'
+        error: 'Gemini CLI not found'
       });
     });
   });
@@ -105,7 +105,7 @@ async function checkVoiceApp() {
   }
 
   const isRunning = voiceApp.status.toLowerCase().includes('up') ||
-                    voiceApp.status.toLowerCase().includes('running');
+    voiceApp.status.toLowerCase().includes('running');
 
   if (!isRunning) {
     return {
@@ -118,11 +118,11 @@ async function checkVoiceApp() {
 }
 
 /**
- * Check if claude-api-server is running
+ * Check if gemini-api-server is running
  * @param {number} port - Port to check
  * @returns {Promise<{running: boolean, pid?: number, healthy?: boolean, error?: string}>}
  */
-async function checkClaudeAPIServer(port) {
+async function checkGeminiAPIServer(port) {
   const running = await isServerRunning();
 
   if (!running) {
@@ -169,11 +169,11 @@ async function checkClaudeAPIServer(port) {
  * @returns {Promise<void>}
  */
 export async function doctorCommand() {
-  console.log(chalk.bold.cyan('\n🔍 Claude Phone Health Check\n'));
+  console.log(chalk.bold.cyan('\n🔍 Gemini Phone Health Check\n'));
 
   if (!configExists()) {
     console.log(chalk.red('✗ Not configured'));
-    console.log(chalk.gray('  → Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  → Run "gemini-phone setup" first\n'));
     process.exit(1);
   }
 
@@ -216,7 +216,7 @@ export async function doctorCommand() {
     console.log(chalk.yellow('⚠ Some issues detected. Review the failures above.\n'));
     process.exit(1);
   } else {
-    console.log(chalk.red('✗ Multiple failures detected. Fix the issues above before using Claude Phone.\n'));
+    console.log(chalk.red('✗ Multiple failures detected. Fix the issues above before using Gemini Phone.\n'));
     process.exit(1);
   }
 }
@@ -230,33 +230,33 @@ async function runApiServerChecks(config) {
   const checks = [];
   let passedCount = 0;
 
-  // Check Claude CLI
-  const claudeSpinner = ora('Checking Claude CLI...').start();
-  const claudeResult = await checkClaudeCLI();
-  if (claudeResult.installed) {
-    claudeSpinner.succeed(chalk.green(`Claude CLI installed (v${claudeResult.version})`));
+  // Check Gemini CLI
+  const geminiSpinner = ora('Checking Gemini CLI...').start();
+  const geminiResult = await checkGeminiCLI();
+  if (geminiResult.installed) {
+    geminiSpinner.succeed(chalk.green(`Gemini CLI installed (v${geminiResult.version})`));
     passedCount++;
   } else {
-    claudeSpinner.fail(chalk.red(`Claude CLI not found: ${claudeResult.error}`));
-    console.log(chalk.gray('  → Install Claude CLI: npm install -g @anthropic-ai/claude\n'));
+    geminiSpinner.fail(chalk.red(`Gemini CLI not found: ${geminiResult.error}`));
+    console.log(chalk.gray('  → Install Gemini CLI: npm install -g @anthropic-ai/gemini\n'));
   }
-  checks.push({ name: 'Claude CLI', passed: claudeResult.installed });
+  checks.push({ name: 'Gemini CLI', passed: geminiResult.installed });
 
-  // Check local Claude API server
-  const apiServerSpinner = ora('Checking Claude API server...').start();
-  const apiServerResult = await checkClaudeAPIServer(config.server.claudeApiPort);
+  // Check local Gemini API server
+  const apiServerSpinner = ora('Checking Gemini API server...').start();
+  const apiServerResult = await checkGeminiAPIServer(config.server.geminiApiPort);
   if (apiServerResult.running && apiServerResult.healthy) {
-    apiServerSpinner.succeed(chalk.green(`Claude API server running (PID: ${apiServerResult.pid})`));
+    apiServerSpinner.succeed(chalk.green(`Gemini API server running (PID: ${apiServerResult.pid})`));
     passedCount++;
   } else if (apiServerResult.running && !apiServerResult.healthy) {
-    apiServerSpinner.warn(chalk.yellow(`Claude API server running but unhealthy (PID: ${apiServerResult.pid})`));
+    apiServerSpinner.warn(chalk.yellow(`Gemini API server running but unhealthy (PID: ${apiServerResult.pid})`));
     console.log(chalk.gray(`  → ${apiServerResult.error}\n`));
     passedCount++; // Count as partial pass
   } else {
-    apiServerSpinner.fail(chalk.red(`Claude API server not running: ${apiServerResult.error}`));
-    console.log(chalk.gray('  → Run "claude-phone start" to launch services\n'));
+    apiServerSpinner.fail(chalk.red(`Gemini API server not running: ${apiServerResult.error}`));
+    console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
   }
-  checks.push({ name: 'Claude API server', passed: apiServerResult.running });
+  checks.push({ name: 'Gemini API server', passed: apiServerResult.running });
 
   return { checks, passedCount };
 }
@@ -292,7 +292,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
       passedCount++;
     } else {
       elevenLabsSpinner.fail(chalk.red(`ElevenLabs API failed: ${elevenLabsResult.error}`));
-      console.log(chalk.gray('  → Check your API key in ~/.claude-phone/config.json\n'));
+      console.log(chalk.gray('  → Check your API key in ~/.gemini-phone/config.json\n'));
     }
     checks.push({ name: 'ElevenLabs API', passed: elevenLabsResult.connected });
   }
@@ -306,7 +306,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
       passedCount++;
     } else {
       openAISpinner.fail(chalk.red(`OpenAI API failed: ${openAIResult.error}`));
-      console.log(chalk.gray('  → Check your API key in ~/.claude-phone/config.json\n'));
+      console.log(chalk.gray('  → Check your API key in ~/.gemini-phone/config.json\n'));
     }
     checks.push({ name: 'OpenAI API', passed: openAIResult.connected });
   }
@@ -319,7 +319,7 @@ async function runVoiceServerChecks(config, isPiSplit) {
     passedCount++;
   } else {
     voiceAppSpinner.fail(chalk.red(`Voice-app container not running: ${voiceAppResult.error}`));
-    console.log(chalk.gray('  → Run "claude-phone start" to launch services\n'));
+    console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
   }
   checks.push({ name: 'Voice-app container', passed: voiceAppResult.running });
 
@@ -339,19 +339,19 @@ async function runVoiceServerChecks(config, isPiSplit) {
     }
     checks.push({ name: 'API server IP reachability', passed: apiServerReachable });
 
-    // Check Claude API server on remote server
-    const apiServerSpinner = ora('Checking Claude API server...').start();
-    const apiUrl = `http://${apiServerIp}:${config.server.claudeApiPort}`;
-    const apiHealth = await checkClaudeApiHealth(apiUrl);
+    // Check Gemini API server on remote server
+    const apiServerSpinner = ora('Checking Gemini API server...').start();
+    const apiUrl = `http://${apiServerIp}:${config.server.geminiApiPort}`;
+    const apiHealth = await checkGeminiApiHealth(apiUrl);
 
     if (apiHealth.healthy) {
-      apiServerSpinner.succeed(chalk.green(`Claude API server healthy at ${apiUrl}`));
+      apiServerSpinner.succeed(chalk.green(`Gemini API server healthy at ${apiUrl}`));
       passedCount++;
     } else {
-      apiServerSpinner.fail(chalk.red(`Claude API server not responding`));
-      console.log(chalk.gray(`  → Run "claude-phone api-server" on your API server\n`));
+      apiServerSpinner.fail(chalk.red(`Gemini API server not responding`));
+      console.log(chalk.gray(`  → Run "gemini-phone api-server" on your API server\n`));
     }
-    checks.push({ name: 'Claude API server (remote)', passed: apiHealth.healthy });
+    checks.push({ name: 'Gemini API server (remote)', passed: apiHealth.healthy });
 
     // Check drachtio port availability
     const drachtioPort = config.deployment.pi.drachtioPort || 5060;
@@ -375,15 +375,15 @@ async function runVoiceServerChecks(config, isPiSplit) {
     // Voice server mode (non-Pi): Check remote API server
     const apiServerIp = config.deployment.apiServerIp;
     const apiServerSpinner = ora('Checking remote API server...').start();
-    const apiUrl = `http://${apiServerIp}:${config.server.claudeApiPort}`;
-    const apiHealth = await checkClaudeApiHealth(apiUrl);
+    const apiUrl = `http://${apiServerIp}:${config.server.geminiApiPort}`;
+    const apiHealth = await checkGeminiApiHealth(apiUrl);
 
     if (apiHealth.healthy) {
       apiServerSpinner.succeed(chalk.green(`API server healthy at ${apiUrl}`));
       passedCount++;
     } else {
       apiServerSpinner.fail(chalk.red(`API server not responding`));
-      console.log(chalk.gray(`  → Run "claude-phone api-server" on your API server\n`));
+      console.log(chalk.gray(`  → Run "gemini-phone api-server" on your API server\n`));
     }
     checks.push({ name: 'API server (remote)', passed: apiHealth.healthy });
   }

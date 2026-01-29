@@ -27,12 +27,12 @@ function redactValue(value) {
  * @returns {Promise<void>}
  */
 export async function configShowCommand() {
-  console.log(chalk.bold.cyan('\n⚙️  Claude Phone Configuration\n'));
+  console.log(chalk.bold.cyan('\n⚙️  Gemini Phone Configuration\n'));
 
   // Check if configured
   if (!configExists()) {
     console.log(chalk.red('✗ Configuration not found'));
-    console.log(chalk.gray('  Run "claude-phone setup" first\n'));
+    console.log(chalk.gray('  Run "gemini-phone setup" first\n'));
     return;
   }
 
@@ -52,8 +52,8 @@ export async function configShowCommand() {
   console.log(chalk.bold('\nServer:'));
   console.log(chalk.gray(`  External IP: ${config.server.externalIp}`));
   console.log(chalk.gray(`  Voice App Port: ${config.server.voiceAppPort}`));
-  console.log(chalk.gray(`  Claude API Port: ${config.server.claudeApiPort}`));
-  console.log(chalk.gray(`  Claude API URL: ${config.server.claudeApiUrl}`));
+  console.log(chalk.gray(`  Gemini API Port: ${config.server.geminiApiPort}`));
+  console.log(chalk.gray(`  Gemini API URL: ${config.server.geminiApiUrl}`));
 
   // Devices
   console.log(chalk.bold('\nDevices:'));
@@ -74,5 +74,5 @@ export async function configShowCommand() {
     }
   }
 
-  console.log(chalk.gray(`\n💡 To view the raw config file, run: claude-phone config path\n`));
+  console.log(chalk.gray(`\n💡 To view the raw config file, run: gemini-phone config path\n`));
 }

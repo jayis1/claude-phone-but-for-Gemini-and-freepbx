@@ -45,7 +45,7 @@ Modify the existing setup.js to consolidate the SIP configuration step. Instead 
 ### Config Schema Changes
 
 ```javascript
-// ~/.claude-phone/config.json
+// ~/.gemini-phone/config.json
 {
   "sip": {
     "domain": "mycompany.3cx.us",      // 3CX FQDN (existing)
@@ -96,14 +96,14 @@ function validateSbcAuthKey(key) {
 
 This is a CLI tool without a formal test suite. Verification is manual:
 
-- [ ] Run `claude-phone setup` on Pi - verify new flow
-- [ ] Run `claude-phone setup` on Mac - verify unchanged flow (standard mode)
+- [ ] Run `gemini-phone setup` on Pi - verify new flow
+- [ ] Run `gemini-phone setup` on Mac - verify unchanged flow (standard mode)
 - [ ] Check generated .env has correct SIP_DOMAIN and SIP_REGISTRAR
 - [ ] Check config.json has sbcAuthKey field
 
 ### Integration Tests
 
-- [ ] Full Pi setup → `claude-phone start` → make test call
+- [ ] Full Pi setup → `gemini-phone start` → make test call
 - [ ] Verify SBC registration works with simplified config
 
 ### What NOT to Test
@@ -148,7 +148,7 @@ This is a CLI tool without a formal test suite. Verification is manual:
 ### Security Considerations
 
 - SBC Auth Key stored with other secrets (chmod 600)
-- Displayed masked in `claude-phone config show`
+- Displayed masked in `gemini-phone config show`
 
 ---
 

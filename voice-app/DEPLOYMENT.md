@@ -1,10 +1,10 @@
 # Production Deployment Guide
 
-Guide for deploying Claude Phone in production environments.
+Guide for deploying Gemini Phone in production environments.
 
 ## Architecture Overview
 
-Claude Phone consists of three Docker containers and an optional API server:
+Gemini Phone consists of three Docker containers and an optional API server:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -18,8 +18,8 @@ Claude Phone consists of three Docker containers and an optional API server:
                               │
                               ▼
               ┌───────────────────────────────┐
-              │     claude-api-server         │
-              │     (Claude Code wrapper)     │
+              │     gemini-api-server         │
+              │     (Gemini Code wrapper)     │
               │     Port 3333                 │
               └───────────────────────────────┘
 ```
@@ -33,7 +33,7 @@ Claude Phone consists of three Docker containers and an optional API server:
 | 5060 | UDP/TCP | SIP signaling (drachtio) | Inbound |
 | 5070 | UDP/TCP | SIP signaling (if 3CX SBC present) | Inbound |
 | 3000 | TCP | Voice app HTTP API | Inbound (optional) |
-| 3333 | TCP | Claude API server | Internal |
+| 3333 | TCP | Gemini API server | Internal |
 | 30000-30100 | UDP | RTP audio (FreeSWITCH) | Bidirectional |
 
 ### Firewall Rules
@@ -62,7 +62,7 @@ The `EXTERNAL_IP` setting must be your server's LAN IP that can receive RTP pack
 
 ## Docker Configuration
 
-The CLI generates `~/.claude-phone/docker-compose.yml` automatically. Key settings:
+The CLI generates `~/.gemini-phone/docker-compose.yml` automatically. Key settings:
 
 ### Network Mode
 
@@ -93,7 +93,7 @@ Key environment variables in the generated `.env`:
 | Variable | Purpose |
 |----------|---------|
 | `EXTERNAL_IP` | Server LAN IP for RTP routing |
-| `CLAUDE_API_URL` | URL to claude-api-server |
+| `GEMINI_API_URL` | URL to gemini-api-server |
 | `ELEVENLABS_API_KEY` | TTS API key |
 | `OPENAI_API_KEY` | Whisper STT API key |
 | `SIP_DOMAIN` | 3CX server FQDN |
@@ -104,6 +104,7 @@ Key environment variables in the generated `.env`:
 ### Voice Server (Pi/Linux)
 
 Requirements:
+
 - Docker and Docker Compose
 - Network access to 3CX and API server
 - Static IP recommended
@@ -111,19 +112,20 @@ Requirements:
 The voice server runs Docker containers and connects to a remote API server:
 
 ```bash
-claude-phone setup    # Select "Voice Server"
-claude-phone start
+gemini-phone setup    # Select "Voice Server"
+gemini-phone start
 ```
 
-### API Server (Mac/Linux with Claude Code)
+### API Server (Mac/Linux with Gemini Code)
 
 Requirements:
+
 - Node.js 18+
-- Claude Code CLI installed and authenticated
+- Gemini Code CLI installed and authenticated
 - Network accessible from voice server
 
 ```bash
-claude-phone api-server --port 3333
+gemini-phone api-server --port 3333
 ```
 
 For persistent operation, use a process manager:
@@ -131,10 +133,10 @@ For persistent operation, use a process manager:
 ```bash
 # Using pm2
 npm install -g pm2
-pm2 start "claude-phone api-server" --name claude-api
+pm2 start "gemini-phone api-server" --name gemini-api
 
 # Using systemd (Linux)
-# Create /etc/systemd/system/claude-api.service
+# Create /etc/systemd/system/gemini-api.service
 ```
 
 ## Monitoring
@@ -143,10 +145,10 @@ pm2 start "claude-phone api-server" --name claude-api
 
 ```bash
 # Overall status
-claude-phone status
+gemini-phone status
 
 # Comprehensive diagnostics
-claude-phone doctor
+gemini-phone doctor
 
 # Container health
 docker ps
@@ -157,17 +159,18 @@ docker compose logs -f
 
 ```bash
 # All logs
-claude-phone logs
+gemini-phone logs
 
 # Specific service
-claude-phone logs voice-app
-claude-phone logs drachtio
-claude-phone logs freeswitch
+gemini-phone logs voice-app
+gemini-phone logs drachtio
+gemini-phone logs freeswitch
 ```
 
 ### Key Log Messages
 
 **Healthy startup:**
+
 ```
 [SIP] Connected to drachtio
 [SIP] Registered extension 9000 with 3CX
@@ -175,6 +178,7 @@ claude-phone logs freeswitch
 ```
 
 **Common errors:**
+
 ```
 # Wrong external IP
 AUDIO RTP REPORTS ERROR: [Bind Error]
@@ -183,7 +187,7 @@ AUDIO RTP REPORTS ERROR: [Bind Error]
 Registration failed: 401 Unauthorized
 
 # API server unreachable
-Error connecting to Claude API
+Error connecting to Gemini API
 ```
 
 ## Security Considerations
@@ -191,13 +195,13 @@ Error connecting to Claude API
 ### API Keys
 
 - Config file has restricted permissions (chmod 600)
-- Never commit `~/.claude-phone/config.json` to version control
+- Never commit `~/.gemini-phone/config.json` to version control
 - Use environment variables in CI/CD pipelines
 
 ### Network Security
 
 - Voice app API (port 3000) should not be publicly exposed without authentication
-- Claude API server (port 3333) should only be accessible from voice server
+- Gemini API server (port 3333) should only be accessible from voice server
 - Consider VPN for split deployments across networks
 
 ### SIP Security
@@ -233,15 +237,15 @@ Error connecting to Claude API
 ### Configuration Backup
 
 ```bash
-claude-phone backup
+gemini-phone backup
 ```
 
-Backups are stored in `~/.claude-phone/backups/` with timestamps.
+Backups are stored in `~/.gemini-phone/backups/` with timestamps.
 
 ### Recovery
 
 ```bash
-claude-phone restore
+gemini-phone restore
 ```
 
 Interactive selection of available backups.
@@ -249,13 +253,13 @@ Interactive selection of available backups.
 ### Manual Backup
 
 ```bash
-cp -r ~/.claude-phone ~/.claude-phone.backup
+cp -r ~/.gemini-phone ~/.gemini-phone.backup
 ```
 
 ## Updating
 
 ```bash
-claude-phone update
+gemini-phone update
 ```
 
 This pulls the latest code and restarts services. Configuration is preserved.
@@ -263,10 +267,11 @@ This pulls the latest code and restarts services. Configuration is preserved.
 ## Uninstalling
 
 ```bash
-claude-phone uninstall
+gemini-phone uninstall
 ```
 
 This removes:
+
 - Docker containers and images
 - CLI installation
 - Optionally: configuration files

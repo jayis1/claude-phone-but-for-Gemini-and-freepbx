@@ -10,10 +10,10 @@ import { stopServer, isServerRunning } from '../process-manager.js';
 
 /**
  * Get the CLI install directory path
- * @returns {string} Path to ~/.claude-phone-cli
+ * @returns {string} Path to ~/.gemini-phone-cli
  */
 function getCliInstallDir() {
-  return path.join(os.homedir(), '.claude-phone-cli');
+  return path.join(os.homedir(), '.gemini-phone-cli');
 }
 
 /**
@@ -22,8 +22,8 @@ function getCliInstallDir() {
  */
 async function findSymlink() {
   const possiblePaths = [
-    '/usr/local/bin/claude-phone',
-    path.join(os.homedir(), '.local/bin/claude-phone')
+    '/usr/local/bin/gemini-phone',
+    path.join(os.homedir(), '.local/bin/gemini-phone')
   ];
 
   for (const symlinkPath of possiblePaths) {
@@ -52,11 +52,11 @@ async function removeDirectory(dirPath) {
 }
 
 /**
- * Uninstall command - Complete removal of Claude Phone
+ * Uninstall command - Complete removal of Gemini Phone
  * @returns {Promise<void>}
  */
 export async function uninstallCommand() {
-  console.log(chalk.bold.red('\n🗑️  Uninstall Claude Phone\n'));
+  console.log(chalk.bold.red('\n🗑️  Uninstall Gemini Phone\n'));
 
   const configDir = getConfigDir();
   const cliDir = getCliInstallDir();
@@ -85,14 +85,14 @@ export async function uninstallCommand() {
   console.log(chalk.yellow('\n  • Docker containers:'));
   console.log(chalk.gray('    voice-app, drachtio, freeswitch'));
 
-  // First confirmation: Remove Claude Phone?
+  // First confirmation: Remove Gemini Phone?
   console.log(chalk.bold.red('\n⚠️  WARNING: This action cannot be undone!\n'));
 
   const { confirmUninstall } = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'confirmUninstall',
-      message: 'Remove Claude Phone?',
+      message: 'Remove Gemini Phone?',
       default: false
     }
   ]);
@@ -119,16 +119,16 @@ export async function uninstallCommand() {
     }
   }
 
-  console.log(chalk.bold.cyan('\n🧹 Removing Claude Phone...\n'));
+  console.log(chalk.bold.cyan('\n🧹 Removing Gemini Phone...\n'));
 
   // Step 1: Stop services
-  let spinner = ora('Stopping Claude API server...').start();
+  let spinner = ora('Stopping Gemini API server...').start();
   try {
     if (await isServerRunning()) {
       await stopServer();
-      spinner.succeed('Claude API server stopped');
+      spinner.succeed('Gemini API server stopped');
     } else {
-      spinner.info('Claude API server not running');
+      spinner.info('Gemini API server not running');
     }
   } catch (error) {
     spinner.warn(`Could not stop server: ${error.message}`);
@@ -175,8 +175,8 @@ export async function uninstallCommand() {
     }
   }
 
-  console.log(chalk.bold.green('\n✓ Claude Phone uninstalled\n'));
-  console.log(chalk.gray('Thank you for using Claude Phone! 👋\n'));
+  console.log(chalk.bold.green('\n✓ Gemini Phone uninstalled\n'));
+  console.log(chalk.gray('Thank you for using Gemini Phone! 👋\n'));
   console.log(chalk.gray('Note: Docker images were not removed. To clean them up, run:'));
   console.log(chalk.gray('  docker image rm drachtio/drachtio-server:latest'));
   console.log(chalk.gray('  docker image rm drachtio/drachtio-freeswitch-mrf:latest\n'));

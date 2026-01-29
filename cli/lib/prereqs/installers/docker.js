@@ -225,5 +225,5 @@ function showDockerManualInstructions(platform) {
       console.log(chalk.gray('See: https://docs.docker.com/engine/install/\n'));
   }
 
-  console.log(chalk.gray('After installation, log out and back in, then run "claude-phone setup" again.\n'));
+  console.log(chalk.gray('After installation, log out and back in, then run "gemini-phone setup" again.\n'));
 }

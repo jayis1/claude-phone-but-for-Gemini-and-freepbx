@@ -27,13 +27,13 @@
 
 - [x] Create `cli/` directory structure per PLAN
 - [x] Initialize `cli/package.json` with dependencies
-- [x] Create `cli/bin/claude-phone.js` entry point with shebang
+- [x] Create `cli/bin/gemini-phone.js` entry point with shebang
 - [x] Set up Commander.js base with version command
-- [x] Verify `node cli/bin/claude-phone.js --version` works
+- [x] Verify `node cli/bin/gemini-phone.js --version` works
 
 ### 1.2 Config Module
 
-- [x] **Test**: config.js reads config from ~/.claude-phone/config.json
+- [x] **Test**: config.js reads config from ~/.gemini-phone/config.json
 - [x] **Implement**: `loadConfig()` function
 - [x] **Test**: config.js writes config with correct permissions (600)
 - [x] **Implement**: `saveConfig()` function
@@ -114,8 +114,8 @@
 - [x] Create `install.sh` for Mac (Darwin detection) [AC-2]
 - [x] **Test**: install.sh checks for Docker [AC-3]
 - [x] **Implement**: Docker prerequisite check with helpful error
-- [x] **Test**: install.sh checks for Claude CLI [AC-4]
-- [x] **Implement**: Claude CLI check with install instructions
+- [x] **Test**: install.sh checks for Gemini CLI [AC-4]
+- [x] **Implement**: Gemini CLI check with install instructions
 - [x] **Test**: install.sh downloads and extracts tarball
 - [x] **Implement**: GitHub release download logic [AC-1]
 - [x] **Test**: install.sh creates symlink in PATH [AC-5]
@@ -136,8 +136,8 @@
 - [x] **Implement**: ElevenLabs health check [AC-14]
 - [x] **Test**: OpenAI connectivity check
 - [x] **Implement**: OpenAI health check [AC-15]
-- [x] **Test**: Claude CLI accessibility check
-- [x] **Implement**: Claude CLI check (claude --version) [AC-16]
+- [x] **Test**: Gemini CLI accessibility check
+- [x] **Implement**: Gemini CLI check (gemini --version) [AC-16]
 - [x] **Test**: Docker running check
 - [x] **Implement**: Docker daemon check [AC-17]
 - [x] **Test**: Summary with actionable messages
@@ -324,7 +324,7 @@ claude-phone
 | AC-1 | curl install works | ✅ |
 | AC-2 | OS detection | ✅ |
 | AC-3 | Docker check | ✅ |
-| AC-4 | Claude CLI check | ✅ |
+| AC-4 | Gemini CLI check | ✅ |
 | AC-5 | PATH setup | ✅ |
 | AC-6 | Setup wizard launches | ✅ |
 | AC-7 | ElevenLabs validation | ✅ |
@@ -336,7 +336,7 @@ claude-phone
 | AC-13 | Doctor runs checks | ✅ |
 | AC-14 | ElevenLabs health | ✅ |
 | AC-15 | OpenAI health | ✅ |
-| AC-16 | Claude CLI health | ✅ |
+| AC-16 | Gemini CLI health | ✅ |
 | AC-17 | Docker health | ✅ |
 | AC-18 | Actionable errors | ✅ |
 | AC-19 | Start all services | ✅ |

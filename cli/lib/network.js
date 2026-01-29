@@ -51,14 +51,14 @@ export async function isReachable(ip, port = 3333, timeout = 3000) {
 }
 
 /**
- * Check if claude-api-server is responding at a given URL
- * @param {string} url - Full URL to claude-api-server (e.g., http://192.168.1.100:3333)
+ * Check if gemini-api-server is responding at a given URL
+ * @param {string} url - Full URL to gemini-api-server (e.g., http://192.168.1.100:3333)
  * @returns {Promise<object>} Check result
  * @property {boolean} reachable - True if server is reachable
  * @property {boolean} [healthy] - True if server responds with success (only if reachable)
  * @property {string} [error] - Error message if check failed
  */
-export async function checkClaudeApiServer(url) {
+export async function checkGeminiApiServer(url) {
   return new Promise((resolve) => {
     try {
       // Validate URL format

@@ -1,7 +1,7 @@
 /**
  * Outbound Call API Routes
  * Express routes for initiating and managing outbound calls
- * v3: Added context parameter for structured data to Claude
+ * v3: Added context parameter for structured data to Gemini
  * Supports both announce (one-way) and conversation (two-way) modes
  */
 
@@ -18,7 +18,7 @@ var mediaServer = null;
 var deviceRegistry = null;
 var audioForkServer = null;
 var whisperClient = null;
-var claudeBridge = null;
+var geminiBridge = null;
 var ttsService = null;
 var wsPort = 3001;
 
@@ -102,7 +102,7 @@ function validateRequest(body) {
  *   - callerId: Caller ID (optional)
  *   - timeoutSeconds: Ring timeout (optional, default: 30)
  */
-router.post('/outbound-call', async function(req, res) {
+router.post('/outbound-call', async function (req, res) {
   var startTime = Date.now();
 
   try {
@@ -124,7 +124,7 @@ router.post('/outbound-call', async function(req, res) {
     // Extract parameters
     var to = req.body.to;
     var message = req.body.message;
-    var context = req.body.context || null;  // NEW: structured context for Claude
+    var context = req.body.context || null;  // NEW: structured context for Gemini
     var mode = req.body.mode || 'announce';
     var deviceParam = req.body.device;
     var callerId = req.body.callerId;
@@ -168,7 +168,7 @@ router.post('/outbound-call', async function(req, res) {
         logger.error('Conversation mode dependencies not ready', {
           audioForkServer: !!audioForkServer,
           whisperClient: !!whisperClient,
-          claudeBridge: !!claudeBridge,
+          geminiBridge: !!geminiBridge,
           ttsService: !!ttsService
         });
 
@@ -211,7 +211,7 @@ router.post('/outbound-call', async function(req, res) {
     });
 
     // Continue asynchronously
-    (async function() {
+    (async function () {
       try {
         session.transition('DIALING');
 
@@ -250,7 +250,7 @@ router.post('/outbound-call', async function(req, res) {
             await runConversationLoop(endpoint, dialog, callId, {
               audioForkServer: audioForkServer,
               whisperClient: whisperClient,
-              claudeBridge: claudeBridge,
+              geminiBridge: geminiBridge,
               ttsService: ttsService,
               wsPort: wsPort,
               deviceConfig: deviceConfig,
@@ -307,7 +307,7 @@ router.post('/outbound-call', async function(req, res) {
 /**
  * GET /api/call/:callId
  */
-router.get('/call/:callId', function(req, res) {
+router.get('/call/:callId', function (req, res) {
   var callId = req.params.callId;
   var session = getSession(callId);
 
@@ -328,20 +328,20 @@ router.get('/call/:callId', function(req, res) {
 /**
  * GET /api/calls
  */
-router.get('/calls', function(req, res) {
+router.get('/calls', function (req, res) {
   var sessions = getAllSessions();
 
   res.json({
     success: true,
     count: sessions.length,
-    calls: sessions.map(function(s) { return s.getInfo(); })
+    calls: sessions.map(function (s) { return s.getInfo(); })
   });
 });
 
 /**
  * POST /api/call/:callId/hangup
  */
-router.post('/call/:callId/hangup', async function(req, res) {
+router.post('/call/:callId/hangup', async function (req, res) {
   var callId = req.params.callId;
   var session = getSession(callId);
 
@@ -392,11 +392,11 @@ function setupRoutes(deps) {
   deviceRegistry = deps.deviceRegistry || null;
   audioForkServer = deps.audioForkServer || null;
   whisperClient = deps.whisperClient || null;
-  claudeBridge = deps.claudeBridge || null;
+  geminiBridge = deps.geminiBridge || null;
   ttsService = deps.ttsService || null;
   wsPort = deps.wsPort || 3001;
 
-  var conversationReady = !!(audioForkServer && whisperClient && claudeBridge && ttsService);
+  var conversationReady = !!(audioForkServer && whisperClient && geminiBridge && ttsService);
 
   logger.info('Outbound routes initialized', {
     srf: !!srf,
