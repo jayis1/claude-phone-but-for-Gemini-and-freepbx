@@ -69,12 +69,19 @@ function renderStacks(stacks) {
         const synxBtn = stack.id > 1 ?
             `<button class="btn" style="background:#0f0; color:#000" onclick="provisionStack(${stack.id})">Synx PBX</button>` : '';
 
+        // Matrix Naming
+        const matrixNames = [
+            'Morpheus', 'Trinity', 'Neo', 'Tank', 'Dozer',
+            'Cypher', 'Switch', 'Apoc', 'Mouse', 'Oracle'
+        ];
+        const stackName = matrixNames[(stack.id - 1) % matrixNames.length] || `Agent ${stack.id}`;
+
         const html = `
        <div class="stack-card">
          <div class="stack-header">
            <div class="stack-title">
              <span class="status-dot ${dotClass}"></span>
-             Stack #${stack.id}
+             Stack #${stack.id}: ${stackName}
            </div>
            <div class="stack-badge">${statusText}</div>
          </div>
