@@ -116,7 +116,7 @@ export function generateDockerCompose(config, stackId = 1) {
   const containerSuffix = stackId === 4 ? 'the-one' : stackId;
 
   // Voice services (drachtio, freeswitch, voice-app)
-  if (installationType === 'voice-server' || installationType === 'both') {
+  if (installationType === 'voice-server' || installationType === 'both' || installationType === 'single') {
     services.push(`  drachtio:
     image: ${drachtioImage}${platformLine}
     container_name: drachtio-${containerSuffix}

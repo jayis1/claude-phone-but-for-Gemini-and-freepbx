@@ -3,9 +3,10 @@ set -e
 
 # Gemini Phone CLI Installer
 # Gemini Phone CLI Installer
+# Gemini Phone CLI Installer
 # Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/MIssionweedSNACKS/install.sh | bash
 
-INSTALL_VERSION="MissionWeedSnacksv421"
+INSTALL_VERSION="MissionWeedSnacksv422"
 
 
 

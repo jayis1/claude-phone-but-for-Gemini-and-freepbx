@@ -78,6 +78,9 @@ export async function startCommand() {
     case 'voice-server':
       await startVoiceServer(config, isPiMode);
       break;
+    case 'single':
+      await startBoth(config, isPiMode);
+      break;
     case 'both':
     default:
       await startBoth(config, isPiMode);

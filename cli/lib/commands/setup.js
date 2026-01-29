@@ -40,6 +40,10 @@ async function promptInstallationType(currentType = 'both') {
     default: currentType,
     choices: [
       {
+        name: 'Single Node (Morpheus only) - Classic, standalone AI',
+        value: 'single'
+      },
+      {
         name: 'Voice Server (Pi/Linux) - Handles calls, needs Docker',
         value: 'voice-server'
       },
@@ -190,6 +194,10 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
       } else {
         config = await setupVoiceServer(baseConfig);
       }
+      break;
+
+    case 'single':
+      config = await setupSingleNode(baseConfig);
       break;
 
     case 'both':
@@ -477,6 +485,73 @@ async function setupVoiceServer(config) {
   config.server.externalIp = serverAnswers.externalIp;
   config.server.httpPort = parseInt(serverAnswers.httpPort, 10);
   config.server.gpuVendor = serverAnswers.gpuVendor;
+
+  return config;
+}
+
+/**
+ * Single Node (Classic Mode) setup flow
+ * @param {object} config - Current config
+ * @returns {Promise<object>} Updated config
+ */
+async function setupSingleNode(config) {
+  // Ensure secrets exist
+  if (!config.secrets) {
+    config.secrets = {
+      drachtio: generateSecret(),
+      freeswitch: generateSecret()
+    };
+  }
+
+  // Ensure deployment mode exists
+  if (!config.deployment) {
+    config.deployment = { mode: 'single' };
+  } else {
+    config.deployment.mode = 'single';
+  }
+
+  // Step 1: API Keys
+  console.log(chalk.bold('\n📡 API Configuration'));
+  config = await setupAPIKeys(config);
+
+  // Step 1.2: PBX Infrastructure (Colocation)
+  console.log(chalk.bold('\n🏢 PBX Infrastructure'));
+  const infraAnswers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'isColocated',
+      message: 'Are you installing Gemini Phone on the same server/LXC as FreePBX?',
+      default: config.sip?.port === 5070
+    }
+  ]);
+
+  if (!config.sip) config.sip = {};
+  config.sip.port = infraAnswers.isColocated ? 5070 : 5060;
+
+  if (infraAnswers.isColocated) {
+    console.log(chalk.cyan('   → Gemini will use port 5070 to avoid conflicts with FreePBX on 5060.'));
+  } else {
+    console.log(chalk.cyan('   → Gemini will use the standard SIP port 5060.'));
+  }
+
+  // Step 2: SIP Configuration
+  config = await setupSIP(config);
+
+  // Step 3: Device Configuration
+  console.log(chalk.bold('\n🤖 Device Configuration'));
+  config = await setupDevice(config);
+
+  // Step 4: Outbound Configuration
+  console.log(chalk.bold('\n📞 Outbound Configuration'));
+  config = await setupOutbound(config);
+
+  // Step 4.5: PBX API (Optional)
+  console.log(chalk.bold('\n📡 FreePBX API (Optional Automation)'));
+  config = await setupPbxApi(config);
+
+  // Step 5: Server Configuration
+  console.log(chalk.bold('\n⚙️  Server Configuration'));
+  config = await setupServer(config);
 
   return config;
 }
