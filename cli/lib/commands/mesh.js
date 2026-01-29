@@ -1,7 +1,7 @@
 
 import chalk from 'chalk';
 import {
-    getConfig
+    loadConfig as getConfig
 } from '../config.js';
 import {
     writeDockerConfig,
