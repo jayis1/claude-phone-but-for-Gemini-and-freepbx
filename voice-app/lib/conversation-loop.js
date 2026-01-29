@@ -13,6 +13,7 @@
  */
 
 const logger = require('./logger');
+const axios = require('axios');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -324,6 +325,27 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
         const byeUrl = await ttsService.generateSpeech("Goodbye! Call again anytime.", voiceId);
         if (callActive) await endpoint.play(byeUrl);
         break;
+      }
+
+      // ============================================
+      // N8N WEBHOOK (Async Control)
+      // ============================================
+      const n8nUrl = process.env.N8N_WEBHOOK_URL;
+      if (n8nUrl) {
+        logger.info('Sending webhook to n8n', { callUuid, url: n8nUrl });
+        try {
+          // Fire-and-forget or wait?
+          // If N8N_MODE=async, we might wait. For now, let's just fire events.
+          // We assume "axios" is available (I will add it to imports next)
+          axios.post(n8nUrl, {
+            callId: callUuid,
+            transcript: transcript,
+            device: deviceConfig ? deviceConfig.name : 'Unknown',
+            status: 'speaking'
+          }).catch(err => logger.warn('n8n webhook failed', { error: err.message }));
+        } catch (e) {
+          logger.warn('Error initiating n8n webhook', { error: e.message });
+        }
       }
 
       // ============================================

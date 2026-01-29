@@ -4,6 +4,7 @@
  */
 
 const { setTimeout: _sleep } = require('node:timers/promises');
+const callManager = require('./call-manager');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -350,6 +351,36 @@ async function handleInvite(req, res, options) {
   let deviceConfig = null;
   if (deviceRegistry && dialedExt) {
     deviceConfig = deviceRegistry.get(dialedExt);
+  }
+
+  // MESH ROUTING LOGIC: Check if dialed extension is a known peer stack (e.g. "stack2", "trinity")
+  // Config injected via options.config.mesh_peers
+  const meshPeers = options.config.mesh_peers || {};
+  let targetPeer = null;
+
+  // Direct lookup (e.g. dialed "stack2")
+  if (meshPeers[dialedExt]) {
+    targetPeer = meshPeers[dialedExt];
+  }
+  // Name lookup (e.g. dialed "trinity")
+  else {
+    const peerKey = Object.keys(meshPeers).find(key =>
+      meshPeers[key].name && meshPeers[key].name.toLowerCase() === dialedExt.toLowerCase()
+    );
+    if (peerKey) targetPeer = meshPeers[peerKey];
+  }
+
+  if (targetPeer) {
+    console.log(`[` + new Date().toISOString() + `] MESH Routing call to ${targetPeer.name} (${targetPeer.sip})`);
+    try {
+      // Proxy to the peer's SIP address
+      return await srf.proxyRequest(req, targetPeer.sip, {
+        recordRoute: true,
+        followRedirects: true
+      });
+    } catch (err) {
+      console.error(`[` + new Date().toISOString() + `] MESH Error:`, err.message);
+    }
   }
 
   // CATCH-ALL PROXY LOGIC: If no device matched and it's not the default extension,

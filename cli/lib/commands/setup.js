@@ -990,10 +990,27 @@ async function setupAPIKeys(config) {
   }
 
   // -----------------------------------------------------------
-  // 6. n8n API Credentials (Optional - Management Path)
+  // 6. n8n API Credentials & Webhook
   // -----------------------------------------------------------
 
   const n8nApiAnswers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'webhookUrl',
+      message: 'n8n Webhook URL (triggers on voice events):',
+      default: (config.n8n && config.n8n.webhookUrl) || '',
+      validate: (input) => {
+        if (input && input.trim() !== '') {
+          try {
+            new URL(input);
+            return true;
+          } catch (e) {
+            return 'Please enter a valid URL';
+          }
+        }
+        return true;
+      }
+    },
     {
       type: 'password',
       name: 'apiKey',
@@ -1017,11 +1034,12 @@ async function setupAPIKeys(config) {
     }
   ]);
 
-  if (n8nApiAnswers.apiKey && n8nApiAnswers.apiKey.trim() !== '') {
+  if (n8nApiAnswers.webhookUrl || n8nApiAnswers.apiKey) {
     if (!config.n8n) config.n8n = {};
-    config.n8n.apiKey = n8nApiAnswers.apiKey.trim();
-    config.n8n.baseUrl = n8nApiAnswers.baseUrl ? n8nApiAnswers.baseUrl.trim() : '';
-    console.log(chalk.green('✓ n8n Management Path configured'));
+    if (n8nApiAnswers.webhookUrl) config.n8n.webhookUrl = n8nApiAnswers.webhookUrl.trim();
+    if (n8nApiAnswers.apiKey) config.n8n.apiKey = n8nApiAnswers.apiKey.trim();
+    if (n8nApiAnswers.baseUrl) config.n8n.baseUrl = n8nApiAnswers.baseUrl.trim();
+    console.log(chalk.green('✓ n8n Configuration saved'));
   }
 
   return config;

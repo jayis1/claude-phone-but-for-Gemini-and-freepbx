@@ -61,9 +61,9 @@ class MultiRegistrar {
       headers: {
         'From': '<sip:' + config.extension + '@' + config.domain + '>',
         'To': '<sip:' + config.extension + '@' + config.domain + '>',
-        'Contact': '<' + contact + '>;expires=' + config.expiry,
+        'Contact': '"' + device.name + '" <' + contact + '>;expires=' + config.expiry,
         'Expires': config.expiry,
-        'User-Agent': 'Gemini-Phone/1.0 (FPBX-Compatible)'
+        'User-Agent': 'Gemini-Phone/1.0 (' + device.name + ')'
       },
       auth: {
         username: config.auth_id,
