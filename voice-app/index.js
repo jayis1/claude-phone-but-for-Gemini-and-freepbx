@@ -368,7 +368,18 @@ srf.on("connect", function (err, hostport) {
       local_port: localPort
     });
     // registerAll takes the device configurations (ext, authId, password)
-    registrar.registerAll(deviceRegistry.getAll());
+    // Filter to register ONLY the extension assigned to this stack (env.SIP_EXTENSION)
+    const allDevices = deviceRegistry.getAll();
+    const myExtension = config.sip.extension;
+    const myDevice = allDevices[myExtension];
+
+    if (myDevice) {
+      console.log(`[STARTUP] Registering MAIN extension only: ${myExtension} (${myDevice.name})`);
+      registrar.registerAll({ [myExtension]: myDevice });
+    } else {
+      console.warn(`[STARTUP] configured extension ${myExtension} not found in devices.json. Registering ALL.`);
+      registrar.registerAll(allDevices);
+    }
   }
 
   checkReadyState();
