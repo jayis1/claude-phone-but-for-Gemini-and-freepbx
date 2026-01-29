@@ -11,7 +11,10 @@ const axios = require('axios');
 const crypto = require('crypto');
 const router = express.Router();
 const logger = require('./logger');
+const logger = require('./logger');
 const deviceRegistry = require('./device-registry');
+const callManager = require('./call-manager');
+const callManager = require('./call-manager');
 
 // Dependencies injected via setupRoutes()
 let geminiBridge = null;
@@ -461,6 +464,92 @@ router.get('/device/:identifier', (req, res) => {
       error: 'internal_error',
       message: 'Failed to retrieve device'
     });
+  }
+});
+
+/**
+ * GET /calls
+ * List active calls
+ */
+router.get('/calls', (req, res) => {
+  try {
+    const activeCalls = Array.from(callManager.calls.values()).map(c => ({
+      id: c.id,
+      startTime: c.startTime,
+      duration: Math.round((Date.now() - c.startTime) / 1000)
+    }));
+
+    res.json({
+      success: true,
+      count: activeCalls.length,
+      calls: activeCalls
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /calls/:id/command
+ * Inject command into active call (For n8n control)
+ */
+router.post('/calls/:id/command', (req, res) => {
+  const { id } = req.params;
+  const command = req.body; // { type: 'speak', text: '...', ... }
+
+  try {
+    if (!command || !command.type) {
+      return res.status(400).json({ success: false, error: 'Invalid command format' });
+    }
+
+    callManager.sendCommand(id, command);
+    res.json({ success: true, message: 'Command injected' });
+  } catch (error) {
+    logger.warn(`Failed to inject command for ${id}: ${error.message}`);
+    res.status(404).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /calls
+ * List active calls
+ */
+router.get('/calls', (req, res) => {
+  try {
+    const activeCalls = Array.from(callManager.calls.values()).map(c => ({
+      id: c.id,
+      startTime: c.startTime,
+      duration: Math.round((Date.now() - c.startTime) / 1000)
+    }));
+
+    res.json({
+      success: true,
+      count: activeCalls.length,
+      calls: activeCalls
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /calls/:id/command
+ * Inject command into active call (For n8n control)
+ */
+router.post('/calls/:id/command', (req, res) => {
+  const { id } = req.params;
+  const command = req.body; // { type: 'speak', text: '...', ... }
+
+  try {
+    if (!command || !command.type) {
+      return res.status(400).json({ success: false, error: 'Invalid command format' });
+    }
+
+    callManager.sendCommand(id, command);
+    res.json({ success: true, message: 'Command injected' });
+  } catch (error) {
+    logger.warn(`Failed to inject command for ${id}: ${error.message}`);
+    res.status(404).json({ success: false, error: error.message });
   }
 });
 

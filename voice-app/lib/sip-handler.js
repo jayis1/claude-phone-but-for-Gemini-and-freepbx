@@ -4,6 +4,8 @@
  */
 
 const { setTimeout: sleep } = require('node:timers/promises');
+const callManager = require('./call-manager');
+const callManager = require('./call-manager');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -129,6 +131,12 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
     const greetingUrl = await ttsService.generateSpeech(greeting, voiceId);
     await endpoint.play(greetingUrl);
 
+    // Register with CallManager for external control
+    callManager.register(callUuid, { device: deviceName });
+
+    // Register with CallManager for external control
+    callManager.register(callUuid, { device: deviceName });
+
     // Start Recording 🔴
     const recordingPath = `/app/recordings/call-${callUuid}.wav`;
     console.log(`[${new Date().toISOString()}] RECORDING Starting to ${recordingPath}`);
@@ -226,12 +234,30 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
       });
       musicPlaying = true;
 
-      // Query Gemini with device-specific prompt
+      // Query Gemini OR Wait for n8n Command
       console.log('[' + new Date().toISOString() + '] GEMINI Querying (device: ' + deviceName + ')...');
-      const geminiResponse = await geminiBridge.query(
-        transcript,
-        { callId: callUuid, devicePrompt: devicePrompt }
-      );
+
+      let geminiResponse = null;
+
+      // Check if we are in "Async Mode" (waiting for external command)
+      // For now, we default to Gemini, but we check CallManager for injected commands first
+      const injectedCmd = await callManager.waitForCommand(callUuid, 100); // Check briefly
+
+      if (injectedCmd) {
+        console.log('[' + new Date().toISOString() + '] EXTERNAL COMMAND: ' + injectedCmd.type);
+        if (injectedCmd.type === 'speak') {
+          geminiResponse = injectedCmd.text;
+        } else if (injectedCmd.type === 'hangup') {
+          break; // End call
+        }
+      }
+
+      if (!geminiResponse) {
+        geminiResponse = await geminiBridge.query(
+          transcript,
+          { callId: callUuid, devicePrompt: devicePrompt }
+        );
+      }
 
       // Stop hold music
       if (musicPlaying) {
@@ -269,6 +295,8 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
     try {
       await geminiBridge.endSession(callUuid);
+      callManager.unregister(callUuid);
+      callManager.unregister(callUuid);
     } catch (e) { }
 
     if (forkRunning) {

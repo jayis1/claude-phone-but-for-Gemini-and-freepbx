@@ -16,7 +16,7 @@ Gemini Phone allows you to deploy fully autonomous "AI Employees" (Stacks) that 
 Run this on any Linux machine (Ubuntu/Debian/Pi) on the same LAN as your FreePBX:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/weedsnacker19/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/MIssionweedSNACKS/install.sh | bash
 ```
 
 Run setup:
@@ -57,7 +57,7 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 - **Smart Routing**: AIs can use the PBX to transfer calls (`"Let me transfer you to billing..."` -> *Transfers to Ext 200*).
 - **"Synx PBX"**: One-click provisioning of Extensions, Trunks, and Inbound Routes on FreePBX.
 - **Mission Control**: Real-time dashboard to see who is talking, view logs, and manage stacks.
-- **Technical Architecture**: A clean, serious diagram showing the Mesh Network layout, including Discrete SIP Trunks, Inter-AI Links, and the n8n Data Loop.
+- **Technical Architecture**: A clean, serious diagram showing the *Elite Mesh Architecture*, including Active Call Stats, Async n8n Control Loop, and Inter-AI SIP Links.
 
 ### Technical Architecture Diagram
 

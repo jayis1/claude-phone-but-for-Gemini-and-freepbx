@@ -5,6 +5,10 @@ import path from 'path';
 import {
   getConfigDir
 } from './config.js';
+import {
+  stopContainer
+} from './process-manager.js';
+import { generateMeshConfig } from './mesh.js';
 
 /**
  * Detect which docker compose command to use
@@ -138,8 +142,9 @@ export function generateDockerCompose(config, stackId = 1) {
     volumes:
       - ${getConfigDir()}/recordings:/app/recordings
     environment:
-      - EXTERNAL_IP=\${EXTERNAL_IP:-127.0.0.1}
-
+      - EXTERNAL_IP=\${EXTERNAL_IP}
+      - MESH_PEERS='${generateMeshConfig(3, baseSipPort)}'
+      - HTTP_PORT=${voicePort}
   voice-app:
     build: ${config.paths.voiceApp}
     container_name: voice-app-${stackId}

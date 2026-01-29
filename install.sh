@@ -325,7 +325,7 @@ main() {
 
     cd "$INSTALL_DIR"
     git fetch --tags --force
-    git reset --hard weedsnacker19
+    git reset --hard MIssionweedSNACKS
     
     # Restore .env
     if [ "$HAS_BACKUP" = true ]; then

@@ -3,7 +3,7 @@
  * Allows deploying and managing multiple telephony stacks
  */
 function generateStacksPage() {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -184,6 +184,18 @@ function generateStacksPage() {
             z-index: 100;
         }
         #toast.show { transform: translateY(0); }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
       </style>
     </head>
     <body>
