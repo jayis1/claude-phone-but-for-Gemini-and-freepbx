@@ -2,7 +2,10 @@
 set -e
 
 # Gemini Phone CLI Installer
+# Gemini Phone CLI Installer
 # Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/MIssionweedSNACKS/install.sh | bash
+
+INSTALL_VERSION="MissionWeedSnacksv421"
 
 
 
@@ -325,7 +328,8 @@ main() {
 
     cd "$INSTALL_DIR"
     git fetch --tags --force
-    git reset --hard refs/tags/MIssionweedSNACKS
+    # Explicitly checkout the version linked to this installer
+    git checkout -f "$INSTALL_VERSION"
     
     # Restore .env
     if [ "$HAS_BACKUP" = true ]; then
@@ -336,6 +340,8 @@ main() {
     echo "Cloning Gemini Phone..."
     git clone "$REPO_URL" "$INSTALL_DIR"
     cd "$INSTALL_DIR"
+    # Explicitly checkout the version linked to this installer
+    git checkout "$INSTALL_VERSION"
   fi
 
   # Install CLI dependencies
