@@ -137,12 +137,13 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
  * @param {string[]} extensions - Array of extensions to ring (e.g. ['9000', '9001'])
  */
 async function provisionRingGroup(extensions = ['9000']) {
-  const groupNumber = '600';
+  const groupNumber = 600; // Int, not String
   console.log(`[PBX-BRIDGE] Provisioning Ring Group ${groupNumber} with members: ${extensions.join(', ')}...`);
 
   // DELETE FIRST
   try {
-    const delMutation = `mutation { deleteRingGroup(input: { groupNumber: "${groupNumber}" }) { status } }`;
+    // Note: groupNumber is integer
+    const delMutation = `mutation { deleteRingGroup(input: { groupNumber: ${groupNumber} }) { status } }`;
     await graphql(delMutation);
   } catch (e) { /* Ignore */ }
 
@@ -175,8 +176,8 @@ async function provisionInboundRoute(destination = "ext-group,600,1") {
 
   // DELETE FIRST (Generic Any/Any route)
   try {
-    // Delete generic route if exists (CID: '', DID: '')
-    const delMutation = `mutation { deleteInboundRoute(input: { extension: "", cidnum: "" }) { status } }`;
+    // Correct mutation name: removeInboundRoute
+    const delMutation = `mutation { removeInboundRoute(input: { extension: "", cidnum: "" }) { status } }`;
     await graphql(delMutation);
   } catch (e) { /* Ignore */ }
 
