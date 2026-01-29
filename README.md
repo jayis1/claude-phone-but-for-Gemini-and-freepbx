@@ -1,481 +1,123 @@
-# Gemini Phone (v4.2.4) 🧠🔗🛰️
+# 🤖 Gemini AI Call Center
 
-![Gemini Phone](assets/logo.png)
+### The "AI Employees" for your FreePBX System
 
-Voice interface for Gemini Code via FreePBX/SIP. Call your AI, and your AI can call you.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Gemini](https://img.shields.io/badge/AI-Gemini%201.5-blue)](https://deepmind.google/technologies/gemini/)
+[![FreePBX](https://img.shields.io/badge/PBX-FreePBX-green)](https://www.freepbx.org/)
 
-## What's New in v4.2.4
+**Turn your FreePBX system into an AI Call Center in minutes.**
+Gemini Phone allows you to deploy fully autonomous "AI Employees" (Stacks) that live on your phone network. They can answer calls, transfer customers, take messages, and even call each other to coordinate tasks.
 
-+ 🏗️ **Mission Control Stability** - Fixed connectivity issues in dual-stack (IPv4/IPv6) environments. The dashboard now properly connects to all local services regardless of network binding.
-+ 🛠️ **Smart Status** - `gemini-phone status` now correctly identifies services running in Docker vs. Host, eliminating false "Not running" alerts.
-+ 🏥 **Enhanced Doctor** - Health checks now verify the Gemini API Server (port 3333) and Mission Control reachability with higher precision.
-+ 🐛 **Bug Fixes** - Resolved critical proxy crashes (`VOICE_APP_URL`/`API_SERVER_URL` errors) to ensure the dashboard stays online 24/7.
-+ 🚀 **v4.2.1** - Because stability is the ultimate feature.
+---
 
-## What is this?
+## 🚀 Quick Start (One-Line Install)
 
-Gemini Phone gives your Gemini Code installation a phone number. It's a "Beautiful Stack" of 4 powerful components:
-
-1. **Mission Control** (The Dashboard) - Unified generic interface.
-2. **Voice App** (The Ears & Mouth) - SIP/RTP handling & TTS/STT.
-3. **n8n Skill Cluster** (The Mind) - Modular AI logic & skill automation.
-4. **Gemini API Server** (The Hands) - Tool execution & CLI access.
-
-## Architecture
-
-![Architecture Flow](assets/architecture_flow.png)
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Phone Call                                                  │
-│      │                                                       │
-│      ↓ Call extension 9000                                  │
-│  ┌─────────────┐                                            │
-│  │   FreePBX   │  ← PBX routes the call                    │
-│  └──────┬──────┘                                            │
-│         │ SIP                                               │
-│         ↓                                                    │
-│  ┌─────────────────────────────────────────────────┐       │
-│  │           voice-app (Docker)                     │       │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌─────────┐ │       │
-│  │  │   drachtio   │  │ FreeSWITCH   │  │ Node.js │ │       │
-│  │  │    (SIP)     │  │   (Media)    │  │ (Logic) │ │       │
-│  │  └──────┬───────┘  └──────┬───────┘  └────┬────┘ │       │
-│  └─────────┼─────────────────┼───────────────┼─────┘       │
-│            │                 │               │             │
-│            ↓                 ↓               ↓             │
-│  ┌──────────────────┐  ┌───────────┐  ┌────────────────┐   │
-│  │  n8n Skill Cluster│  │  Gemini  │  │ Mission Control │   │
-│  │  (8 Webhooks)    │←─┤   API     │  │   (Dashboard)  │   │
-│  └──────────────────┘  └───────────┘  └────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Prerequisites
-
-| Requirement | Where to Get It | Notes |
-| :--- | :--- | :--- |
-| **SIP PBX Account** | FreePBX / Asterisk | Any SIP-compliant server |
-| **ElevenLabs API Key** | [elevenlabs.io](https://elevenlabs.io/) | For text-to-speech |
-| **OpenAI API Key** | [platform.openai.com](https://platform.openai.com/) | For Whisper STT |
-| **Gemini Code CLI** | [geminicli.com](https://geminicli.com/) | Requires Gemini subscription |
-
-## Platform Support
-
-| Platform | Status |
-| :--- | :--- |
-| **macOS** | Fully supported |
-| **Linux** | Fully supported (including Raspberry Pi) |
-| **Windows** | Not supported (may work with WSL) |
-
-## Quick Start
-
-### 1. Install
+Run this on any Linux machine (Ubuntu/Debian/Pi) on the same LAN as your FreePBX:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/v4.2.8/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/weedsnacker4/install.sh | bash
 ```
 
-The installer performs the following steps:
-
-```text
-🔍 Checking prerequisites...
-
-Platform: linux (x86_64)
-
-  ✓ Node.js v20.20.0 (requires >=18.0.0)
-  ✓ Docker v29.2.0
-  ✓ Docker Compose v5.0.2 (plugin)
-  ✓ Disk space 34.8GB free (requires >=2GB)
-  ✓ Network: ✓ npm ✓ docker ✓ nodesource
-```
-
-### 2. Setup
+Run setup:
 
 ```bash
 gemini-phone setup
-```
-
-The interactive setup wizard helps you:
-
-1. **Choose Mode**: Voice Server, API Server, or Both (All-in-One).
-2. **Configure PBX**: Connect to your **FreePBX** or SIP server.
-3. **API Keys**: Enter your ElevenLabs and OpenAI keys.
-
-### 3. Start
-
-```bash
 gemini-phone start
 ```
 
-### 4. Update (When new versions are released)
+---
 
-```bash
-gemini-phone update
-```
+## 🏢 What is an "AI Call Center"?
 
-This single command will:
+Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 
-1. Check for the latest version.
-2. Pull new Docker images.
-3. Update the CLI tools.
-4. Restart services automatically.
+### The Architecture
 
-## Previous Updates (v2.1.x) 🚀
+- **Mission Control**: A dashboard to manage your AI workforce.
+- **Stacks (AI Employees)**: Each "Stack" is a dedicated independent AI agent with its own:
+  - **Phone Extension** (e.g., 9000, 9010, 9020)
+  - **Voice** (ElevenLabs / Google)
+  - **Personality** (System Prompt)
+  - **Memory** (Context)
+- **Synx PBX**: Auto-magically configures your FreePBX. No manual trunk/route setup needed.
 
-+ **Multi-Provider Switching**:
-  + Hot-swap between **FreePBX** and **Asterisk** directly from Mission Control.
-  + **Smart Profiles**: The system remembers your credentials for each provider, so switching is just one click.
-  + **Standalone Restart**: Automatically restarts the Voice App service (no Docker requirement) to apply changes immediately.
+### Example Team
 
-+ **Mission Control UI 2.0**:
-  + **Custom Modals**: Replaced ugly browser alerts with sleek, dark-mode confirmation dialogs.
-  + **Smart Update Button**: Always visible with intelligent behavior:
-    + ✅ **Up-to-Date?**: Click to force a re-install (useful for debugging).
-    + 🚀 **Update Available?**: Click to one-tap update your entire stack.
+1. **Morpheus (Ext 9000)**: Level 1 Support. Answers all incoming calls. Filters spam.
+2. **Trinity (Ext 9010)**: Specialist. Morpheus transfers technical questions to her.
+3. **Neo (Ext 9020)**: Outbound Sales. Calls leads from a list.
 
-+ **Infrastructure**:
-  + **Red Dot Fix**: Solved port conflicts to ensure Mission Control always sees the Voice App.
+---
 
-## Deployment Modes
+## 🧠 Features
 
-### All-in-One (Single Machine)
+- **Multi-Modal AI**: Powered by Gemini 1.5 Pro/Flash.
+- **Natural Voice**: Ultra-low latency TTS via ElevenLabs.
+- **Smart Routing**: AIs can use the PBX to transfer calls (`"Let me transfer you to billing..."` -> *Transfers to Ext 200*).
+- **"Synx PBX"**: One-click provisioning of Extensions, Trunks, and Inbound Routes on FreePBX.
+- **Mission Control**: Real-time dashboard to see who is talking, view logs, and manage stacks.
 
-Best for: Mac or Linux server that's always on and has Gemini Code installed.
+---
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Your Phone                                                  │
-│      │                                                       │
-│      ↓ Call extension 9000                                  │
-│  ┌───────────────────────┐                                  │
-│  │   FreePBX / Asterisk  │  ← Cloud/Local PBX               │
-│  └──────┬────────────────┘                                  │
-│         │                                                    │
-│         │ SIP                                                │
-│         ↓                                                    │
-│  ┌───────────────────────┐                                  │
-│  │   Gemini Phone        │  ← Running "Both" mode           │
-│  │  (Voice + API Server) │                                  │
-│  └───────────────────────┘                                  │
-└─────────────────────────────────────────────────────────────┘
-```
+## 🛠️ Usage
 
-**Setup:**
+### CLI Commands
 
-```bash
-gemini-phone setup    # Select "Both"
-gemini-phone start    # Launches Docker + API server
-```
-
-### Split Mode (Pi + API Server)
-
-Best for: Dedicated Pi for voice services, Gemini running on your main machine.
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Your Phone                                                  │
-│      │                                                       │
-│      ↓ Call extension 9000                                  │
-│  ┌───────────────────────┐                                  │
-│  │   FreePBX / Asterisk  │  ← Cloud/Local PBX               │
-│  └──────┬────────────────┘                                  │
-│         │                                                    │
-│         ↓                                                    │
-
-│  ┌─────────────┐         ┌─────────────────────┐           │
-│  │ Raspberry Pi │   ←→   │ Mac/Linux with      │           │
-│  │ (voice-app)  │  HTTP  │ Gemini Code CLI     │           │
-│  └─────────────┘         │ (gemini-api-server) │           │
-│                          └─────────────────────┘           │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**On your Pi (Voice Server):**
-
-```bash
-gemini-phone setup    # Select "Voice Server", enter API server IP when prompted
-gemini-phone start    # Launches Docker containers
-```
-
-**On your Mac/Linux (API Server):**
-
-```bash
-gemini-phone api-server    # Starts Gemini API wrapper on port 3333
-```
-
-Note: On the API server machine, you don't need to run `gemini-phone setup` first - the `api-server` command works standalone.
-
-### Dual-LXC / Satellite SBC Mode
-
-Best for: High-stability Proxmox setups where FreePBX and Gemini live in separate containers.
-
-```text
-┌───────────────────────────────┐      ┌───────────────────────────────┐
-│     LXC 101 (FreePBX)         │      │     LXC 102 (Gemini Phone)    │
-│  IP: 172.16.1.83              │      │  IP: 172.16.1.81              │
-│  Standard SIP (Port 5060)     │ ◀──▶ │  Satellite SBC (Port 5060)    │
-└───────────────────────────────┘      └───────────────────────────────┘
-```
-
-**Setup on Gemini LXC:**
-
-1. Run `gemini-phone setup`.
-2. When asked **"Installing on same server as FreePBX?"**, select **No**.
-3. Enter the IP of your FreePBX LXC.
-4. Gemini will now act as a remote SBC, allowing both systems to use Port 5060 without conflict.
-
-## Proxmox & LXC Compatibility
-
-If running inside a Proxmox LXC container, ensure the following settings are enabled in the Proxmox Web UI (Options -> Features):
-
-+ ✅ **Nesting**: Required for Docker to run inside LXC.
-+ ✅ **FUSE**: Optional, but improves storage performance.
-
-### GPU Passthrough in LXC
-
-To use AMD/NVIDIA acceleration in Proxmox, add these lines to your `/etc/pve/lxc/ID.conf` on the **host**:
-
-```text
-lxc.cgroup2.devices.allow: c 226:* rwm
-lxc.mount.entry: /dev/kfd dev/kfd none bind,optional,create=file
-lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
-```
-
-## CLI Commands
+Everything is managed via the `gemini-phone` tool.
 
 | Command | Description |
 | :--- | :--- |
-| `gemini-phone setup` | Interactive configuration wizard |
-| `gemini-phone start` | Start services based on installation type |
-| `gemini-phone stop` | Stop all services |
-| `gemini-phone status` | Show service status |
-| `gemini-phone doctor` | Health check for dependencies and services |
-| `gemini-phone api-server [--port N]` | Start API server standalone (default: 3333) |
-| `gemini-phone device add` | Add a new device/extension |
-| `gemini-phone device list` | List configured devices |
-| `gemini-phone device remove <name>` | Remove a device |
-| `gemini-phone logs [service]` | Tail logs (voice-app, drachtio, freeswitch) |
-| `gemini-phone config show` | Display configuration (secrets redacted) |
-| `gemini-phone config path` | Show config file location |
-| `gemini-phone config reset` | Reset configuration |
-| `gemini-phone backup` | Create configuration backup |
-| `gemini-phone restore` | Restore from backup |
-| `gemini-phone update` | Update Gemini Phone |
-| `gemini-phone uninstall` | Complete removal |
+| `gemini-phone setup` | Hardware/Network wizard. |
+| `gemini-phone start` | Wake up the workforce. |
+| `gemini-phone stop` | Send everyone home. |
+| `gemini-phone status` | See who is online. |
+| `gemini-phone doctor` | Diagnose connectivity/network issues. |
+| `gemini-phone stack deploy [N]` | Hire a new AI (Deploy Stack N). |
+| `gemini-phone stack remove [N]` | Fire an AI (Remove Stack N). |
 
-## Device Personalities
+### Mission Control
 
-Each SIP extension can have its own identity with a unique name, voice, and personality prompt:
+Visit `http://YOUR_SERVER_IP:3030` to access the GUI.
 
-```bash
-gemini-phone device add
-```
+- **Green Dot**: Online & Registered with PBX.
+- **Red Dot**: Offline (Check `gemini-phone doctor`).
+- **Apply Config**: Force FreePBX to reload settings.
 
-Example devices:
+---
 
-+ **Morpheus** (ext 9000) - General assistant
-+ **Cephanie** (ext 9002) - Storage monitoring bot
+## 🔧 Advanced: Inter-AI Communication
 
-## Mission Control Dashboard
+Your AI agents can talk to each other!
+Because they are standard SIP extensions, you can set up scenarios where:
 
-Access the unified dashboard at `http://your-server-ip:3030`
+1. **Morpheus** receives an inbound call.
+2. User asks a complex math question.
+3. **Morpheus** says "Hold on, let me ask the professor."
+4. **Morpheus** initiates a second call leg to **Trinity** (Ext 9010).
+5. AIs converse, solve the problem, and report back to the user.
 
-**Features:**
+*(Future update: creating "Conference Room" scenarios for multi-agent swarms)*
 
-+ **2x2 Grid Layout**: View all services simultaneously
-  + Voice App (top-left) - Voice customization & Terminal
-  + API Server (top-right) - Interactive endpoints
-  + Inference Brain (bottom-left) - Model selection & Activity Log
-  + System Monitor (bottom-right) - Live stats
+---
 
-+ **Status Indicators**:
-  + Real-time dots for FreePBX, Drachtio, Brain, and Python status.
+## 📦 Requirements
 
-+ **Quick Access**:
-+ **📊 htop view** (one-click access)
-+ **⚙️ Settings Gear**: Configure API keys and SIP settings directly in browser
-  
-+ **Real-time Monitoring**:
-  + CPU & Memory usage
-  + Active calls counter
-  + System uptime
-  + Live log stream (last 10 entries, auto-refresh every 5s)
+- **Linux Server** (Ubuntu 20.04+, Debian 11+, Raspberry Pi OS 64-bit)
+- **FreePBX Server** (v15+) on the same LAN.
+- **Gemini API Key** (Google AI Studio)
+- **ElevenLabs API Key** (Voice)
+- **OpenAI API Key** (Whisper STT)
 
-+ **Quick Actions**:
-  + Refresh stats
-  + Clear logs
+---
 
-## Voice Customization
+## 🤝 Contributing
 
-Configure voice and speed settings per device via the Voice App dashboard (`http://your-server-ip:3000`):
+We are building the future of open-source AI telephony.
 
-**Available Voices** (10 ElevenLabs options):
+- **Repo**: `jayis1/claude-phone-but-for-Gemini-and-freepbx`
+- **Issues**: Submit bugs on GitHub.
+- **Feature Requests**: Join the discussion.
 
-+ Rachel, Antoni, Elli, Josh, Arnold
-+ Adam, Sam, Bella, Charlie, Daniel
-
-**Speed Control**:
-
-+ Range: 0.5x to 2.0x
-+ Real-time adjustment
-+ Per-device settings
-+ Persistent across calls
-
-**How to Use**:
-
-1. Visit Voice App dashboard
-2. Select device from dropdown
-3. Choose voice and adjust speed slider
-4. Click "Save Settings"
-5. Settings apply to all future calls for that device
-
-## Dashboards
-
-All services provide interactive web dashboards:
-
-| Service | Port | URL | Features |
-| :--- | :--- | :--- | :--- |
-| **Mission Control** | 3030 | `http://localhost:3030` | Unified view, system stats, logs |
-| **Voice App** | 3000 | `http://localhost:3000` | Voice/speed config, API endpoints |
-| **Inference Brain** | 4000 | `http://localhost:4000` | Model selection, endpoints |
-| **API Server** | 3333 | `http://localhost:3333` | Interactive endpoints, testing |
-
-## API Endpoints
-
-### Voice App (Port 3000)
-
-| Method | Endpoint | Purpose |
-| :--- | :--- | :--- |
-| POST | `/api/outbound-call` | Initiate an outbound call |
-| GET | `/api/call/:callId` | Get call status |
-| GET | `/api/calls` | List active calls |
-| POST | `/api/query` | Query a device programmatically |
-| GET | `/api/devices` | List configured devices |
-| POST | `/api/config/voice` | Update voice for device |
-| POST | `/api/config/speed` | Update speech speed |
-| GET | `/api/config` | Get device config |
-| GET | `/health` | Health check |
-
-### Mission Control (Port 3030)
-
-| Method | Endpoint | Purpose |
-| :--- | :--- | :--- |
-| GET | `/api/system-stats` | CPU, memory, uptime |
-| GET | `/api/active-calls` | Active calls count |
-| GET | `/api/logs` | System logs |
-| DELETE | `/api/logs` | Clear logs |
-| GET | `/health` | Health check |
-
-See [Outbound API Reference](voice-app/README-OUTBOUND.md) for details.
-
-## Troubleshooting
-
-### Quick Diagnostics
-
-```bash
-gemini-phone doctor    # Automated health checks
-gemini-phone status    # Service status
-gemini-phone logs      # View logs
-```
-
-### Common Issues
-
-| Problem | Likely Cause | Solution |
-| :--- | :--- | :--- |
-| Calls connect but no audio | Wrong external IP | Re-run `gemini-phone setup`, verify LAN IP |
-| Extension not registering | FreePBX/Asterisk issue | Check PBX admin panel |
-| "Sorry, something went wrong" | API server unreachable | Check `gemini-phone status` |
-| Port conflict on startup | PBX using port 5060 | Setup auto-detects this; re-run setup |
-| Calls fail with 503 error | SIP "Cause 34" | No Trunk/Outbound Route; see [Solve Guide](docs/TROUBLESHOOTING_CAUSE_34.md) |
-
-### Manual Node.js Installation
-
-If the installer fails to install Node.js automatically (common on some restricted Debian/Ubuntu systems), run:
-
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs
-```
-
-Then run the installer again.
-
-### Gemini CLI
-
-The installer will automatically install the Gemini CLI (@google/gemini-cli) if it's not found.
-
-If you prefer to install it manually:
-
-```bash
-npm install -g @google/gemini-cli
-```
-
-### Alternative: Run via Docker
-
-For security and isolation, you can run the Gemini CLI directly from a docker container:
-
-```bash
-docker run --rm -it us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.1
-```
-
-If you have the CLI installed locally, you can also force sandbox mode:
-
-```bash
-gemini --sandbox -y -p "your prompt here"
-```
-
-See [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for more.
-
-## Configuration
-
-Configuration is stored in `~/.gemini-phone/config.json` with restricted permissions (chmod 600).
-
-```bash
-gemini-phone config show    # View config (secrets redacted)
-gemini-phone config path    # Show file location
-```
-
-## Development
-
-```bash
-# Run tests
-npm test
-
-# Lint
-npm run lint
-npm run lint:fix
-```
-
-## Documentation
-
-+ [CLI Reference](cli/README.md) - Detailed CLI documentation
-+ [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
-+ [Outbound API](voice-app/README-OUTBOUND.md) - Outbound calling API reference
-+ [Deployment](voice-app/DEPLOYMENT.md) - Production deployment guide
-+ [FreePBX Guide](docs/FREEPBX.md) - Setup for FreePBX / Asterisk
-+ [SIP Cause 34 Guide](docs/TROUBLESHOOTING_CAUSE_34.md) - Fix "No circuit/channel" 503 errors
-+ [Gemini Code Skill](docs/GEMINI-CODE-SKILL.md) - Build a "call me" skill for Gemini Code
-
-## License
-
-MIT
-
-**
-<!-- Fun Footer -->
-```text
-    .-----------------.
-    |  Hi, I'm Gemini |
-    |      Phone!     |
-    |  .-----------.  |
-    |  |  /*\\  _  |  |
-    |  | |   | | | |  |
-    |  | \\*/  |*| |  |
-    |  '-----------'  |
-    | [1] [2] [3] |\  |
-    | [4] [5] [6] | | |
-    | [7] [8] [9] | | |
-    | [*] [0] [#] | | |
-    '-------------' | |
-      |*______**|**/
-
-```
+---
+*Built with ❤️ by NetworkChuck Community & The "Antigravity" Agent*
