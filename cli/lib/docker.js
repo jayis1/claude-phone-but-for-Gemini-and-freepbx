@@ -158,6 +158,8 @@ export function generateDockerCompose(config, stackId = 1) {
     volumes:
       - ${config.paths.voiceApp}/audio:/app/audio
       - ${config.paths.voiceApp}/config:/app/config
+      - ${config.paths.voiceApp}/index.js:/app/index.js
+      - ${config.paths.voiceApp}/lib:/app/lib
       - ${getConfigDir()}/devices${stackId === 1 ? '' : '-' + stackId}.json:/app/config/devices.json
       - ${getConfigDir()}/recordings:/app/recordings
     depends_on:

@@ -1,0 +1,16 @@
+<!-- Sangoma config for TheOne -->
+<Global>
+    <Display_Language>English</Display_Language>
+    <Time_Zone>GMT-5</Time_Zone>
+</Global>
+<Account1>
+    <Enable>1</Enable>
+    <Label>TheOne</Label>
+    <DisplayName>9003</DisplayName>
+    <UserName>9003</UserName>
+    <AuthName>9003</AuthName>
+    <Password>GeminiPhone123!</Password>
+    <SIP_Server>172.16.1.83</SIP_Server>
+    <SIP_Port>5091</SIP_Port>
+    <Transport>0</Transport>
+</Account1>

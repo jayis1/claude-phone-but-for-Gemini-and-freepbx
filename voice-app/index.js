@@ -417,13 +417,14 @@ srf.on("error", function (err) {
   drachtioConnected = false;
 });
 
-// Connect to FreeSWITCH helper
 function connectToFreeswitch() {
   const mrf = new Mrf(srf);
   return mrf.connect({
     address: config.freeswitch.host,
     port: config.freeswitch.port,
-    secret: config.freeswitch.secret
+    secret: config.freeswitch.secret,
+    listenPort: 8085 + (parseInt(process.env.STACK_ID || 1) - 1) // Unique listener port per stack to avoid collision
+    // sipProfile: 'internal' // Force use of 'internal' profile if drachtio_mrf is missing
   });
 }
 

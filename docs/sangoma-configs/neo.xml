@@ -1,0 +1,16 @@
+<!-- Sangoma config for Neo -->
+<Global>
+    <Display_Language>English</Display_Language>
+    <Time_Zone>GMT-5</Time_Zone>
+</Global>
+<Account1>
+    <Enable>1</Enable>
+    <Label>Neo</Label>
+    <DisplayName>9010</DisplayName>
+    <UserName>9010</UserName>
+    <AuthName>9010</AuthName>
+    <Password>GeminiPhone123!</Password>
+    <SIP_Server>172.16.1.83</SIP_Server>
+    <SIP_Port>5070</SIP_Port>
+    <Transport>0</Transport>
+</Account1>
