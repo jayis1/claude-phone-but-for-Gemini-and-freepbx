@@ -69,10 +69,10 @@ function renderStacks(stacks) {
         const synxBtn = stack.id > 1 ?
             `<button class="btn" style="background:#0f0; color:#000" onclick="provisionStack(${stack.id})">Synx PBX</button>` : '';
 
-        // Matrix Naming
+        // Matrix Naming (Elite Mesh Standards)
         const matrixNames = [
-            'Morpheus', 'Trinity', 'Neo', 'Tank', 'Dozer',
-            'Cypher', 'Switch', 'Apoc', 'Mouse', 'Oracle'
+            'Morpheus', 'Neo', 'Trinity', 'The One (Fax Machine)', 'Tank',
+            'Dozer', 'Cypher', 'Switch', 'Apoc', 'Mouse'
         ];
         const stackName = matrixNames[(stack.id - 1) % matrixNames.length] || `Agent ${stack.id}`;
 

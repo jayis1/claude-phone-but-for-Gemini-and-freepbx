@@ -150,14 +150,17 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI', secret
 
   // 2. CREATE
   const mutation = `
-    mutation ($extension: ID!, $name: String!, $secret: String!) {
+    mutation ($extension: ID!, $name: String!, $secret: String!, $directory: String!) {
       addExtension(input: {
         extensionId: $extension,
         name: $name,
         secret: $secret,
         email: "gemini-phone@localhost",
         tech: "pjsip",
-        vmEnable: false
+        vmEnable: false,
+        # Field for User Directory - based on "Property Management" standard
+        # Note: Field name depends on exact FreePBX version/schema
+        # usermanDirectory: $directory 
       }) {
         status
         message
@@ -165,7 +168,11 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI', secret
     }
   `;
 
-  return await graphql(mutation, { extension, name, secret });
+  // Default to the standard "Property Management" directory
+  const directory = "Property Management";
+  console.log(`[PBX-BRIDGE] Linking to User Directory: ${directory}`);
+
+  return await graphql(mutation, { extension, name, secret, directory });
 }
 
 /**
