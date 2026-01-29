@@ -230,34 +230,7 @@ async function initializeHttpServer() {
    * Provision AI Switchboard (Ring Group + Inbound Route)
    * Rings ALL active extensions simultaneously
    */
-  /**
-   * Provision AI Switchboard (Ring Group + Inbound Route)
-   * Rings ALL active extensions simultaneously
-   */
-  httpServer.app.post('/api/pbx/provision-switchboard', async (req, res) => {
-    try {
-      // 1. Identify active extensions
-      // We assume a standard 5-stack deployment for the "AI Squad"
-      // Stack 1: 9000, Stack 2: 9010 ... Stack 5: 9040
-      const extensions = ['9000', '9010', '9020', '9030', '9040'];
 
-      console.log(`[API] Provisioning AI Switchboard for extensions: ${extensions.join(', ')}...`);
-
-      // 2. Create Ring Group 600
-      await pbxBridge.provisionRingGroup(extensions, 600, "Gemini AI Switchboard");
-
-      // 3. Create Inbound Route -> Ring Group 600
-      await pbxBridge.provisionInboundRoute('ext-group,600,1');
-
-      // 4. Reload
-      await pbxBridge.graphql('mutation { doreload(input: {}) { status message } }');
-
-      res.json({ success: true, message: 'AI Switchboard created (Group 600 -> 9000-9040)' });
-    } catch (error) {
-      console.error('[API] Switchboard provisioning failed:', error.message);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
 
   // Log Endpoint
   httpServer.app.get('/api/logs', (req, res) => {

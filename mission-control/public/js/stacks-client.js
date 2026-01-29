@@ -14,35 +14,7 @@ async function fetchStacks() {
     }
 }
 
-async function createSwitchboard() {
-    if (!confirm('This will create Ring Group 600 and route ALL incoming calls to it.\nit will ring extensions 9000, 9010, 9020... (All Stacks).\n\nContinue?')) return;
 
-    const btn = document.querySelector('button[title*="Switchboard"]');
-    const oldText = btn ? btn.innerText : 'Create Switchboard';
-    if (btn) {
-        btn.innerText = '⏳ Provisioning...';
-        btn.disabled = true;
-    }
-
-    try {
-        // Use the voice-app proxy (Voice App 1 is the PBX Controller)
-        const res = await fetch('/api/proxy/voice/api/pbx/provision-switchboard', { method: 'POST' });
-        const data = await res.json();
-
-        if (data.success) {
-            showToast('Success! ' + data.message, 'success');
-        } else {
-            throw new Error(data.error || 'Unknown error');
-        }
-    } catch (err) {
-        showToast('Failed: ' + err.message, 'error');
-    } finally {
-        if (btn) {
-            btn.innerText = oldText;
-            btn.disabled = false;
-        }
-    }
-}
 
 function renderStacks(stacks) {
     const grid = document.getElementById('stacks-grid');
@@ -95,7 +67,7 @@ function renderStacks(stacks) {
          </div>
           <div class="stack-actions">
             <button class="btn btn-primary" onclick="addStack()">+ Add Stack</button>
-            <button class="btn btn-secondary" onclick="createSwitchboard()" title="Create AI Switchboard (Group 600)">📞 Create Switchboard</button>
+
             <button class="btn btn-danger" onclick="stopAllStacks()">Stop All</button>
             <button class="btn btn-danger" onclick="removeStack(${stack.id})">Remove</button>
             <button class="btn btn-primary" onclick="redeployStack(${stack.id})">Redeploy</button>
@@ -120,7 +92,7 @@ function renderStacks(stacks) {
     const actionsDiv = document.getElementById('header-actions');
     if (actionsDiv) {
         actionsDiv.innerHTML = `
-      <button class="btn btn-secondary" onclick="createSwitchboard()" title="Create AI Switchboard (Group 600)">📞 Create Switchboard</button>
+
       <button class="btn btn-primary" onclick="addStack()">+ Add Stack</button>
       <button class="btn btn-danger" onclick="stopAllStacks()">Stop All</button>
     `;
