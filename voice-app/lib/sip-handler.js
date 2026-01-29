@@ -3,8 +3,7 @@
  * v12: Device registry integration with proper method names
  */
 
-const { setTimeout: sleep } = require('node:timers/promises');
-const callManager = require('./call-manager');
+const { setTimeout: _sleep } = require('node:timers/promises');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -225,7 +224,7 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
       // Hold music in background
       let musicPlaying = false;
-      endpoint.play(HOLD_MUSIC_URL).catch(function (e) {
+      endpoint.play(HOLD_MUSIC_URL).catch(function (_e) {
         console.log('[' + new Date().toISOString() + '] MUSIC: Hold music failed, continuing');
       });
       musicPlaying = true;

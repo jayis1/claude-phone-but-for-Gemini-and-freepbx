@@ -11,7 +11,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const router = express.Router();
 const logger = require('./logger');
-const logger = require('./logger');
+
 const deviceRegistry = require('./device-registry');
 const callManager = require('./call-manager');
 const callManager = require('./call-manager');

@@ -81,7 +81,7 @@ class CallManager extends EventEmitter {
         const call = this.get(callId);
         if (!call) return Promise.reject(new Error('Call not found'));
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             const timer = setTimeout(() => {
                 call.events.removeListener('command', handler);
                 resolve(null); // Timeout (continue normal flow)
