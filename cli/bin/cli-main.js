@@ -203,6 +203,48 @@ stack
     }
   });
 
+// Mesh management subcommands
+import { meshCommand } from '../lib/commands/mesh.js';
+const mesh = program
+  .command('mesh')
+  .description('Manage the 3-Node AI Mesh');
+
+mesh
+  .command('start')
+  .description('Start the full 3-node mesh (Morpheus, Neo, Trinity)')
+  .action(async () => {
+    try {
+      await meshCommand('start');
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Mesh start failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+mesh
+  .command('stop')
+  .description('Stop the full mesh')
+  .action(async () => {
+    try {
+      await meshCommand('stop');
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Mesh stop failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+mesh
+  .command('status')
+  .description('Show mesh status')
+  .action(async () => {
+    try {
+      await meshCommand('status');
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Mesh status failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
 program
   .command('logs [service]')
   .description('Tail service logs (voice-app, api-server, or all)')

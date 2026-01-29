@@ -18,7 +18,7 @@ class MultiRegistrar {
     const extensions = Object.keys(devices);
     console.log('[MULTI-REGISTRAR] Starting registration for ' + extensions.length + ' devices');
 
-    for (const [extension, device] of Object.entries(devices)) {
+    for (const device of Object.values(devices)) {
       this.registerDevice(device);
     }
   }

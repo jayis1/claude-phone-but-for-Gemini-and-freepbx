@@ -14,7 +14,7 @@ export function generateMeshConfig(totalStacks = 3, baseSipPort = 5060) {
         peers[`stack${i}`] = {
             id: i,
             sip: `sip:stack${i}@${externalIp}:${port}`,
-            name: i === 1 ? 'Morpheus' : i === 2 ? 'Trinity' : i === 3 ? 'Neo' : `Agent-${i}`
+            name: i === 1 ? 'Morpheus' : i === 2 ? 'Neo' : i === 3 ? 'Trinity' : `Agent-${i}`
         };
     }
     return JSON.stringify(peers);
