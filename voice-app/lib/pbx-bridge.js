@@ -114,18 +114,13 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
   }
 
   // 2. CREATE
-  // We use a fixed secret for now to match devices.json (Config 1)
-  // TODO: dynamic secret from config
-  const secret = '2fhbcvsTMNK6PJ6';
-
   const mutation = `
-    mutation ($extension: ID!, $name: String!, $secret: String!) {
+    mutation ($extension: ID!, $name: String!) {
       addExtension(input: {
         extensionId: $extension,
         name: $name,
         email: "gemini-phone@localhost",
         tech: "pjsip",
-        secret: $secret, 
         vmEnable: false
       }) {
         status
@@ -134,7 +129,7 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI') {
     }
   `;
 
-  return await graphql(mutation, { extension, name, secret });
+  return await graphql(mutation, { extension, name });
 }
 
 /**
@@ -165,8 +160,7 @@ async function provisionRingGroup(extensions = ['9000']) {
     description: "Gemini AI Switchboard",
     strategy: "ringall", // Simultaneous ring
     extensionList: extensions.join('-'), // Format: 9000-9001
-    ringTime: "30",
-    destination: "app-blackhole,hangup,1" // Default failover
+    ringTime: "30"
   };
 
   return await graphql(mutation, { input });
@@ -249,8 +243,7 @@ async function provisionTrunk(hostIp) {
           server_port: "5060",
           aor_contact: $host,
           authentication: "none",
-          registration: "none",
-          context: "from-internal"
+          registration: "none"
         }
       }) {
         status
