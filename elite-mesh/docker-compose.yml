@@ -1,0 +1,98 @@
+version: "3.9"
+
+networks:
+  sip-control:
+    driver: bridge
+  sip-media:
+    driver: bridge
+  automation:
+    driver: bridge
+
+services:
+  freepbx:
+    image: tiredofit/freepbx:latest
+    container_name: freepbx
+    networks: [ sip-control, sip-media ]
+    ports:
+      - "5060:5060/udp"
+      - "5061:5061/tcp"
+      - "10000-10100:10000-10100/udp"
+    environment:
+      RTP_START: 10000
+      RTP_FINISH: 10100
+    volumes:
+      - ./freepbx-data:/data
+
+  morpheus:
+    build:
+      context: ./sip-agent
+    container_name: ai-sip-morpheus
+    networks: [ sip-control, sip-media ]
+    environment:
+      NODE_NAME: morpheus
+      SIP_PORT: 5070
+      PEER_NODES: "neo,trinity"
+      WEBHOOK_URL: http://webhook-api:8080/events
+    expose:
+      - "5070/udp"
+      - "11000-11100/udp"
+
+  neo:
+    build:
+      context: ./sip-agent
+    container_name: ai-sip-neo
+    networks: [ sip-control, sip-media ]
+    environment:
+      NODE_NAME: neo
+      SIP_PORT: 5070
+      PEER_NODES: "morpheus,trinity"
+      WEBHOOK_URL: http://webhook-api:8080/events
+    expose:
+      - "5070/udp"
+      - "11000-11100/udp"
+
+  trinity:
+    build:
+      context: ./sip-agent
+    container_name: ai-sip-trinity
+    networks: [ sip-control, sip-media ]
+    environment:
+      NODE_NAME: trinity
+      SIP_PORT: 5070
+      PEER_NODES: "morpheus,neo"
+      WEBHOOK_URL: http://webhook-api:8080/events
+    expose:
+      - "5070/udp"
+      - "11000-11100/udp"
+
+  webhook-api:
+    build:
+      context: ./webhook-api
+    container_name: webhook-api
+    networks: [ automation, sip-control ]
+    environment:
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/ai-call
+    expose:
+      - "8080"
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-orchestrator
+    networks: [ automation ]
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=GeminiPhoneElite123!
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks: [ automation ]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
