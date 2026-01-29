@@ -154,7 +154,7 @@ async function provisionExtension(extension = '9000', name = 'Gemini AI', secret
       addExtension(input: {
         extensionId: $extension,
         name: $name,
-        secret: $secret,
+        umPassword: $secret, // User Manager Password (linked to SIP secret)
         email: "gemini-phone@localhost",
         tech: "pjsip",
         vmEnable: false
