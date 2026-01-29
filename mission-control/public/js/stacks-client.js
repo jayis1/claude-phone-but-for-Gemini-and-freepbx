@@ -16,6 +16,36 @@ async function fetchStacks() {
 
 
 
+async function applyConfig() {
+    if (!confirm('Apply FreePBX Configuration? This will reload the PBX core.')) return;
+
+    const btn = document.querySelector('button[title*="Reload"]');
+    const oldText = btn ? btn.innerText : 'Apply Config';
+    if (btn) {
+        btn.innerText = 'Applying...';
+        btn.disabled = true;
+    }
+
+    try {
+        // Use the voice-app proxy
+        const res = await fetch('/api/proxy/voice/api/pbx/reload', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('✅ Configuration Applied!', 'success');
+        } else {
+            showToast('❌ Failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+    } catch (e) {
+        showToast('❌ Network Error: ' + e.message, 'error');
+    } finally {
+        if (btn) {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+}
+
 function renderStacks(stacks) {
     const grid = document.getElementById('stacks-grid');
     grid.innerHTML = '';
@@ -92,8 +122,8 @@ function renderStacks(stacks) {
     const actionsDiv = document.getElementById('header-actions');
     if (actionsDiv) {
         actionsDiv.innerHTML = `
-
       <button class="btn btn-primary" onclick="addStack()">+ Add Stack</button>
+      <button class="btn btn-warning" onclick="applyConfig()" title="Reload FreePBX Configuration">↻ Apply Config</button>
       <button class="btn btn-danger" onclick="stopAllStacks()">Stop All</button>
     `;
     }

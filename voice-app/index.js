@@ -232,6 +232,20 @@ async function initializeHttpServer() {
    */
 
 
+  /**
+   * Manual Reload (Apply Config)
+   */
+  httpServer.app.post('/api/pbx/reload', async (req, res) => {
+    try {
+      console.log('[API] Applying FreePBX Config (Reload)...');
+      const result = await pbxBridge.graphql('mutation { doreload(input: {}) { status message } }');
+      res.json({ success: true, result });
+    } catch (error) {
+      console.error('[API] Reload failed:', error.message);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // Log Endpoint
   httpServer.app.get('/api/logs', (req, res) => {
     res.json({ success: true, logs: globalLogs || [] });
