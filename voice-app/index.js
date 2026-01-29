@@ -312,8 +312,17 @@ async function start() {
         try {
           // Only provision if it has auth credentials (is a real SIP device)
           if (dev.authId && dev.password) {
-            console.log(`[PROVISION] Ensuring extension ${ext} (${dev.name}) exists...`);
-            await pbxBridge.provisionExtension(ext, dev.name, dev.password);
+            // Check role from env
+            const role = process.env.ROLE || 'voice-node';
+
+            // Auto-provisioning logic
+            if (role === 'fax-machine') {
+              console.log('[PROVISION] Detected role: FAX-MACHINE (The One). Provisioning Fax extension...');
+              await pbxBridge.provisionFaxExtension(ext, `The One (Fax)`, 'pass');
+            } else {
+              console.log(`[PROVISION] Ensuring extension ${ext} (${dev.name}) exists...`);
+              await pbxBridge.provisionExtension(ext, dev.name, dev.password);
+            }
           }
         } catch (e) {
           console.error(`[PROVISION] Failed to provision ${ext}: ${e.message}`);
