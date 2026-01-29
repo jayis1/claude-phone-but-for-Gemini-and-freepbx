@@ -419,13 +419,15 @@ srf.on("error", function (err) {
 
 function connectToFreeswitch() {
   const mrf = new Mrf(srf);
-  return mrf.connect({
+  const connectOpts = {
     address: config.freeswitch.host,
     port: config.freeswitch.port,
     secret: config.freeswitch.secret,
     listenPort: 8085 + (parseInt(process.env.STACK_ID || 1) - 1), // Unique listener port per stack to avoid collision
     sipProfile: 'internal' // Force use of 'internal' profile if drachtio_mrf is missing
-  });
+  };
+  console.log('[DEBUG] Connecting to FreeSWITCH with options:', JSON.stringify(connectOpts));
+  return mrf.connect(connectOpts);
 }
 
 function enableOutboundCalling() {
