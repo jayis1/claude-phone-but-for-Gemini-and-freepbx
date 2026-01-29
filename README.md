@@ -61,7 +61,7 @@ Instead of just one AI bot, this system orchestrates **Teams of AIs**.
 
 ### Technical Architecture Diagram
 
-![System Architecture](docs/technical_architecture.jpg)
+![System Architecture](docs/technical_architecture.png)
 
 ```mermaid
 graph TD
