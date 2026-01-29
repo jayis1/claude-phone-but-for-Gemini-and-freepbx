@@ -270,8 +270,36 @@ async function start() {
     console.log("[" + new Date().toISOString() + "] Starting Gemini Phone Voice App...");
 
     // 1. Initialize HTTP Server and Routes FIRST
-    // This ensures all routes are registered before any 404 handlers
     await initializeHttpServer();
+
+    // 1.5 Auto-Provision PBX Extensions (if configured)
+    if (process.env.FREEPBX_API_URL) {
+      console.log("[" + new Date().toISOString() + "] Auto-Provisioning Extensions in FreePBX...");
+      const devices = deviceRegistry.getAll();
+      const extensions = Object.keys(devices);
+
+      // Provision sequentially to avoid API rate limits
+      for (const ext of extensions) {
+        const dev = devices[ext];
+        try {
+          // Only provision if it has auth credentials (is a real SIP device)
+          if (dev.authId && dev.password) {
+            console.log(`[PROVISION] Ensuring extension ${ext} (${dev.name}) exists...`);
+            await pbxBridge.provisionExtension(ext, dev.name);
+          }
+        } catch (e) {
+          console.error(`[PROVISION] Failed to provision ${ext}: ${e.message}`);
+        }
+      }
+
+      // Reload FreePBX core to apply changes
+      try {
+        console.log("[PROVISION] Applying changes to FreePBX...");
+        await pbxBridge.graphql('mutation { doreload(input: {}) { status message } }');
+      } catch (e) {
+        console.error("[PROVISION] Failed to reload FreePBX: " + e.message);
+      }
+    }
 
     // 2. Connect to PBX / SIP (Drachtio)
     console.log("[" + new Date().toISOString() + "] Connecting to Drachtio...");
