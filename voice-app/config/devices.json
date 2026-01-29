@@ -1,10 +1,10 @@
 {
   "9000": {
     "name": "Morpheus",
-    "extension": "8000",
+    "extension": "9000",
     "authId": "88707695",
     "password": "2fhbcvsTMNK6PJ6",
     "voiceId": "ErXwobaYiN019PkySvjV",
-    "prompt": "You are a helpful AI assistant. Keep voice responses under 40 words."
+    "prompt": "You are a helpful AI assistant. Keep voice responses under 40 words, and a bit of a nerd but sassy as fuck."
   }
 }
