@@ -266,10 +266,37 @@ async function initializeHttpServer() {
 // MAIN STARTUP SEQUENCE
 // ==========================================
 
+// Start the application
 async function start() {
   try {
+    const role = process.env.ROLE || 'voice-node';
     console.log("[" + new Date().toISOString() + "] Starting Gemini Phone Voice App...");
+    console.log("[" + new Date().toISOString() + "] Operational Role: " + role.toUpperCase());
 
+    // FAX MACHINE MODE (Stack 4)
+    if (role === 'fax-machine') {
+      const FaxRelay = require('./lib/fax-relay');
+
+      // Initialize HTTP but maybe simplified?
+      await initializeHttpServer();
+
+      console.log("[" + new Date().toISOString() + "] Connecting to Drachtio (Fax Mode)...");
+      srf.connect({
+        host: config.drachtio.host,
+        port: config.drachtio.port,
+        secret: config.drachtio.secret
+      });
+
+      srf.on('connect', async (err, hostport) => {
+        console.log("[" + new Date().toISOString() + "] FAX MACHINE Connected to Drachtio at " + hostport);
+        const faxRelay = new FaxRelay(srf, config);
+        await faxRelay.start();
+      });
+
+      return; // Stop standard voice app initialization
+    }
+
+    // STANDARD VOICE NODE MODE
     // 1. Initialize HTTP Server and Routes FIRST
     await initializeHttpServer();
 

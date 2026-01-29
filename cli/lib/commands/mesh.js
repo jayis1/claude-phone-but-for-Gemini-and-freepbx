@@ -102,8 +102,11 @@ async function startMesh(config) {
     // 4. Generate Configs for Stacks 1, 2, 3
     console.log(chalk.yellow('\n📝 Generating Configuration...'));
 
-    for (let stackId = 1; stackId <= 3; stackId++) {
-        const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
+    // 4. Generate Configs for Stacks 1, 2, 3, 4
+    console.log(chalk.yellow('\n📝 Generating Configuration...'));
+
+    for (let stackId = 1; stackId <= 4; stackId++) {
+        const name = stackId === 4 ? 'The One (Fax Machine)' : ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
         process.stdout.write(`   - Configuring Node ${stackId} (${name})... `);
         try {
             await writeDockerConfig(config, stackId);
@@ -117,8 +120,8 @@ async function startMesh(config) {
 
     // 5. Build Containers (CRITICAL FIX: Ensure code updates apply)
     console.log(chalk.yellow('\n🔨 Building Containers (Ensuring Fresh Code)...'));
-    for (let stackId = 1; stackId <= 3; stackId++) {
-        const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
+    for (let stackId = 1; stackId <= 4; stackId++) {
+        const name = stackId === 4 ? 'The One (Fax Machine)' : ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
         process.stdout.write(`   - Building Node ${stackId} (${name})... `);
         try {
             await buildContainers(stackId);
@@ -133,8 +136,8 @@ async function startMesh(config) {
     // 6. Launch Stacks
     console.log(chalk.yellow('\n🚀 Launching Containers...'));
 
-    for (let stackId = 1; stackId <= 3; stackId++) {
-        const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
+    for (let stackId = 1; stackId <= 4; stackId++) {
+        const name = stackId === 4 ? 'The One (Fax Machine)' : ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
         process.stdout.write(`   - Booting Node ${stackId} (${name})... `);
         try {
             await startContainers(stackId);
@@ -151,6 +154,7 @@ async function startMesh(config) {
     console.log(`Node 1 (Morpheus): SIP ${baseSipPort}   | HTTP 3000`);
     console.log(`Node 2 (Neo):      SIP ${baseSipPort + 10} | HTTP 3002`);
     console.log(`Node 3 (Trinity):  SIP ${baseSipPort + 20} | HTTP 3004`);
+    console.log(`Node 4 (The One):  SIP 5091   | HTTP 3006 [FAX MODE]`);
     console.log(chalk.gray('--------------------------------------------------'));
     console.log(chalk.blue('Connect "The One" (Mission Control) at port 3030 to orchestrate.'));
 }
@@ -183,8 +187,8 @@ async function meshStatus() {
     console.log('');
 
     console.log(chalk.bold('Mesh Nodes (Docker):'));
-    for (let stackId = 1; stackId <= 3; stackId++) {
-        const name = ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
+    for (let stackId = 1; stackId <= 4; stackId++) {
+        const name = stackId === 4 ? 'The One (Fax Machine)' : ['Morpheus', 'Neo', 'Trinity'][stackId - 1];
         const containers = await getContainerStatus(stackId);
 
         if (containers.length > 0) {
