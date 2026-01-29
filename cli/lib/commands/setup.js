@@ -494,7 +494,16 @@ async function setupVoiceServer(config) {
  * @param {object} config - Current config
  * @returns {Promise<object>} Updated config
  */
+/**
+ * Single Node (Classic Mode) setup flow
+ * @param {object} config - Current config
+ * @returns {Promise<object>} Updated config
+ */
 async function setupSingleNode(config) {
+  console.log(chalk.bold.yellow('\n🤖 Classic Mode Setup (Simple)\n'));
+  console.log(chalk.gray('Configuring a single AI assistant just like the original project.'));
+  console.log(chalk.gray('No complicated features. Just Connection + AI.\n'));
+
   // Ensure secrets exist
   if (!config.secrets) {
     config.secrets = {
@@ -504,54 +513,135 @@ async function setupSingleNode(config) {
   }
 
   // Ensure deployment mode exists
-  if (!config.deployment) {
-    config.deployment = { mode: 'single' };
-  } else {
-    config.deployment.mode = 'single';
-  }
+  config.deployment = { mode: 'single' };
+  config.sip = config.sip || {};
+  config.server = config.server || {};
+  config.api = config.api || { elevenlabs: {}, openai: {}, gemini: {} };
 
-  // Step 1: API Keys
-  console.log(chalk.bold('\n📡 API Configuration'));
-  config = await setupAPIKeys(config);
+  // --- 1. Connection (SIP/PBX) ---
+  console.log(chalk.bold('\n☎️  Connection Settings'));
 
-  // Step 1.2: PBX Infrastructure (Colocation)
-  console.log(chalk.bold('\n🏢 PBX Infrastructure'));
-  const infraAnswers = await inquirer.prompt([
+  const connection = await inquirer.prompt([
     {
-      type: 'confirm',
-      name: 'isColocated',
-      message: 'Are you installing Gemini Phone on the same server/LXC as FreePBX?',
-      default: config.sip?.port === 5070
+      type: 'input',
+      name: 'sipIp',
+      message: 'PBX / SIP Server IP:',
+      default: config.sip.registrar || '192.168.1.1',
+      validate: (input) => validateIP(input) ? true : 'Invalid IP address'
+    },
+    {
+      type: 'input',
+      name: 'extension',
+      message: 'Extension Number:',
+      default: (config.devices[0] && config.devices[0].extension) || '9000',
+      validate: (input) => validateExtension(input) ? true : 'Invalid extension'
+    },
+    {
+      type: 'password',
+      name: 'password',
+      message: 'Extension Password:',
+      mask: '*'
     }
   ]);
 
-  if (!config.sip) config.sip = {};
-  config.sip.port = infraAnswers.isColocated ? 5070 : 5060;
+  config.sip.registrar = connection.sipIp;
+  config.sip.domain = connection.sipIp; // Simple setups usually invoke matching domain=IP
+  config.sip.port = 5060;
 
-  if (infraAnswers.isColocated) {
-    console.log(chalk.cyan('   → Gemini will use port 5070 to avoid conflicts with FreePBX on 5060.'));
-  } else {
-    console.log(chalk.cyan('   → Gemini will use the standard SIP port 5060.'));
+  // --- 2. AI Settings ---
+  console.log(chalk.bold('\n🧠 AI Brain Settings'));
+
+  // Gemini Key
+  let geminiKey = process.env.GEMINI_API_KEY || config.api.gemini.apiKey;
+  if (!geminiKey) {
+    const geminiParams = await inquirer.prompt([{
+      type: 'password',
+      name: 'key',
+      message: 'Gemini API Key:',
+      mask: '*',
+      validate: (input) => validateGeminiKey(input) ? true : 'Invalid Gemini Key'
+    }]);
+    geminiKey = geminiParams.key;
+  }
+  config.api.gemini.apiKey = geminiKey;
+  config.api.gemini.validated = true;
+
+  // ElevenLabs (Optional)
+  const elevenLabs = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'useElevenLabs',
+      message: 'Use ElevenLabs for high-quality voice? (Recommended)',
+      default: true
+    }
+  ]);
+
+  if (elevenLabs.useElevenLabs) {
+    const elParams = await inquirer.prompt([
+      {
+        type: 'password',
+        name: 'apiKey',
+        message: 'ElevenLabs API Key:',
+        mask: '*',
+        default: config.api.elevenlabs.apiKey
+      },
+      {
+        type: 'input',
+        name: 'voiceId',
+        message: 'Voice ID:',
+        default: config.api.elevenlabs.defaultVoiceId || 'ErXwobaYiN019PkySvjV' // Antoni
+      }
+    ]);
+    config.api.elevenlabs.apiKey = elParams.apiKey;
+    config.api.elevenlabs.defaultVoiceId = elParams.voiceId;
+    config.api.elevenlabs.validated = true;
   }
 
-  // Step 2: SIP Configuration
-  config = await setupSIP(config);
+  // OpenAI (Optional - for Whisper)
+  // We'll skip prompting for simplicity and assume they might add it later or use defaults if we had them.
+  // Actually, keeping strict simplicity: Whisper IS required for STT unless we have another provider.
+  // The original project used Deepgram or Whisper. We use OpenAI Whisper in this stack.
 
-  // Step 3: Device Configuration
-  console.log(chalk.bold('\n🤖 Device Configuration'));
-  config = await setupDevice(config);
+  if (!process.env.OPENAI_API_KEY && !config.api.openai.apiKey) {
+    const openaiParams = await inquirer.prompt([{
+      type: 'password',
+      name: 'apiKey',
+      message: 'OpenAI API Key (for Whisper STT):',
+      mask: '*'
+    }]);
+    config.api.openai.apiKey = openaiParams.apiKey;
+  }
 
-  // Step 4: Outbound Configuration
-  console.log(chalk.bold('\n📞 Outbound Configuration'));
-  config = await setupOutbound(config);
+  // --- 3. Configuration & Defaults ---
 
-  // Step 4.5: PBX API (Optional)
-  console.log(chalk.bold('\n📡 FreePBX API (Optional Automation)'));
-  config = await setupPbxApi(config);
+  // Create Single Device
+  config.devices = [{
+    name: 'Gemini',
+    extension: connection.extension,
+    authId: connection.extension, // Usually same
+    password: connection.password,
+    voiceId: config.api.elevenlabs.defaultVoiceId || 'default',
+    prompt: 'You are a helpful assistant.'
+  }];
 
-  // Step 5: Server Configuration
-  console.log(chalk.bold('\n⚙️  Server Configuration'));
-  config = await setupServer(config);
+  // Defaults for Server
+  config.server = {
+    geminiApiPort: 3333,
+    httpPort: 3000,
+    missionControlPort: 3030,
+    externalIp: 'auto', // Auto-detect
+    gpuVendor: 'none'
+  };
+
+  // Defaults for Outbound (Empty/Safe)
+  config.outbound = {
+    callerId: connection.extension,
+    ringTimeout: 30,
+    maxTurns: 10,
+    dialPrefix: ''
+  };
+
+  config.pbx = { automateTrunk: false }; // Disable automation
 
   return config;
 }
