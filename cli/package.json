@@ -1,6 +1,6 @@
 {
   "name": "gemini-phone-cli",
-  "version": "weedsnacker13",
+  "version": "weedsnacker14",
   "description": "Unified CLI installer for Gemini Phone voice interface",
   "type": "module",
   "bin": {
