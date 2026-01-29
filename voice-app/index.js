@@ -111,7 +111,7 @@ async function initializeHttpServer() {
   httpServer = createHttpServer(config.audio_dir, config.http_port);
 
   // Audio fork server (WebSockets)
-  audioForkServer = new AudioForkServer(config.ws_port);
+  audioForkServer = new AudioForkServer({ port: config.ws_port });
   await audioForkServer.start();
   console.log("[" + new Date().toISOString() + "] WS Audio Fork Server running on port " + config.ws_port);
 
