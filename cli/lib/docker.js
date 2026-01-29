@@ -410,7 +410,7 @@ export async function buildContainers(stackId = 1) {
   }
 
   const compose = getComposeCommand();
-  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'build'];
+  const composeArgs = [...compose.args, '-p', projectName, '-f', dockerComposePath, 'build', '--no-cache'];
 
   return new Promise((resolve, reject) => {
     const child = spawn(compose.cmd, composeArgs, {

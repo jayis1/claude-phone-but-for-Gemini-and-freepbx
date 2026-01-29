@@ -2,7 +2,7 @@
 set -e
 
 # Gemini Phone CLI Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/WEEDsMARTIX1.1.8/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/WEEDsMARTIX1.1.9/install.sh | bash
 
 
 
@@ -325,7 +325,7 @@ main() {
 
     cd "$INSTALL_DIR"
     git fetch --tags --force
-    git reset --hard WEEDsMARTIX1.1.8
+    git reset --hard WEEDsMARTIX1.1.9
     
     # Restore .env
     if [ "$HAS_BACKUP" = true ]; then
