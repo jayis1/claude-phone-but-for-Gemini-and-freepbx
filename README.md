@@ -16,7 +16,7 @@ Gemini Phone allows you to deploy fully autonomous "AI Employees" (Stacks) that 
 Run this on any Linux machine (Ubuntu/Debian/Pi) on the same LAN as your FreePBX:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/WEEDsMARTIX1.1.3/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/WEEDsMARTIX1.1.4/install.sh | bash
 ```
 
 Run setup:
