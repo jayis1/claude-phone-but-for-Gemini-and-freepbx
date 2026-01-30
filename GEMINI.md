@@ -24,6 +24,8 @@ Gemini Phone gives your Gemini Code installation a phone number through FreePBX 
 
 ## Architecture
 
+![Gemini Phone Architecture](docs/images/gemini-phone-architecture.png)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Phone Call                                                  │

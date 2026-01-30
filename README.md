@@ -48,7 +48,7 @@ The installer will:
 
 ### Architecture
 
-![Gemini Phone Architecture](assets/gemini-phone-architecture.jpg)
+![Gemini Phone Architecture](docs/images/gemini-phone-architecture.png)
 
 ### 2. Setup
 
