@@ -671,7 +671,8 @@ function createDefaultConfig() {
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
-      gemini: { apiKey: '' }
+      gemini: { apiKey: '' },
+      n8n: { webhookUrl: '' }
     },
     sip: {
       domain: '',
@@ -713,6 +714,19 @@ async function setupAPIKeys(config) {
 
   if (!config.api.gemini) config.api.gemini = {};
   config.api.gemini.apiKey = geminiAnswers.apiKey;
+
+  // n8n Webhook URL (Optional)
+  const n8nAnswers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'webhookUrl',
+      message: 'n8n Webhook URL (optional):',
+      default: config.api.n8n?.webhookUrl || '',
+    }
+  ]);
+
+  if (!config.api.n8n) config.api.n8n = {};
+  config.api.n8n.webhookUrl = n8nAnswers.webhookUrl;
 
   // ElevenLabs API Key
   const elevenLabsAnswers = await inquirer.prompt([
