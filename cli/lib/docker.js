@@ -6,6 +6,7 @@ import {
   getEnvPath,
   getConfigDir
 } from './config.js';
+import { getLocalIP } from './utils.js';
 
 /**
  * Detect which docker compose command to use
@@ -193,7 +194,7 @@ export function generateEnvFile(config) {
     '# ====================================',
     '',
     '# Network Configuration',
-    `EXTERNAL_IP=${config.server.externalIp === 'auto' ? 'auto' : config.server.externalIp}`,
+    `EXTERNAL_IP=${config.server.externalIp === 'auto' ? getLocalIP() : config.server.externalIp}`,
     '',
     '# Drachtio Configuration',
     'DRACHTIO_HOST=127.0.0.1',
