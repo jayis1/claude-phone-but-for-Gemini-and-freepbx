@@ -115,12 +115,19 @@ export class FreePBXClient {
      */
     async testConnection() {
         try {
-            // Use a simple query that should always work if authenticated
-            const q = `query { fetchAllExtensions { extension } }`;
+            // 1. Try a standard Ping query (requires gql:ping scope)
+            const q = `query { ping { status version } }`;
             await this.query(q);
             return { valid: true };
         } catch (error) {
-            return { valid: false, error: error.message };
+            // 2. Fallback to fetchExtensions if ping is blocked but extensions aren't
+            try {
+                const q2 = `query { fetchAllExtensions { extension } }`;
+                await this.query(q2);
+                return { valid: true };
+            } catch (err2) {
+                return { valid: false, error: error.message };
+            }
         }
     }
 }
