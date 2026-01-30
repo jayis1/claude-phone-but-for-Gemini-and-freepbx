@@ -62,7 +62,8 @@ export async function provisionCommand() {
         }
 
         const name = `${device.name} (AI)`;
-        const cid = `"${device.name}" <${device.extension}>`;
+        // FreePBX GraphQL API requires numeric outboundcid
+        const cid = device.extension;
 
         const updateResult = await client.updateExtension(
             device.extension,
