@@ -157,20 +157,20 @@ export class FreePBXClient {
      * @param {string} outboundcid - Outbound Caller ID
      * @returns {Promise<Object>} Mutation result
      */
-    async updateExtension(extension, name, outboundcid) {
+    async updateExtension(extensionId, name, outboundCid) {
         const mutation = `
-            mutation ($extension: String!, $name: String!, $outboundcid: String!) {
+            mutation ($extensionId: ID!, $name: String!, $outboundCid: String!) {
                 updateExtension(input: {
-                    extension: $extension,
+                    extensionId: $extensionId,
                     name: $name,
-                    outboundcid: $outboundcid
+                    outboundCid: $outboundCid
                 }) {
                     status
                     message
                 }
             }
         `;
-        return this.query(mutation, { extension, name, outboundcid });
+        return this.query(mutation, { extensionId, name, outboundCid });
     }
 
     /**
