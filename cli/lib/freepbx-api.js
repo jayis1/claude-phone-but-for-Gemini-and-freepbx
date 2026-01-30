@@ -157,13 +157,30 @@ export class FreePBXClient {
     }
 
     /**
+     * Find an extension's internal ID by its number
+     * @param {string} extensionNumber
+     * @returns {Promise<string|null>} Internal ID
+     */
+    async findExtensionId(extensionNumber) {
+        const q = `query { fetchAllExtensions { extension { id extension } } }`;
+        const res = await this.query(q);
+        const ext = res?.fetchAllExtensions?.find(e => e.extension.extension === extensionNumber);
+        return ext?.extension?.id || null;
+    }
+
+    /**
      * Update an extension's name and caller ID
      * @param {string} extension - Extension number
      * @param {string} name - Display name
-     * @param {string} outboundcid - Outbound Caller ID
+     * @param {string} outboundCid - Outbound Caller ID
      * @returns {Promise<Object>} Mutation result
      */
-    async updateExtension(extensionId, name, outboundCid) {
+    async updateExtension(extension, name, outboundCid) {
+        const extensionId = await this.findExtensionId(extension);
+        if (!extensionId) {
+            throw new Error(`Could not find internal ID for extension ${extension}`);
+        }
+
         const mutation = `
             mutation ($extensionId: ID!, $name: String!, $outboundCid: String!) {
                 updateExtension(input: {
