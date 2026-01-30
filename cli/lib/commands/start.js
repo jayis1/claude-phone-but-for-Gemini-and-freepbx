@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import fs from 'fs';
 import path from 'path';
-import { loadConfig, configExists, getInstallationType } from '../config.js';
+import { loadConfig, configExists, getInstallationType, getEnvPath } from '../config.js';
 import { checkDocker, writeDockerConfig, startContainers } from '../docker.js';
 import { startServer, isServerRunning } from '../process-manager.js';
 import { isGeminiInstalled, sleep } from '../utils.js';
@@ -155,8 +155,6 @@ async function startVoiceServer(config, isPiMode) {
   await mountVoicemail(config);
 
   // Generate Docker config
-
-  // Generate Docker config
   spinner.start('Generating Docker configuration...');
   try {
     await writeDockerConfig(config);
@@ -282,8 +280,6 @@ async function startBoth(config, isPiMode) {
   await mountVoicemail(config);
 
   // Generate Docker config
-
-  // Generate Docker config
   spinner.start('Generating Docker configuration...');
   try {
     await writeDockerConfig(config);
@@ -317,7 +313,7 @@ async function startBoth(config, isPiMode) {
       console.log(chalk.gray('  • PBX/SBC is running on the configured port'));
       console.log(chalk.gray('  • Another service is using the port'));
       console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If a PBX is on port 5060, run "gemini-phone setup" again'));
+      console.log(chalk.gray('  1. If a PBX/SBC is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }
@@ -373,7 +369,7 @@ async function startBoth(config, isPiMode) {
  */
 async function mountVoicemail(config) {
   // Load .env variables manually since we don't use dotenv in CLI
-  const envPath = path.join(config.paths.configDir, '.env');
+  const envPath = getEnvPath();
   if (!fs.existsSync(envPath)) return;
 
   const envContent = await fs.promises.readFile(envPath, 'utf8');
@@ -389,23 +385,15 @@ async function mountVoicemail(config) {
     }
   });
 
-  if (!env.SSH_PASS) return;
+  // Skip if SSH_PASS is not defined at all (user didn't use setup)
+  if (env.SSH_PASS === undefined) return;
 
   const spinner = ora('Mounting remote voicemail directory...').start();
 
   try {
-    // Check if sshpass is installed
-    try {
-      await execAsync('which sshpass');
-    } catch (e) {
-      spinner.warn('sshpass not found. Skipping auto-mount.');
-      console.log(chalk.gray('  Run installer again to get sshpass or install manually.\n'));
-      return;
-    }
-
     const mountPoint = path.join(config.paths.voiceApp, 'mounts', 'voicemail');
     const user = env.VOICEMAIL_MOUNT_USER || 'root';
-    const host = env.SIP_REGISTRAR; // Assuming SIP_REGISTRAR is the IP/Host of FreePBX
+    const host = env.SIP_REGISTRAR;
 
     if (!host) {
       spinner.warn('SIP_REGISTRAR not found in .env. Skipping mount.');
@@ -425,18 +413,32 @@ async function mountVoicemail(config) {
         return;
       }
     } catch (e) {
-      // grep returns exit code 1 if not found, which throws error. Proceed to mount.
+      // grep returns exit code 1 if not found
     }
 
-    // Mount
-    // Using -o reconnection options for robustness
-    const cmd = `sshpass -p "${env.SSH_PASS}" sshfs -o stricthostkeychecking=no,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 ${user}@${host}:/var/spool/asterisk/voicemail "${mountPoint}"`;
+    // Mount command
+    let cmd;
+    if (env.SSH_PASS) {
+      // If password provided, use sshpass
+      try {
+        await execAsync('which sshpass');
+      } catch (e) {
+        spinner.warn('sshpass not found. Skipping auto-mount.');
+        console.log(chalk.gray('  Run installer again to get sshpass or install manually.\n'));
+        return;
+      }
+      cmd = `sshpass -p "${env.SSH_PASS}" sshfs -o stricthostkeychecking=no,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 ${user}@${host}:/var/spool/asterisk/voicemail "${mountPoint}"`;
+    } else {
+      // If password is empty (and SSH_PASS was present in env), try direct sshfs (keys or passwordless)
+      // This supports the "blank password" scenario
+      cmd = `sshfs -o stricthostkeychecking=no,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 ${user}@${host}:/var/spool/asterisk/voicemail "${mountPoint}"`;
+    }
 
     await execAsync(cmd);
     spinner.succeed('Voicemail directory mounted via SSHFS');
 
   } catch (error) {
     spinner.fail(`Failed to mount voicemail: ${error.message}`);
-    console.log(chalk.yellow('  Check SSH credentials and network connectivity to ' + env.SIP_REGISTRAR));
+    // console.log(chalk.yellow('  Check SSH credentials and network connectivity to ' + (env.SIP_REGISTRAR || 'FreePBX')));
   }
 }
