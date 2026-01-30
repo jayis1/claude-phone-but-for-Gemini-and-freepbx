@@ -146,6 +146,12 @@ export class FreePBXClient {
                 this.accessToken = null;
                 return this.query(query, variables);
             }
+
+            // Extract detailed error information for 400 Bad Request
+            if (error.response?.data) {
+                const details = JSON.stringify(error.response.data);
+                throw new Error(`GraphQL Request Failed (${error.response.status}): ${details}`);
+            }
             throw error;
         }
     }
