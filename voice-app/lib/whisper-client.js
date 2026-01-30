@@ -85,7 +85,10 @@ async function transcribe(audioBuffer, options = {}) {
       model: "whisper-1",
       language: language,
       response_format: "text"
-    }, { timeout: 10000 }); // 10s timeout
+    }, {
+      timeout: 30000, // Increase to 30s
+      maxRetries: 0   // Disable auto-retries to see true error
+    });
 
     console.log(`[${timestamp}] WHISPER Transcribed: ${transcription.substring(0, 100)}${transcription.length > 100 ? "..." : ""}`);
 
