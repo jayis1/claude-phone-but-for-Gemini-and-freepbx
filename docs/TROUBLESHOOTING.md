@@ -21,7 +21,7 @@ Start here for most problems:
 **Causes & Solutions:**
 
 | Cause | Solution |
-|-------|----------|
+| :---- | :------- |
 | Key is incorrect | Double-check you copied the full key |
 | No billing enabled | Add payment method to your account |
 | Account suspended | Check account status on provider dashboard |
@@ -206,7 +206,7 @@ sed -i 's/--rtp-range-end 20100/--rtp-range-end 30100/' ~/.gemini-phone/docker-c
 **Causes & Solutions:**
 
 | Cause | Solution |
-|-------|----------|
+| :---- | :------- |
 | OpenAI billing exhausted | Add credits to OpenAI account |
 | Audio quality poor | Check microphone, reduce background noise |
 | Network latency | Audio chunks may be lost; check connection |
