@@ -13,6 +13,7 @@
  */
 
 const logger = require('./logger');
+const voicemailService = require('./voicemail-service');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -137,13 +138,17 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
     maxTurns = 20
   } = options;
 
-  // Extract devicePrompt and voiceId from deviceConfig (for Cephanie etc)
   const devicePrompt = deviceConfig?.prompt || null;
   const voiceId = deviceConfig?.voiceId || null;  // null = use default Morpheus voice
+  const callerId = options.callerId || 'unknown';
+
   let session = null;
   let forkRunning = false;
   let callActive = true;
   let dtmfHandler = null;
+
+  // Enhance system prompt with caller info
+  const systemContext = `\n[SYSTEM] Incoming call from ${callerId}. You are Morpheus. Answer accordingly.`;
 
   // Track when call ends to prevent operations on dead endpoints
   const onDialogDestroy = () => {
@@ -356,8 +361,20 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
 
       // 3. Query Gemini
       logger.info('Querying Gemini', { callUuid });
+
+      // Check for voicemail intent
+      let voicemailContext = '';
+      if (transcript.toLowerCase().includes('voicemail') || transcript.toLowerCase().includes('message')) {
+        const messages = await voicemailService.listVoicemails(deviceConfig?.extension || '9000');
+        if (messages.length > 0) {
+          voicemailContext = `\n[SYSTEM] User has ${messages.length} voicemails. Latest from ${messages[messages.length - 1].callerId} at ${messages[messages.length - 1].timestamp}. You can offer to play them.`;
+        } else {
+          voicemailContext = '\n[SYSTEM] User has 0 voicemails.';
+        }
+      }
+
       const geminiResponse = await geminiBridge.query(
-        transcript,
+        transcript + voicemailContext + systemContext,
         { callId: callUuid, devicePrompt: devicePrompt }
       );
 

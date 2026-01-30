@@ -402,7 +402,8 @@ async function handleInvite(req, res, options) {
     });
 
     // Pass activeCalls and n8nConfig (already in options)
-    await conversationLoop(endpoint, dialog, callUuid, options, deviceConfig);
+    const loopOptions = { ...options, callerId };
+    await conversationLoop(endpoint, dialog, callUuid, loopOptions, deviceConfig);
     return { endpoint: endpoint, dialog: dialog, callerId: callerId, callUuid: callUuid };
 
   } catch (error) {
