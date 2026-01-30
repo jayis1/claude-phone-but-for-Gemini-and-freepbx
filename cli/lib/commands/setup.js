@@ -24,6 +24,7 @@ import { detectSbc } from '../port-check.js';
 import { checkPiPrerequisites } from '../prerequisites.js';
 import { checkGeminiApiServer } from '../network.js';
 import { runPrereqChecks } from '../prereqs.js';
+import { FreePBXClient } from '../freepbx-api.js';
 
 /**
  * Prompt for installation type
@@ -667,7 +668,7 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '2.1.4',
+    version: '2.1.5',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
@@ -755,6 +756,45 @@ async function setupAPIKeys(config) {
   config.api.freepbx.clientId = freePBXAnswers.clientId;
   config.api.freepbx.clientSecret = freePBXAnswers.clientSecret;
   config.api.freepbx.apiUrl = freePBXAnswers.apiUrl;
+
+  // Validate FreePBX API if credentials were provided
+  if (freePBXAnswers.clientId && freePBXAnswers.clientSecret && freePBXAnswers.apiUrl) {
+    const pbxSpinner = ora('Validating FreePBX M2M API connection...').start();
+    try {
+      const client = new FreePBXClient({
+        clientId: freePBXAnswers.clientId,
+        clientSecret: freePBXAnswers.clientSecret,
+        apiUrl: freePBXAnswers.apiUrl
+      });
+
+      const pbxValid = await client.testConnection();
+      if (pbxValid) {
+        pbxSpinner.succeed('FreePBX API connection validated');
+      } else {
+        pbxSpinner.warn('FreePBX API connection failed (credentials may be invalid or scropes missing)');
+        const { pbxContinue } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'pbxContinue',
+            message: 'Connection failed. Continue anyway?',
+            default: true
+          }
+        ]);
+        if (!pbxContinue) throw new Error('Setup cancelled');
+      }
+    } catch (err) {
+      pbxSpinner.fail(`FreePBX API Error: ${err.message}`);
+      const { pbxContinue } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'pbxContinue',
+          message: 'API check failed. Continue anyway?',
+          default: true
+        }
+      ]);
+      if (!pbxContinue) throw new Error('Setup cancelled');
+    }
+  }
 
   // ElevenLabs API Key
   const elevenLabsAnswers = await inquirer.prompt([
