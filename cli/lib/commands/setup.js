@@ -667,13 +667,13 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '2.1.2',
+    version: '2.1.3',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
       gemini: { apiKey: '' },
       n8n: { webhookUrl: '' },
-      freepbx: { apiKey: '', apiSecret: '', apiUrl: '' }
+      freepbx: { clientId: '', clientSecret: '', apiUrl: '' }
     },
     sip: {
       domain: '',
@@ -733,15 +733,15 @@ async function setupAPIKeys(config) {
   const freePBXAnswers = await inquirer.prompt([
     {
       type: 'input',
-      name: 'apiKey',
-      message: 'FreePBX API Key (optional):',
-      default: config.api.freepbx?.apiKey || '',
+      name: 'clientId',
+      message: 'FreePBX API Client ID (optional):',
+      default: config.api.freepbx?.clientId || '',
     },
     {
       type: 'password',
-      name: 'apiSecret',
-      message: 'FreePBX API Secret (optional):',
-      default: config.api.freepbx?.apiSecret || '',
+      name: 'clientSecret',
+      message: 'FreePBX API Client Secret (optional):',
+      default: config.api.freepbx?.clientSecret || '',
     },
     {
       type: 'input',
@@ -752,8 +752,8 @@ async function setupAPIKeys(config) {
   ]);
 
   if (!config.api.freepbx) config.api.freepbx = {};
-  config.api.freepbx.apiKey = freePBXAnswers.apiKey;
-  config.api.freepbx.apiSecret = freePBXAnswers.apiSecret;
+  config.api.freepbx.clientId = freePBXAnswers.clientId;
+  config.api.freepbx.clientSecret = freePBXAnswers.clientSecret;
   config.api.freepbx.apiUrl = freePBXAnswers.apiUrl;
 
   // ElevenLabs API Key
