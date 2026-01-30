@@ -162,9 +162,9 @@ export class FreePBXClient {
      * @returns {Promise<string|null>} Internal ID
      */
     async findExtensionId(extensionNumber) {
-        const q = `query { fetchAllExtensions { extension { id extension } } }`;
+        const q = `query { fetchAllExtensions { extension { id extensionId } } }`;
         const res = await this.query(q);
-        const ext = res?.fetchAllExtensions?.find(e => e.extension.extension === extensionNumber);
+        const ext = res?.fetchAllExtensions?.find(e => e.extension.extensionId === extensionNumber);
         return ext?.extension?.id || null;
     }
 
