@@ -221,14 +221,14 @@ export class FreePBXClient {
             return { valid: false, error: 'Incomplete or missing API URL' };
         }
         try {
-            // 1. Try fetching extensions (most relevant to our needs)
-            const q = `query { fetchAllExtensions { extension } }`;
+            // 1. Universal health check (standard GraphQL)
+            const q = `query { __typename }`;
             await this.query(q);
             return { valid: true };
         } catch (error) {
-            // 2. Fallback to a simple Ping if extensions is blocked
+            // 2. Try fetching extensions as fallback
             try {
-                const q2 = `query { ping { status } }`;
+                const q2 = `query { fetchAllExtensions { extension { extension } } }`;
                 await this.query(q2);
                 return { valid: true };
             } catch (err2) {
