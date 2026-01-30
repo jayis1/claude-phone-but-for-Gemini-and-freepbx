@@ -10,6 +10,18 @@ REPO_URL="https://github.com/jayis1/2fast2dumb2fun.git"
 echo "🎯 Gemini Phone CLI Installer"
 echo ""
 
+# Define sudo command based on user
+if [ "$EUID" -eq 0 ]; then
+  SUDO=""
+else
+  if command -v sudo &> /dev/null; then
+    SUDO="sudo"
+  else
+    echo "✗ This script requires root privileges or sudo."
+    exit 1
+  fi
+fi
+
 # Detect OS
 OS="$(uname -s)"
 case "$OS" in
@@ -46,14 +58,14 @@ install_nodejs() {
   case "$PKG_MANAGER" in
     apt)
       # Install Node.js 20.x LTS via NodeSource
-      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-      sudo apt-get install -y nodejs
+      curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO -E bash -
+      $SUDO apt-get install -y nodejs
       ;;
     dnf)
-      sudo dnf install -y nodejs npm
+      $SUDO dnf install -y nodejs npm
       ;;
     pacman)
-      sudo pacman -S --noconfirm nodejs npm
+      $SUDO pacman -S --noconfirm nodejs npm
       ;;
     brew)
       brew install node
@@ -74,21 +86,21 @@ install_docker() {
   case "$PKG_MANAGER" in
     apt)
       # Install Docker via official script
-      curl -fsSL https://get.docker.com | sudo sh
-      sudo usermod -aG docker $USER
+      curl -fsSL https://get.docker.com | $SUDO sh
+      $SUDO usermod -aG docker $USER
       echo "⚠️  You may need to log out and back in for Docker group to take effect"
       ;;
     dnf)
-      sudo dnf install -y docker
-      sudo systemctl start docker
-      sudo systemctl enable docker
-      sudo usermod -aG docker $USER
+      $SUDO dnf install -y docker
+      $SUDO systemctl start docker
+      $SUDO systemctl enable docker
+      $SUDO usermod -aG docker $USER
       ;;
     pacman)
-      sudo pacman -S --noconfirm docker
-      sudo systemctl start docker
-      sudo systemctl enable docker
-      sudo usermod -aG docker $USER
+      $SUDO pacman -S --noconfirm docker
+      $SUDO systemctl start docker
+      $SUDO systemctl enable docker
+      $SUDO usermod -aG docker $USER
       ;;
     brew)
       echo "📦 Docker Desktop required on macOS"
@@ -110,13 +122,13 @@ install_git() {
   echo "📦 Installing git..."
   case "$PKG_MANAGER" in
     apt)
-      sudo apt-get update && sudo apt-get install -y git
+      $SUDO apt-get update && $SUDO apt-get install -y git
       ;;
     dnf)
-      sudo dnf install -y git
+      $SUDO dnf install -y git
       ;;
     pacman)
-      sudo pacman -S --noconfirm git
+      $SUDO pacman -S --noconfirm git
       ;;
     brew)
       brew install git
@@ -194,7 +206,7 @@ if [ "$OS" = "Linux" ]; then
   if ! docker info &> /dev/null 2>&1; then
     echo "⚠️  Docker permission issue"
     echo "  Adding user to docker group..."
-    sudo usermod -aG docker $USER
+    $SUDO usermod -aG docker $USER
     echo "  ⚠️  You need to log out and back in, OR run: newgrp docker"
     echo ""
     read -p "Continue anyway? (Y/n) " -n 1 -r
@@ -251,7 +263,7 @@ else
   if [ -w "$BIN_DIR" ]; then
     ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
   else
-    sudo ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
+    $SUDO ln -s "$INSTALL_DIR/cli/bin/gemini-phone.js" "$BIN_DIR/gemini-phone"
   fi
   echo "✓ Installed to: $BIN_DIR/gemini-phone"
 fi
