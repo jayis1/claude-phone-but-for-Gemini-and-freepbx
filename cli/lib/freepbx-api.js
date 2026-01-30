@@ -198,7 +198,7 @@ export class FreePBXClient {
                 updateExtension(input: {
                     extensionId: $extensionId,
                     name: $name,
-                    outboundcid: $outboundCid
+                    outboundCid: $outboundCid
                 }) {
                     status
                     message
