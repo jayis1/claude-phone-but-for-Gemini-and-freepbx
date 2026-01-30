@@ -130,7 +130,8 @@ export class FreePBXClient {
                 timeout: 15000,
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'Sangoma P330/4.5.3'
                 }
             });
 
@@ -217,12 +218,10 @@ export class FreePBXClient {
         const destination = `from-did-direct,${targetExtension},1`;
         const input = {
             destination,
-            description: "Gemini Phone: AI Route"
+            description: "Gemini Phone: AI Route",
+            extension: did || null,
+            cidnum: cid || null
         };
-
-        // Only include fields if they have values to avoid "numeric only" validation errors on empty strings
-        if (did) input.extension = did;
-        if (cid) input.cidnum = cid;
 
         const mutation = `
             mutation ($input: addInboundRouteInput!) {
