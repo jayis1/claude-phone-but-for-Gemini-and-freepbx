@@ -104,7 +104,7 @@ export async function checkUdpPort(port, timeout = 1000) {
  */
 export async function checkSbcProcess() {
   try {
-    // Check for 3CX SBC (legacy) or potentially other common SBCs
+    // Check for PBX SBC or potentially other common SBCs
     const { stdout } = await execAsync('pgrep -x 3cxsbc || systemctl is-active 3cxsbc 2>/dev/null');
     return stdout.trim().length > 0 || stdout.includes('active');
   } catch {
