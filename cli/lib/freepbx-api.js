@@ -221,21 +221,12 @@ export class FreePBXClient {
             return { valid: false, error: 'Incomplete or missing API URL' };
         }
         try {
-            // 1. Universal health check (standard GraphQL)
+            // Standard GraphQL introspection query - works on every GraphQL server
             const q = `query { __typename }`;
             await this.query(q);
             return { valid: true };
         } catch (error) {
-            // 2. Try fetching extensions as fallback
-            try {
-                const q2 = `query { fetchAllExtensions { extension { extension } } }`;
-                await this.query(q2);
-                return { valid: true };
-            } catch (err2) {
-                // Return the most informative error
-                const finalError = err2.message.includes('Cannot query field') ? error.message : err2.message;
-                return { valid: false, error: finalError };
-            }
+            return { valid: false, error: error.message };
         }
     }
 }

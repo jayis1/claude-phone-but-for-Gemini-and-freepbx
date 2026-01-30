@@ -76,7 +76,7 @@ gemini-phone start
 
 Best for: Mac or Linux server that's always on and has Gemini Code installed.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Your Phone                                                  │
 │      │                                                       │
@@ -107,7 +107,7 @@ gemini-phone start    # Launches Docker + API server
 
 Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │  Your Phone                                                 │
 │      │                                                      │

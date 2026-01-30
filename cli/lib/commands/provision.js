@@ -9,7 +9,7 @@ import { FreePBXClient } from '../freepbx-api.js';
  * @param {object} options - Command options
  * @returns {Promise<void>}
  */
-export async function provisionCommand(options = {}) {
+export async function provisionCommand() {
     console.log(chalk.bold.cyan('\n⚙️  FreePBX Self-Provisioning\n'));
 
     const config = await loadConfig();
