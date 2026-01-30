@@ -118,6 +118,34 @@ async function checkVoiceApp() {
 }
 
 /**
+ * Check SIP registration status via voice-app API
+ * @param {number} port - Voice-app HTTP port
+ * @returns {Promise<{connected: boolean, registered: boolean, details?: any, error?: string}>}
+ */
+async function checkSIPRegistration(port) {
+  try {
+    const response = await axios.get(`http://localhost:${port}/api/sip-status`, {
+      timeout: 5000
+    });
+
+    if (response.status === 200) {
+      const { drachtioConnected, freeswitchConnected, registrations } = response.data;
+      const registeredCount = registrations.length;
+
+      return {
+        connected: true,
+        registered: registeredCount > 0,
+        details: { drachtioConnected, freeswitchConnected, registrations }
+      };
+    } else {
+      return { connected: false, error: `API returned status ${response.status}` };
+    }
+  } catch (error) {
+    return { connected: false, error: 'Voice-app API not responding' };
+  }
+}
+
+/**
  * Check if gemini-api-server is running
  * @param {number} port - Port to check
  * @returns {Promise<{running: boolean, pid?: number, healthy?: boolean, error?: string}>}
@@ -322,6 +350,27 @@ async function runVoiceServerChecks(config, isPiSplit) {
     console.log(chalk.gray('  → Run "gemini-phone start" to launch services\n'));
   }
   checks.push({ name: 'Voice-app container', passed: voiceAppResult.running });
+
+  // Check SIP Registration (if container is running)
+  if (voiceAppResult.running) {
+    const sipSpinner = ora('Checking SIP registration...').start();
+    const sipResult = await checkSIPRegistration(config.server.httpPort || 3000);
+
+    if (sipResult.connected && sipResult.registered) {
+      const exts = sipResult.details.registrations.map(r => r.extension).join(', ');
+      sipSpinner.succeed(chalk.green(`SIP registered: extensions ${exts}`));
+      passedCount++;
+    } else if (sipResult.connected && !sipResult.registered) {
+      sipSpinner.fail(chalk.red('SIP not registered with PBX'));
+      console.log(chalk.gray('  → Check extension credentials in ~/.gemini-phone/config.json'));
+      console.log(chalk.gray('  → Ensure FreePBX allows registration from this IP\n'));
+    } else {
+      sipSpinner.warn(chalk.yellow(`SIP status unknown: ${sipResult.error}`));
+      console.log(chalk.gray('  → Voice-app API is starting up or unreachable\n'));
+      passedCount++; // Partial pass
+    }
+    checks.push({ name: 'SIP registration', passed: sipResult.connected && sipResult.registered });
+  }
 
   // Check API server reachability (voice-server mode)
   if (isPiSplit) {
