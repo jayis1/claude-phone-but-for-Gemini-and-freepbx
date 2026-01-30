@@ -92,9 +92,11 @@ function buildGeminiEnvironment() {
     GEMINI_ENTRYPOINT: 'cli',
   };
 
-  // CRITICAL: Remove GEMINI_API_KEY so Gemini CLI uses subscription auth
-  // If GEMINI_API_KEY is set (even to placeholder), CLI tries API auth instead
-  delete env.GEMINI_API_KEY;
+  // ONLY remove GEMINI_API_KEY if it's a placeholder or empty
+  // If it's a valid key, we want to respect it so Gemini CLI uses API auth
+  if (!env.GEMINI_API_KEY || env.GEMINI_API_KEY.includes('change_me') || env.GEMINI_API_KEY.trim() === '') {
+    delete env.GEMINI_API_KEY;
+  }
 
   return env;
 }

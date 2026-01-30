@@ -34,7 +34,7 @@ test('process-manager module', async (t) => {
     const serverPath = '/bin';
     const port = 3333;
 
-    const pid = await startServer(serverPath, port, TEST_PID_FILE);
+    const pid = await startServer(serverPath, port, {}, TEST_PID_FILE);
     assert.ok(pid > 0);
     assert.strictEqual(fs.existsSync(TEST_PID_FILE), true);
   });

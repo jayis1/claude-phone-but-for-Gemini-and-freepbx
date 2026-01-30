@@ -42,7 +42,7 @@ curl -sSL https://raw.githubusercontent.com/jayis1/2fast2dumb2fun/main/install.s
 The installer will:
 
 - Check for Node.js 18+, Docker, and git (offers to install if missing)
-- Clone the repository to `~/.claude-phone-cli`
+- Clone the repository to `~/.gemini-phone-cli`
 - Install dependencies
 - Create the `gemini-phone` command
 
@@ -61,7 +61,7 @@ The setup wizard asks what you're installing:
 | Type | Use Case | What It Configures |
 |------|----------|-------------------|
 | **Voice Server** | Pi or dedicated voice box | Docker containers, connects to remote API server |
-| **API Server** | Mac/Linux with Claude Code | Just the Claude API wrapper |
+| **API Server** | Mac/Linux with Gemini Code | Just the Gemini API wrapper |
 | **Both** | All-in-one single machine | Everything on one box |
 
 ### 3. Start
@@ -120,7 +120,7 @@ Best for: Dedicated Pi for voice services, Gemini running on your main machine.
 │  ┌─────────────┐         ┌─────────────────────┐            │
 │  │ Raspberry Pi │   ←→   │ Mac/Linux with      │            │
 │  │ (voice-app)  │  HTTP  │ Gemini_CLI          │            │
-│  └─────────────┘         │ (claude-api-server) │            │
+│  └─────────────┘         │ (gemini-api-server) │            │
 │                          └─────────────────────┘            │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -138,7 +138,7 @@ gemini-phone start    # Launches Docker containers
 gemini-phone api-server    # Starts Gemini API wrapper on port 3333
 ```
 
-Note: On the API server machine, you don't need to run `gemini-phone setup` first - the `api-server` command works standalone.
+Note: On the API server machine, you don't need to run `gemini-phone setup` first if you use `gemini login`. If you prefer using an API key, run `gemini-phone setup` and provide your `GEMINI_API_KEY`.
 
 ## CLI Commands
 

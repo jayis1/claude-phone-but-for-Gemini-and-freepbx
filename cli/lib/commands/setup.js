@@ -667,10 +667,11 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '1.0.0',
+    version: '2.1.0',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
-      openai: { apiKey: '', validated: false }
+      openai: { apiKey: '', validated: false },
+      gemini: { apiKey: '' }
     },
     sip: {
       domain: '',
@@ -700,6 +701,19 @@ function createDefaultConfig() {
  * @returns {Promise<object>} Updated config
  */
 async function setupAPIKeys(config) {
+  // Gemini API Key (Optional)
+  const geminiAnswers = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'apiKey',
+      message: 'Gemini API key (optional, leave empty to use "gemini login" auth):',
+      default: config.api.gemini?.apiKey || '',
+    }
+  ]);
+
+  if (!config.api.gemini) config.api.gemini = {};
+  config.api.gemini.apiKey = geminiAnswers.apiKey;
+
   // ElevenLabs API Key
   const elevenLabsAnswers = await inquirer.prompt([
     {
