@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="assets/logo.png" alt="Gemini Phone Classic" width="200">
   <img src="assets/gemini-logo-v2.png" alt="Gemini Phone 2.0" width="200">
 </p>
 
