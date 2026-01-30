@@ -36,7 +36,7 @@ Gemini Phone gives your Gemini Code installation a phone number. You can:
 ### 1. Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jayis1/2fast2dumb2fun/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/2fast2dumb2fun/2.1.2/install.sh | bash
 ```
 
 The installer will:
