@@ -221,18 +221,20 @@ export class FreePBXClient {
             return { valid: false, error: 'Incomplete or missing API URL' };
         }
         try {
-            // 1. Try a standard Ping query (requires gql:ping scope)
-            const q = `query { ping { status version } }`;
+            // 1. Try fetching extensions (most relevant to our needs)
+            const q = `query { fetchAllExtensions { extension } }`;
             await this.query(q);
             return { valid: true };
         } catch (error) {
-            // 2. Fallback to fetchExtensions if ping is blocked but extensions aren't
+            // 2. Fallback to a simple Ping if extensions is blocked
             try {
-                const q2 = `query { fetchAllExtensions { extension } }`;
+                const q2 = `query { ping { status } }`;
                 await this.query(q2);
                 return { valid: true };
             } catch (err2) {
-                return { valid: false, error: error.message };
+                // Return the most informative error
+                const finalError = err2.message.includes('Cannot query field') ? error.message : err2.message;
+                return { valid: false, error: finalError };
             }
         }
     }
