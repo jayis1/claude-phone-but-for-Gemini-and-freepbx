@@ -667,7 +667,7 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '2.1.3',
+    version: '2.1.4',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
