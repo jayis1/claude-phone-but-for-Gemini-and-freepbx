@@ -157,7 +157,7 @@ gemini-phone/
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/jayis1/2fast2dumb2fun/2.1.6/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jayis1/claude-phone-but-for-Gemini-and-freepbx/2.1.6/install.sh | bash
 
 # Setup and run
 gemini-phone setup    # Interactive configuration
