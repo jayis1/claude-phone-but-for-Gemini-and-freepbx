@@ -229,6 +229,30 @@ function initializeServers() {
   httpServer.app.use("/api", queryRouter);
   console.log("[" + new Date().toISOString() + "] QUERY API enabled (/api/query, /api/devices)");
 
+  // ========== SIP STATUS ENDPOINT ==========
+  httpServer.app.get("/api/sip-status", (req, res) => {
+    const status = {
+      isReady,
+      drachtioConnected,
+      freeswitchConnected,
+      registrations: []
+    };
+
+    if (registrar && registrar.registrations) {
+      for (const [ext, reg] of registrar.registrations.entries()) {
+        status.registrations.push({
+          extension: ext,
+          name: reg.device ? reg.device.name : 'unknown',
+          registeredAt: new Date(reg.registeredAt).toISOString(),
+          expiry: reg.expiry
+        });
+      }
+    }
+
+    res.json(status);
+  });
+  console.log("[" + new Date().toISOString() + "] SIP STATUS API enabled (/api/sip-status)");
+
   // Finalize HTTP server
   httpServer.finalize();
 
