@@ -18,25 +18,30 @@ export class FreePBXClient {
 
         // Improve URL resolution
         if (this.apiUrl) {
-            // Clean up common copy-paste noise (like labels from prompts)
+            // Clean up common copy-paste noise
             this.apiUrl = this.apiUrl.trim()
                 .replace(/^[Ll]:\s*/, '') // Remove prompt label "L: "
                 .replace(/^Graphql URL.*:\s*/i, '') // Remove label "Graphql URL (optional...): "
                 .replace(/\s+/g, ''); // Remove all spaces
 
-            // Basic protocol validation
-            if (!this.apiUrl.startsWith('http://') && !this.apiUrl.startsWith('https://')) {
-                this.apiUrl = 'https://' + this.apiUrl;
+            // Bail if empty after cleaning
+            if (!this.apiUrl) {
+                this.apiUrl = null;
+                this.tokenUrl = null;
+            } else {
+                // Basic protocol validation
+                if (!this.apiUrl.startsWith('http://') && !this.apiUrl.startsWith('https://')) {
+                    this.apiUrl = 'https://' + this.apiUrl;
+                }
+
+                // If user provides a bare domain/IP, append the standard GraphQL path
+                if (!this.apiUrl.includes('/admin/api/') && !this.apiUrl.endsWith('.php')) {
+                    this.apiUrl = this.apiUrl.replace(/\/$/, '') + '/admin/api/api/gql';
+                }
+
+                // Resolve Token URL from GraphQL URL
+                this.tokenUrl = this.apiUrl.replace(/\/gql$/, '/token');
             }
-
-            // If user provides a bare domain, append the standard GraphQL path
-
-            if (!this.apiUrl.includes('/admin/api/') && !this.apiUrl.endsWith('.php')) {
-                this.apiUrl = this.apiUrl.replace(/\/$/, '') + '/admin/api/api/gql';
-            }
-
-            // Resolve Token URL from GraphQL URL
-            this.tokenUrl = this.apiUrl.replace(/\/gql$/, '/token');
         } else {
             this.tokenUrl = null;
         }
@@ -126,6 +131,9 @@ export class FreePBXClient {
      * @returns {Promise<{ valid: boolean, error?: string }>} True if connection is valid
      */
     async testConnection() {
+        if (!this.apiUrl || this.apiUrl === 'https://') {
+            return { valid: false, error: 'Incomplete or missing API URL' };
+        }
         try {
             // 1. Try a standard Ping query (requires gql:ping scope)
             const q = `query { ping { status version } }`;
