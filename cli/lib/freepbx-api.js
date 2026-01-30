@@ -18,7 +18,14 @@ export class FreePBXClient {
 
         // Improve URL resolution
         if (this.apiUrl) {
+            // Basic protocol validation
+            if (!this.apiUrl.startsWith('http://') && !this.apiUrl.startsWith('https://')) {
+                // If it looks like a domain or nonsense starting with L:, try fix it
+                this.apiUrl = 'https://' + this.apiUrl.replace(/^[Ll]:\s*/, '');
+            }
+
             // If user provides a bare domain, append the standard GraphQL path
+
             if (!this.apiUrl.includes('/admin/api/') && !this.apiUrl.endsWith('.php')) {
                 this.apiUrl = this.apiUrl.replace(/\/$/, '') + '/admin/api/api/gql';
             }
