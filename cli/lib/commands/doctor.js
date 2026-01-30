@@ -349,15 +349,17 @@ async function runVoiceServerChecks(config, isPiSplit) {
         clientSecret: config.api.freepbx.clientSecret,
         apiUrl: config.api.freepbx.apiUrl
       });
-      const pbxValid = await client.testConnection();
-      if (pbxValid) {
+      const pbxResult = await client.testConnection();
+      if (pbxResult.valid) {
         pbxSpinner.succeed(chalk.green('FreePBX M2M API connected'));
         passedCount++;
       } else {
-        pbxSpinner.fail(chalk.red('FreePBX M2M API connection failed'));
-        console.log(chalk.gray('  → Check your Client ID, Secret and URL in ~/.gemini-phone/config.json\n'));
+        pbxSpinner.fail(chalk.red(`FreePBX M2M API connection failed: ${pbxResult.error}`));
+        console.log(chalk.gray('  → Check your Client ID, Secret and URL in ~/.gemini-phone/config.json'));
+        console.log(chalk.gray(`  → Current GraphQL URL: ${config.api.freepbx.apiUrl}\n`));
       }
-      checks.push({ name: 'FreePBX M2M API', passed: pbxValid });
+      checks.push({ name: 'FreePBX M2M API', passed: pbxResult.valid });
+
     } catch (err) {
       pbxSpinner.fail(chalk.red(`FreePBX M2M API error: ${err.message}`));
       console.log(chalk.gray('  → Ensure FreePBX is reachable and API is enabled\n'));

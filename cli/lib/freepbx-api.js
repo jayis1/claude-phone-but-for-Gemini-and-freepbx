@@ -16,10 +16,18 @@ export class FreePBXClient {
         this.clientSecret = options.clientSecret;
         this.apiUrl = options.apiUrl;
 
-        // Resolve Token URL from GraphQL URL
-        // GraphQL: https://ip/admin/api/api/gql
-        // Token:   https://ip/admin/api/api/token
-        this.tokenUrl = options.apiUrl ? options.apiUrl.replace(/\/gql$/, '/token') : null;
+        // Improve URL resolution
+        if (this.apiUrl) {
+            // If user provides a bare domain, append the standard GraphQL path
+            if (!this.apiUrl.includes('/admin/api/') && !this.apiUrl.endsWith('.php')) {
+                this.apiUrl = this.apiUrl.replace(/\/$/, '') + '/admin/api/api/gql';
+            }
+
+            // Resolve Token URL from GraphQL URL
+            this.tokenUrl = this.apiUrl.replace(/\/gql$/, '/token');
+        } else {
+            this.tokenUrl = null;
+        }
 
         this.accessToken = null;
         this.tokenExpiresAt = null;
@@ -103,16 +111,16 @@ export class FreePBXClient {
 
     /**
      * Test connectivity and credentials
-     * @returns {Promise<boolean>} True if connection is valid
+     * @returns {Promise<{ valid: boolean, error?: string }>} True if connection is valid
      */
     async testConnection() {
         try {
             // Use a simple query that should always work if authenticated
             const q = `query { fetchAllExtensions { extension } }`;
             await this.query(q);
-            return true;
+            return { valid: true };
         } catch (error) {
-            return false;
+            return { valid: false, error: error.message };
         }
     }
 }

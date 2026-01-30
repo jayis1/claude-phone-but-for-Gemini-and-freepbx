@@ -668,7 +668,7 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '2.1.5',
+    version: '2.1.6',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
@@ -767,11 +767,12 @@ async function setupAPIKeys(config) {
         apiUrl: freePBXAnswers.apiUrl
       });
 
-      const pbxValid = await client.testConnection();
-      if (pbxValid) {
+      const pbxResult = await client.testConnection();
+      if (pbxResult.valid) {
         pbxSpinner.succeed('FreePBX API connection validated');
       } else {
-        pbxSpinner.warn('FreePBX API connection failed (credentials may be invalid or scropes missing)');
+        pbxSpinner.warn(`FreePBX API connection failed: ${pbxResult.error}`);
+
         const { pbxContinue } = await inquirer.prompt([
           {
             type: 'confirm',
