@@ -217,6 +217,7 @@ export function generateEnvFile(config) {
     `FREEPBX_CLIENT_ID=${config.api.freepbx?.clientId || ''}`,
     `FREEPBX_CLIENT_SECRET=${config.api.freepbx?.clientSecret || ''}`,
     `FREEPBX_API_URL=${config.api.freepbx?.apiUrl || ''}`,
+    'GEMINI_APP_STACK_IP=auto',
     '',
     '# Default extension (primary device)',
     `SIP_EXTENSION=${config.devices[0].extension}`,
