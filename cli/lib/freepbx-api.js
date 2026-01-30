@@ -18,10 +18,15 @@ export class FreePBXClient {
 
         // Improve URL resolution
         if (this.apiUrl) {
+            // Clean up common copy-paste noise (like labels from prompts)
+            this.apiUrl = this.apiUrl.trim()
+                .replace(/^[Ll]:\s*/, '') // Remove prompt label "L: "
+                .replace(/^Graphql URL.*:\s*/i, '') // Remove label "Graphql URL (optional...): "
+                .replace(/\s+/g, ''); // Remove all spaces
+
             // Basic protocol validation
             if (!this.apiUrl.startsWith('http://') && !this.apiUrl.startsWith('https://')) {
-                // If it looks like a domain or nonsense starting with L:, try fix it
-                this.apiUrl = 'https://' + this.apiUrl.replace(/^[Ll]:\s*/, '');
+                this.apiUrl = 'https://' + this.apiUrl;
             }
 
             // If user provides a bare domain, append the standard GraphQL path
