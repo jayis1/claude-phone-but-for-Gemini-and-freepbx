@@ -219,7 +219,7 @@ export class FreePBXClient {
      * @param {string} cid - CID number (optional)
      */
     async addInboundRoute(targetExtension, did = '', cid = '') {
-        const destination = `from - did - direct, ${targetExtension}, 1`;
+        const destination = `from-did-direct,${targetExtension},1`;
         const input = {
             destination,
             description: "Gemini Phone: AI Route",
