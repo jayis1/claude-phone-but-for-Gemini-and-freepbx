@@ -96,7 +96,7 @@ function validateRequest(body) {
  * Body parameters:
  *   - to: Phone number (required)
  *   - message: Initial message to play (required) - what the device SAYS
- *   - context: Background data for Claude (optional) - what the device KNOWS
+ *   - context: Background data for Gemini (optional) - what the device KNOWS
  *   - mode: 'announce' or 'conversation' (default: announce)
  *   - device: Device extension or name for voice/personality (optional)
  *   - callerId: Caller ID (optional)
@@ -164,7 +164,7 @@ router.post('/outbound-call', async function (req, res) {
 
     // For conversation mode, check additional dependencies
     if (mode === 'conversation') {
-      if (!audioForkServer || !whisperClient || !claudeBridge || !ttsService) {
+      if (!audioForkServer || !whisperClient || !geminiBridge || !ttsService) {
         logger.error('Conversation mode dependencies not ready', {
           audioForkServer: !!audioForkServer,
           whisperClient: !!whisperClient,

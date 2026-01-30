@@ -1,23 +1,28 @@
 # API Contract: Device Personality Query Endpoint
+
 **Version:** 1.0.0  
 **Status:** DRAFT  
 **Author:** Glenn (The Researcher)  
 **Date:** 2025-12-22  
 
 ## 1. Overview
+
 This specification defines the contract for the `POST /api/query` endpoint in the `voice-app` service. This endpoint allows external systems (specifically n8n automation workflows) to synchronously query specific device personalities (e.g., "Cephanie", "Morpheus") without initiating a voice call.
 
 The primary goal is to retrieve **Structured JSON** responses from the LLM to drive conditional logic in automation flows.
 
 ## 2. Base Configuration
+
 - **Host:** `http://10.70.7.81:3000` (Sippycup)
 - **Content-Type:** `application/json`
 - **Auth:** Internal Network Only (No token required for MVP)
 
 ## 3. Configuration Dependencies
+
 The system relies on a `devices.json` configuration file to map identifiers to personalities.
 
 **Definition (`devices.json`):**
+
 ```json
 {
   "9002": {
@@ -54,7 +59,7 @@ Directly queries a device personality with a text prompt and receives a text or 
 
 **Parameters:**
 
-| Field | Type | Required | Description | Validation | 
+| Field | Type | Required | Description | Validation |
 |-------|------|----------|-------------|------------|
 | `target` | string | Yes | The identifier of the device to query. Can be an **Extension** (e.g., "9002") or a **Name** (case-insensitive, e.g., "cephanie"). | Must match an entry in `devices.json`. |
 | `query` | string | Yes | The input prompt or question for the device. | Min 1 char, Max 2000 chars. |
@@ -80,7 +85,7 @@ Directly queries a device personality with a text prompt and receives a text or 
   },
   "meta": {
     "duration_ms": 1450,
-    "model": "claude-3-opus"
+    "model": "gemini-1.5-pro"
   }
 }
 ```
@@ -88,10 +93,10 @@ Directly queries a device personality with a text prompt and receives a text or 
 **Field Details:**
 
 - `response.raw`: The exact string returned by the LLM.
-- `response.data`: 
-    - If `format="json"`, this contains the parsed JSON object.
-    - If `format="text"`, this is `null`.
-    - If JSON parsing fails, this is `null` (check `error` in logs, or `success: false` if strict).
+- `response.data`:
+  - If `format="json"`, this contains the parsed JSON object.
+  - If `format="text"`, this is `null`.
+  - If JSON parsing fails, this is `null` (check `error` in logs, or `success: false` if strict).
 
 **Error Response (4xx/5xx)**
 
@@ -115,7 +120,6 @@ Directly queries a device personality with a text prompt and receives a text or 
 | `parse_error` | 422 | `format="json"` was requested, but the LLM returned invalid JSON. |
 
 ---
-
 
 ## 5. Structured Output Strategy (JSON)
 
@@ -145,7 +149,6 @@ If the LLM returns text with markdown ticks (e.g., \`\`\`json ... \`\`\`), the `
 
 ---
 
-
 ## 6. n8n Integration Guide
 
 ### 6.1 HTTP Request Node Configuration
@@ -153,6 +156,7 @@ If the LLM returns text with markdown ticks (e.g., \`\`\`json ... \`\`\`), the `
 - **Method:** POST
 - **URL:** `http://10.70.7.81:3000/api/query`
 - **Body Parameters:**
+
   ```json
   {
     "target": "Cephanie",
@@ -168,6 +172,7 @@ Assuming the n8n HTTP Node outputs the API response, you can route based on the 
 **Scenario:** "Ask Cephanie if I can reboot the server."
 
 **Response Data (`body.response.data`):**
+
 ```json
 {
   "approved": false,
@@ -196,11 +201,15 @@ If parsing fails, default to `false`:
 ## 7. Example Scenarios
 
 ### Scenario A: Simple Status Check (Text)
+
 **Request:**
+
 ```json
 { "target": "Morpheus", "query": "Who is currently connected?", "format": "text" }
 ```
+
 **Response:**
+
 ```json
 {
   "success": true,
@@ -213,7 +222,9 @@ If parsing fails, default to `false`:
 ```
 
 ### Scenario B: Automation Decision (JSON)
+
 **Request:**
+
 ```json
 { 
   "target": "Cephanie", 
@@ -221,7 +232,9 @@ If parsing fails, default to `false`:
   "format": "json" 
 }
 ```
+
 **Response:**
+
 ```json
 {
   "success": true,

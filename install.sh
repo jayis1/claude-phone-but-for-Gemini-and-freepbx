@@ -221,10 +221,22 @@ if [ "$OS" = "Linux" ]; then
   fi
 fi
 
-# Check Gemini CLI (optional - only needed for API server)
+# Check Gemini CLI (optional - needed for API server)
 if ! command -v gemini &> /dev/null; then
   echo "⚠️  Gemini CLI not found (needed for API server only)"
-  echo "  Install from: https://geminicli.com/docs/get-started/installation/"
+  read -p "  Install Gemini CLI automatically? (Y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    echo "📦 Installing Gemini CLI..."
+    if [ -n "$SUDO" ]; then
+      $SUDO npm install -g @google/gemini-cli
+    else
+      npm install -g @google/gemini-cli
+    fi
+    echo "✓ Gemini CLI installed"
+  else
+    echo "  Manual install: https://geminicli.com/docs/get-started/installation/"
+  fi
 else
   echo "✓ Gemini CLI installed"
 fi
