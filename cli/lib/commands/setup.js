@@ -425,6 +425,10 @@ async function setupVoiceServer(config) {
   config.server.externalIp = serverAnswers.externalIp;
   config.server.httpPort = parseInt(serverAnswers.httpPort, 10);
 
+  config = await setupSIP(config);
+
+  config = await setupVoicemail(config);
+
   return config;
 }
 
@@ -460,6 +464,9 @@ async function setupBoth(config) {
   // Step 3: Device Configuration
   console.log(chalk.bold('\n🤖 Device Configuration'));
   config = await setupDevice(config);
+
+  // Step 3.5: Voicemail Configuration
+  config = await setupVoicemail(config);
 
   // Step 4: Server Configuration
   console.log(chalk.bold('\n⚙️  Server Configuration'));
@@ -1258,6 +1265,50 @@ async function setupPiServer(config) {
 
   config.server.externalIp = answers.externalIp;
   config.server.httpPort = parseInt(answers.httpPort, 10);
+
+  return config;
+}
+/**
+ * Setup Remote Voicemail Access
+ * @param {object} config - Current config
+ * @returns {Promise<object>} Updated config
+ */
+async function setupVoicemail(config) {
+  // Create voicemail config if not exists
+  if (!config.voicemail) config.voicemail = {};
+
+  // Step: Remote Voicemail Access
+  const voicemailAnswers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'enableMount',
+      message: 'Do you want to enable remote voicemail monitoring (SSHFS)?',
+      default: !!config.voicemail.sshPass
+    },
+    {
+      type: 'password',
+      name: 'sshPass',
+      message: 'SSH Password for FreePBX server (root):',
+      when: (answers) => answers.enableMount,
+      default: config.voicemail.sshPass || '',
+      validate: (input) => input.length > 0 ? true : 'Password is required'
+    },
+    {
+      type: 'input',
+      name: 'mountUser',
+      message: 'SSH User for mount (default: root):',
+      when: (answers) => answers.enableMount,
+      default: config.voicemail.mountUser || 'root'
+    }
+  ]);
+
+  if (voicemailAnswers.enableMount) {
+    config.voicemail.sshPass = voicemailAnswers.sshPass;
+    config.voicemail.mountUser = voicemailAnswers.mountUser;
+  } else {
+    config.voicemail.sshPass = '';
+    config.voicemail.mountUser = '';
+  }
 
   return config;
 }

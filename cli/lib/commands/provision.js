@@ -79,14 +79,23 @@ export async function provisionCommand() {
         // Step 3: Sync Inbound Route
         if (setupRoute) {
             spinner.text = `Configuring inbound route for DID: ${did || 'ANY'}...`;
-            const routeResult = await client.addInboundRoute(
-                device.extension,
-                did,
-                '' // CID (Any)
-            );
+            try {
+                const routeResult = await client.addInboundRoute(
+                    device.extension,
+                    did,
+                    '' // CID (Any)
+                );
 
-            if (!routeResult.addInboundRoute.status) {
-                spinner.warn(chalk.yellow(`Inbound Route sync failed: ${routeResult.addInboundRoute.message}`));
+                if (!routeResult.addInboundRoute.status) {
+                    spinner.warn(chalk.yellow(`Inbound Route sync failed: ${routeResult.addInboundRoute.message}`));
+                }
+            } catch (err) {
+                // If route already exists (GraphQL error), just warn
+                if (err.message && err.message.includes('Inbound Route already exists')) {
+                    spinner.warn(chalk.yellow('Inbound Route already exists (skipping creation)'));
+                } else {
+                    throw err; // Rebrand other errors
+                }
             }
         }
 

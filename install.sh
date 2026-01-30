@@ -63,13 +63,13 @@ install_nodejs() {
       else
         curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
       fi
-      $SUDO apt-get install -y nodejs
+      $SUDO apt-get install -y nodejs sshpass sshfs
       ;;
     dnf)
-      $SUDO dnf install -y nodejs npm
+      $SUDO dnf install -y nodejs npm sshpass fuse-sshfs
       ;;
     pacman)
-      $SUDO pacman -S --noconfirm nodejs npm
+      $SUDO pacman -S --noconfirm nodejs npm sshpass sshfs
       ;;
     brew)
       brew install node

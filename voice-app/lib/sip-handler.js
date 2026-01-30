@@ -4,6 +4,7 @@
  */
 
 const { setTimeout: sleep } = require('node:timers/promises');
+const { initiateOutboundCall } = require('./outbound-handler');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -109,10 +110,11 @@ function extractVoiceLine(response) {
  * @param {Object} deviceConfig - Device configuration (name, prompt, voiceId, etc.) or null for default
  */
 async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfig) {
-  const { ttsService, whisperClient, geminiBridge, wsPort, audioForkServer, activeCalls, n8nConfig } = options;
+  const { ttsService, whisperClient, geminiBridge, wsPort, audioForkServer, activeCalls, n8nConfig, srf, mediaServer } = options;
 
   let session = null;
   let forkRunning = false;
+  let callbackTarget = null; // Track if we need to call someone back
 
   // Get device-specific settings
   const deviceName = deviceConfig ? deviceConfig.name : 'Morpheus';
@@ -121,6 +123,9 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
   const greeting = deviceConfig && deviceConfig.name !== 'Morpheus'
     ? "Hello! I'm " + deviceConfig.name + ". How can I help you today?"
     : "Hello! I'm your server. How can I help you today?";
+
+  // Add system instruction for callback capability
+  const systemContext = `\n[SYSTEM] You have the ability to call people back. If the user asks you to call a number or return a call, reply with: "I'll call them right now. 🗣️ CALLBACK: <number>" (replace <number> with the actual number).`;
 
   try {
     console.log('[' + new Date().toISOString() + '] CONVERSATION Starting (session: ' + callUuid + ', device: ' + deviceName + ', voice: ' + voiceId + ')...');
@@ -255,8 +260,9 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
       // Query Gemini with device-specific prompt
       console.log('[' + new Date().toISOString() + '] GEMINI Querying (device: ' + deviceName + ')...');
+      console.log('[' + new Date().toISOString() + '] GEMINI Querying (device: ' + deviceName + ')...');
       const geminiResponse = await geminiBridge.query(
-        transcript,
+        transcript + systemContext,
         { callId: callUuid, devicePrompt: devicePrompt }
       );
 
@@ -275,6 +281,14 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
 
       const responseUrl = await ttsService.generateSpeech(voiceLine, voiceId);
       await endpoint.play(responseUrl);
+
+      // Check for CALLBACK command
+      const callbackMatch = geminiResponse.match(/🗣️\s*CALLBACK:\s*([+\d]+)/im);
+      if (callbackMatch) {
+        callbackTarget = callbackMatch[1].trim();
+        console.log('[' + new Date().toISOString() + '] CALLBACK Detected target: ' + callbackTarget);
+        break; // End conversation loop to initiate callback
+      }
 
       console.log('[' + new Date().toISOString() + '] CONVERSATION Turn ' + turnCount + ' complete');
     }
@@ -322,6 +336,28 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
     }
 
     try { dialog.destroy(); } catch (e) { }
+
+    // Execute Callback if requested
+    if (callbackTarget && srf && mediaServer) {
+      console.log('[' + new Date().toISOString() + '] CALLBACK Initiating call to ' + callbackTarget);
+      // Wait a moment for previous call to fully teardown
+      setTimeout(async () => {
+        try {
+          // Use "announce" mode or "conversation" mode?
+          // The user probably wants Morpheus to talk to them.
+          // We'll use "message" as context and start conversation.
+          await initiateOutboundCall(srf, mediaServer, {
+            to: callbackTarget,
+            message: `Hello, this is ${deviceName} returning your call.`,
+            callerId: deviceConfig ? deviceConfig.extension : '9000',
+            deviceConfig: deviceConfig,
+            timeoutSeconds: 45
+          });
+        } catch (err) {
+          console.error('[' + new Date().toISOString() + '] CALLBACK Failed: ' + err.message);
+        }
+      }, 2000);
+    }
   }
 }
 

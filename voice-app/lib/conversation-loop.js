@@ -14,6 +14,7 @@
 
 const logger = require('./logger');
 const voicemailService = require('./voicemail-service');
+const { initiateOutboundCall } = require('./outbound-handler');
 
 // Audio cue URLs
 const READY_BEEP_URL = 'http://127.0.0.1:3000/static/ready-beep.wav';
@@ -141,14 +142,16 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
   const devicePrompt = deviceConfig?.prompt || null;
   const voiceId = deviceConfig?.voiceId || null;  // null = use default Morpheus voice
   const callerId = options.callerId || 'unknown';
+  const { srf, mediaServer } = options;
 
   let session = null;
   let forkRunning = false;
   let callActive = true;
   let dtmfHandler = null;
+  let callbackTarget = null; // Track callback intent
 
   // Enhance system prompt with caller info
-  const systemContext = `\n[SYSTEM] Incoming call from ${callerId}. You are Morpheus. Answer accordingly.`;
+  const systemContext = `\n[SYSTEM] Incoming call from ${callerId}. You are Morpheus. Answer accordingly.\n[SYSTEM] You can call people back. Reply with "I'll call them now. 🗣️ CALLBACK: <number>" to trigger a callback.`;
 
   // Track when call ends to prevent operations on dead endpoints
   const onDialogDestroy = () => {
@@ -399,8 +402,17 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
       const voiceLine = extractVoiceLine(geminiResponse);
       logger.info('Voice line', { callUuid, voiceLine });
 
+      // Check for CALLBACK
+      const callbackMatch = geminiResponse.match(/🗣️\s*CALLBACK:\s*([+\d]+)/im);
+      if (callbackMatch) {
+        callbackTarget = callbackMatch[1].trim();
+        logger.info('CALLBACK Detected', { callUuid, target: callbackTarget });
+      }
+
       const responseUrl = await ttsService.generateSpeech(voiceLine, voiceId);
       if (callActive) await endpoint.play(responseUrl);
+
+      if (callbackTarget) break; // End loop to trigger callback
 
       logger.info('Turn complete', { callUuid, turn: turnCount });
     }
@@ -463,6 +475,26 @@ async function runConversationLoop(endpoint, dialog, callUuid, options) {
         // Ignore
       }
     }
+  }
+
+  // Execute Callback if requested (outside finally block to ensure cleanup is done)
+  // But wait, we need srf/mediaServer which are passed in options.
+  if (callbackTarget && srf && mediaServer) {
+    logger.info('Initiating callback', { target: callbackTarget });
+    setTimeout(async () => {
+      try {
+        await initiateOutboundCall(srf, mediaServer, {
+          to: callbackTarget,
+          message: `Hello, this is ${deviceConfig?.name || 'Morpheus'} returning your call.`,
+          callerId: deviceConfig?.extension || '9000',
+          deviceConfig: deviceConfig,
+          timeoutSeconds: 45,
+          mode: 'conversation' // Start conversation immediately
+        });
+      } catch (err) {
+        logger.error('Callback failed', { error: err.message });
+      }
+    }, 2000);
   }
 }
 

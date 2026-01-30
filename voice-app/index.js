@@ -284,7 +284,8 @@ function checkReadyState() {
         wsPort: config.ws_port,
         externalIp: config.external_ip,
         activeCalls: activeCalls,
-        n8nConfig: config.n8n
+        n8nConfig: config.n8n,
+        srf: srf
       }).catch(function (err) {
         console.error("[" + new Date().toISOString() + "] CALL Error: " + err.message);
       });

@@ -45,6 +45,8 @@ services:
       - ./voice-app/audio:/app/audio
       # Device configurations
       - ./voice-app/config:/app/config
+      # Voicemail Access (requires SSHFS mount on host)
+      - ./voice-app/mounts/voicemail:/var/spool/asterisk/voicemail
     depends_on:
       - drachtio
       - freeswitch

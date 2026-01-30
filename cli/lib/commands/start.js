@@ -8,6 +8,10 @@ import { startServer, isServerRunning } from '../process-manager.js';
 import { isGeminiInstalled, sleep } from '../utils.js';
 import { checkGeminiApiServer } from '../network.js';
 import { runPrereqChecks } from '../prereqs.js';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 /**
  * Start command - Launch all services
@@ -147,6 +151,11 @@ async function startVoiceServer(config, isPiMode) {
   }
   spinner.succeed('Docker is ready');
 
+  // Mount Voicemail (if configured)
+  await mountVoicemail(config);
+
+  // Generate Docker config
+
   // Generate Docker config
   spinner.start('Generating Docker configuration...');
   try {
@@ -269,6 +278,11 @@ async function startBoth(config, isPiMode) {
   }
   spinner.succeed('Docker is ready');
 
+  // Mount Voicemail (if configured)
+  await mountVoicemail(config);
+
+  // Generate Docker config
+
   // Generate Docker config
   spinner.start('Generating Docker configuration...');
   try {
@@ -351,4 +365,78 @@ async function startBoth(config, isPiMode) {
     console.log(chalk.gray(`  • ${device.name}: extension ${device.extension}`));
   }
   console.log();
+}
+
+/**
+ * Mount remote voicemail directory if configured
+ * @param {object} config - Configuration
+ */
+async function mountVoicemail(config) {
+  // Load .env variables manually since we don't use dotenv in CLI
+  const envPath = path.join(config.paths.configDir, '.env');
+  if (!fs.existsSync(envPath)) return;
+
+  const envContent = await fs.promises.readFile(envPath, 'utf8');
+  const env = {};
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      let value = match[2].trim();
+      // Remove quotes if present
+      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+      env[key] = value;
+    }
+  });
+
+  if (!env.SSH_PASS) return;
+
+  const spinner = ora('Mounting remote voicemail directory...').start();
+
+  try {
+    // Check if sshpass is installed
+    try {
+      await execAsync('which sshpass');
+    } catch (e) {
+      spinner.warn('sshpass not found. Skipping auto-mount.');
+      console.log(chalk.gray('  Run installer again to get sshpass or install manually.\n'));
+      return;
+    }
+
+    const mountPoint = path.join(config.paths.voiceApp, 'mounts', 'voicemail');
+    const user = env.VOICEMAIL_MOUNT_USER || 'root';
+    const host = env.SIP_REGISTRAR; // Assuming SIP_REGISTRAR is the IP/Host of FreePBX
+
+    if (!host) {
+      spinner.warn('SIP_REGISTRAR not found in .env. Skipping mount.');
+      return;
+    }
+
+    // Create mount point
+    if (!fs.existsSync(mountPoint)) {
+      await fs.promises.mkdir(mountPoint, { recursive: true });
+    }
+
+    // check if already mounted
+    try {
+      const { stdout } = await execAsync(`mount | grep "${mountPoint}"`);
+      if (stdout) {
+        spinner.succeed('Voicemail directory already mounted');
+        return;
+      }
+    } catch (e) {
+      // grep returns exit code 1 if not found, which throws error. Proceed to mount.
+    }
+
+    // Mount
+    // Using -o reconnection options for robustness
+    const cmd = `sshpass -p "${env.SSH_PASS}" sshfs -o stricthostkeychecking=no,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 ${user}@${host}:/var/spool/asterisk/voicemail "${mountPoint}"`;
+
+    await execAsync(cmd);
+    spinner.succeed('Voicemail directory mounted via SSHFS');
+
+  } catch (error) {
+    spinner.fail(`Failed to mount voicemail: ${error.message}`);
+    console.log(chalk.yellow('  Check SSH credentials and network connectivity to ' + env.SIP_REGISTRAR));
+  }
 }
