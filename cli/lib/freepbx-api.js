@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { URLSearchParams } from 'url';
 
 /**
  * FreePBX M2M API Client
@@ -65,13 +66,19 @@ export class FreePBXClient {
         }
 
         try {
-            const response = await axios.post(this.tokenUrl, {
-                grant_type: 'client_credentials',
-                client_id: this.clientId,
-                client_secret: this.clientSecret
-            }, {
+            // FreePBX (League/OAuth2) often expects form-data for the token endpoint
+            // and Basic Auth for client identification
+            const params = new URLSearchParams();
+            params.append('grant_type', 'client_credentials');
+
+            const authHeader = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
+
+            const response = await axios.post(this.tokenUrl, params.toString(), {
                 timeout: 10000,
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Basic ${authHeader}`
+                }
             });
 
             if (response.data && response.data.access_token) {
@@ -84,7 +91,24 @@ export class FreePBXClient {
 
             throw new Error('Invalid response from token endpoint');
         } catch (error) {
-            const msg = error.response?.data?.message || error.message;
+            let msg = error.message;
+            if (error.response?.data) {
+                if (typeof error.response.data === 'string') {
+                    msg = error.response.data;
+                } else if (error.response.data.message) {
+                    msg = error.response.data.message;
+                } else if (error.response.data.error_description) {
+                    msg = error.response.data.error_description;
+                } else if (error.response.data.error) {
+                    msg = error.response.data.error;
+                }
+            }
+
+            // Helpful hint for the specific error encountered
+            if (msg.includes('grant type is not supported')) {
+                msg += ' (Ensure "Client Credentials" is enabled in FreePBX API Settings for this application)';
+            }
+
             throw new Error(`FreePBX Auth Failed: ${msg}`);
         }
     }
