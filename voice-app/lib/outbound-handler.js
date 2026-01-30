@@ -86,7 +86,7 @@ async function initiateOutboundCall(srf, mediaServer, options) {
       localSdp: localSdp,
       headers: {
         'From': fromHeader,
-        'User-Agent': 'NetworkChuck-VoiceServer/1.0',
+        'User-Agent': 'Sangoma P330/4.5.3',
         'X-Call-ID': callId
       }
     };
