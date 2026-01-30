@@ -177,7 +177,11 @@ export class FreePBXClient {
         }
 
         const ext = list.find(e => e.extensionId === extensionNumber);
-        return ext?.id || null;
+        if (ext) {
+            // Try using the pure extension number as ID (parsed as int)
+            return parseInt(ext.extensionId, 10) || null;
+        }
+        return null;
     }
 
     /**
@@ -215,7 +219,7 @@ export class FreePBXClient {
      * @param {string} cid - CID number (optional)
      */
     async addInboundRoute(targetExtension, did = '', cid = '') {
-        const destination = `from-did-direct,${targetExtension},1`;
+        const destination = `from - did - direct, ${targetExtension}, 1`;
         const input = {
             destination,
             description: "Gemini Phone: AI Route",
@@ -224,13 +228,13 @@ export class FreePBXClient {
         };
 
         const mutation = `
-            mutation ($input: addInboundRouteInput!) {
-                addInboundRoute(input: $input) {
-                    status
-                    message
-                }
-            }
-        `;
+mutation($input: addInboundRouteInput!) {
+    addInboundRoute(input: $input) {
+        status
+        message
+    }
+}
+`;
         return this.query(mutation, { input });
     }
 
@@ -241,12 +245,12 @@ export class FreePBXClient {
     async applyConfig() {
         const mutation = `
             mutation {
-                doreload(input: { clientMutationId: "gemini-phone" }) {
-                    status
-                    message
-                }
-            }
-        `;
+    doreload(input: { clientMutationId: "gemini-phone" }) {
+        status
+        message
+    }
+}
+`;
         return this.query(mutation);
     }
 
@@ -260,7 +264,7 @@ export class FreePBXClient {
         }
         try {
             // Standard GraphQL introspection query - works on every GraphQL server
-            const q = `query { __typename }`;
+            const q = `query { __typename } `;
             await this.query(q);
             return { valid: true };
         } catch (error) {
