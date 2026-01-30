@@ -73,26 +73,35 @@ async function transcribe(audioBuffer, options = {}) {
 
   // Write to temp file (Whisper API requires a file)
   const tempFile = path.join("/tmp", "whisper-" + Date.now() + ".wav");
-  fs.writeFileSync(tempFile, wavBuffer);
+  const timestamp = new Date().toISOString();
 
   try {
+    console.log(`[${timestamp}] WHISPER Writing ${wavBuffer.length} bytes to ${tempFile}`);
+    fs.writeFileSync(tempFile, wavBuffer);
+
+    console.log(`[${timestamp}] WHISPER Sending request to OpenAI...`);
     const transcription = await client.audio.transcriptions.create({
       file: fs.createReadStream(tempFile),
       model: "whisper-1",
       language: language,
       response_format: "text"
-    });
+    }, { timeout: 10000 }); // 10s timeout
 
-    const timestamp = new Date().toISOString();
-    console.log("[" + timestamp + "] WHISPER Transcribed: " + transcription.substring(0, 100) + (transcription.length > 100 ? "..." : ""));
+    console.log(`[${timestamp}] WHISPER Transcribed: ${transcription.substring(0, 100)}${transcription.length > 100 ? "..." : ""}`);
 
     return transcription;
+  } catch (error) {
+    console.error(`[${timestamp}] WHISPER Error: ${error.message}`);
+    throw error;
   } finally {
     // Clean up temp file
-    try {
-      fs.unlinkSync(tempFile);
-    } catch (e) {
-      // Ignore cleanup errors
+    if (fs.existsSync(tempFile)) {
+      try {
+        fs.unlinkSync(tempFile);
+      } catch (e) {
+        // Ignore cleanup errors
+        console.warn(`[${timestamp}] WHISPER Cleanup warning: ${e.message}`);
+      }
     }
   }
 }
