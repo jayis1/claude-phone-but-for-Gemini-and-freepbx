@@ -180,12 +180,13 @@ export class FreePBXClient {
      * @param {string} cid - CID number (optional)
      */
     async addInboundRoute(targetExtension, did = '', cid = '') {
+        const destination = `from-did-direct,${targetExtension},1`;
         const mutation = `
-            mutation ($did: String!, $cid: String!, $targetExtension: String!) {
+            mutation ($did: String!, $cid: String!, $destination: String!) {
                 addInboundRoute(input: {
                     extension: $did,
                     cidnum: $cid,
-                    destination: "from-did-direct,$targetExtension,1",
+                    destination: $destination,
                     description: "Gemini Phone: AI Route"
                 }) {
                     status
@@ -193,7 +194,7 @@ export class FreePBXClient {
                 }
             }
         `;
-        return this.query(mutation, { did, cid, targetExtension });
+        return this.query(mutation, { did, cid, destination });
     }
 
     /**
