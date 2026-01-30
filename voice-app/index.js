@@ -55,7 +55,7 @@ var config = {
   sip: {
     extension: process.env.SIP_EXTENSION || "9000",
     auth_id: process.env.SIP_AUTH_ID || "Au0XZPTpJY",
-    password: process.env.SIP_AUTH_PASSWORD || "DGHwMW6v25",
+    password: process.env.SIP_PASSWORD || "DGHwMW6v25",
     domain: process.env.SIP_DOMAIN || "hello.networkchuck.com",
     registrar: process.env.SIP_REGISTRAR || "hello.networkchuck.com",
     registrar_port: parseInt(process.env.SIP_REGISTRAR_PORT) || 5060,
