@@ -162,10 +162,25 @@ export class FreePBXClient {
      * @returns {Promise<string|null>} Internal ID
      */
     async findExtensionId(extensionNumber) {
-        const q = `query { fetchAllExtensions { extension { id extensionId } } }`;
+        // Try a flatter query first as per common FreePBX GQL patterns
+        const q = `query { fetchAllExtensions { id extensionId } }`;
         const res = await this.query(q);
-        const ext = res?.fetchAllExtensions?.find(e => e.extension.extensionId === extensionNumber);
-        return ext?.extension?.id || null;
+
+        // Handle possible response structures
+        const list = res?.fetchAllExtensions;
+
+        if (!list || typeof list.find !== 'function') {
+            // Log for debugging if structure is unexpected
+            console.error(`[DEBUG] Unexpected fetchAllExtensions structure:`, JSON.stringify(res));
+            return null;
+        }
+
+        const ext = list.find(e =>
+            (e.extensionId === extensionNumber) ||
+            (e.extension?.extensionId === extensionNumber)
+        );
+
+        return ext?.id || ext?.extension?.id || null;
     }
 
     /**
