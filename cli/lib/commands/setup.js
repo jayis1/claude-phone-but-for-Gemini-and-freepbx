@@ -261,6 +261,29 @@ async function setupInstallationType(installationType, existingConfig, isPi, opt
     console.log(chalk.gray('  2. Call extension ' + config.devices[0].extension + ' from your phone'));
     console.log(chalk.gray('  3. Start talking to Gemini!\n'));
   }
+
+  // Offer automatic provisioning if FreePBX API is configured
+  if (config.api.freepbx && config.api.freepbx.clientId) {
+    console.log(chalk.bold.cyan('✨ Identity Sync Available'));
+    const { shouldProvision } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'shouldProvision',
+        message: 'Sync Morpheus identity to FreePBX now?',
+        default: true
+      }
+    ]);
+
+    if (shouldProvision) {
+      try {
+        const { provisionCommand } = await import('./provision.js');
+        await provisionCommand();
+      } catch (err) {
+        console.log(chalk.yellow(`\n⚠️  Automatic sync failed: ${err.message}`));
+        console.log(chalk.gray('You can try again later with: gemini-phone provision\n'));
+      }
+    }
+  }
 }
 
 /**
@@ -558,7 +581,7 @@ async function setupPi(config) {
     }
   }
 
-  config.deployment.pi.has3cxSbc = hasSbc;
+  config.deployment.pi.hasSbc = hasSbc;
   config.deployment.pi.drachtioPort = hasSbc ? 5070 : 5060;
 
   // Ask for API server IP and port first, then check connectivity
@@ -668,7 +691,7 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '2.1.6',
+    version: '2.2.0',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
@@ -978,18 +1001,18 @@ async function setupSIP(config) {
  */
 async function setupSBC(config) {
   // Display pre-requisite information
-  console.log(chalk.cyan('\nℹ️  Pre-requisite: You must create an SBC in 3CX Admin first'));
+  console.log(chalk.cyan('\nℹ️  Pre-requisite: You must create an API Application in FreePBX Admin first'));
   console.log(chalk.gray('   (Admin → Settings → SBC → Add SBC → Raspberry Pi)\n'));
 
   const answers = await inquirer.prompt([
     {
       type: 'input',
       name: 'fqdn',
-      message: '3CX FQDN (e.g., mycompany.3cx.us):',
+      message: 'FreePBX Domain/FQDN (e.g., pbx.example.com):',
       default: config.sip.domain,
       validate: (input) => {
         if (!input || input.trim() === '') {
-          return '3CX FQDN is required';
+          return 'Domain/FQDN is required';
         }
         if (!validateHostname(input)) {
           return 'Invalid hostname format';
@@ -999,7 +1022,7 @@ async function setupSBC(config) {
     }
   ]);
 
-  // Domain is the 3CX FQDN (for From/To SIP headers)
+  // Domain is the FreePBX FQDN (for From/To SIP headers)
   config.sip.domain = answers.fqdn;
   // Registrar is the LOCAL SBC (drachtio registers with local SBC, not cloud)
   config.sip.registrar = '127.0.0.1';

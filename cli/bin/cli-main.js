@@ -5,6 +5,7 @@ import { startCommand } from '../lib/commands/start.js';
 import { stopCommand } from '../lib/commands/stop.js';
 import { statusCommand } from '../lib/commands/status.js';
 import { doctorCommand } from '../lib/commands/doctor.js';
+import { provisionCommand } from '../lib/commands/provision.js';
 import { apiServerCommand } from '../lib/commands/api-server.js';
 import { deviceAddCommand } from '../lib/commands/device/add.js';
 import { deviceListCommand } from '../lib/commands/device/list.js';
@@ -27,7 +28,7 @@ program
 
 program
   .command('setup')
-  .description('Interactive setup wizard for API keys, 3CX config, and devices')
+  .description('Interactive setup wizard for API keys, FreePBX config, and devices')
   .option('--skip-prereqs', 'Skip prerequisite checks (advanced users only)')
   .action(async (options) => {
     try {
@@ -82,6 +83,18 @@ program
       await doctorCommand();
     } catch (error) {
       console.error(chalk.red(`\n✗ Health check failed: ${error.message}\n`));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('provision')
+  .description('Sync AI identity to FreePBX (Name, Caller ID, Routes)')
+  .action(async () => {
+    try {
+      await provisionCommand();
+    } catch (error) {
+      console.error(chalk.red(`\n✗ Provisioning failed: ${error.message}\n`));
       process.exit(1);
     }
   });

@@ -31,7 +31,7 @@ Gemini Phone consists of three Docker containers and an optional API server:
 | Port | Protocol | Service | Direction |
 |------|----------|---------|-----------|
 | 5060 | UDP/TCP | SIP signaling (drachtio) | Inbound |
-| 5070 | UDP/TCP | SIP signaling (if 3CX SBC present) | Inbound |
+| 5070 | UDP/TCP | SIP signaling (if SBC/Proxy present) | Inbound |
 | 3000 | TCP | Voice app HTTP API | Inbound (optional) |
 | 3333 | TCP | Gemini API server | Internal |
 | 30000-30100 | UDP | RTP audio (FreeSWITCH) | Bidirectional |
@@ -58,7 +58,7 @@ The `EXTERNAL_IP` setting must be your server's LAN IP that can receive RTP pack
 
 - Use your server's private IP (e.g., 192.168.1.50)
 - Ensure RTP ports are forwarded if behind NAT
-- 3CX handles NAT traversal for SIP; RTP is direct
+- The PBX handles NAT traversal for SIP; RTP is direct
 
 ## Docker Configuration
 
@@ -77,7 +77,7 @@ This allows FreeSWITCH to bind RTP ports directly.
 
 ### RTP Port Range
 
-FreeSWITCH uses ports 30000-30100 by default (configured to avoid conflict with 3CX SBC which uses 20000-20099):
+FreeSWITCH uses ports 30000-30100 by default (configured to avoid conflict with PBX SBC which uses 20000-20099):
 
 ```yaml
 freeswitch:
@@ -96,7 +96,7 @@ Key environment variables in the generated `.env`:
 | `GEMINI_API_URL` | URL to gemini-api-server |
 | `ELEVENLABS_API_KEY` | TTS API key |
 | `OPENAI_API_KEY` | Whisper STT API key |
-| `SIP_DOMAIN` | 3CX server FQDN |
+| `SIP_DOMAIN` | PBX server FQDN |
 | `SIP_REGISTRAR` | SIP registrar address |
 
 ## Split Deployment
@@ -106,7 +106,7 @@ Key environment variables in the generated `.env`:
 Requirements:
 
 - Docker and Docker Compose
-- Network access to 3CX and API server
+- Network access to PBX and API server
 - Static IP recommended
 
 The voice server runs Docker containers and connects to a remote API server:
@@ -173,7 +173,7 @@ gemini-phone logs freeswitch
 
 ```
 [SIP] Connected to drachtio
-[SIP] Registered extension 9000 with 3CX
+[SIP] Registered extension 9000 with PBX
 [HTTP] Server listening on port 3000
 ```
 
@@ -207,7 +207,7 @@ Error connecting to Gemini API
 ### SIP Security
 
 - Use strong passwords for SIP extensions
-- 3CX provides TLS for signaling; verify it's enabled
+- PBX provides TLS for signaling; verify it's enabled
 - Monitor for unusual call patterns
 
 ## Troubleshooting

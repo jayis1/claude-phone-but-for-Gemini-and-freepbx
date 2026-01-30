@@ -1,7 +1,7 @@
 {
   "name": "gemini-phone",
-  "version": "2.1.9",
-  "description": "Voice interface for Gemini Code via SIP/3CX",
+  "version": "2.2.0",
+  "description": "Voice interface for Gemini Code via SIP/FreePBX",
   "private": true,
   "scripts": {
     "test": "npm run test:cli && npm run test:voice-app",

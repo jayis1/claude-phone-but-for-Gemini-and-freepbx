@@ -127,6 +127,68 @@ export class FreePBXClient {
     }
 
     /**
+     * Update an extension's name and caller ID
+     * @param {string} extension - Extension number
+     * @param {string} name - Display name
+     * @param {string} outboundcid - Outbound Caller ID
+     * @returns {Promise<Object>} Mutation result
+     */
+    async updateExtension(extension, name, outboundcid) {
+        const mutation = `
+            mutation ($extension: String!, $name: String!, $outboundcid: String!) {
+                updateExtension(input: {
+                    extension: $extension,
+                    name: $name,
+                    outboundcid: $outboundcid
+                }) {
+                    status
+                    message
+                }
+            }
+        `;
+        return this.query(mutation, { extension, name, outboundcid });
+    }
+
+    /**
+     * Create or update an inbound route pointing to an extension
+     * @param {string} extension - Extension number
+     * @param {string} did - DID number (optional)
+     * @param {string} cid - CID number (optional)
+     */
+    async addInboundRoute(extension, did = '', cid = '') {
+        const mutation = `
+            mutation ($extension: String!, $did: String!, $cid: String!) {
+                addInboundRoute(input: {
+                    extension: $extension,
+                    did: $did,
+                    cid: $cid,
+                    destination: "from-did-direct,${extension},1"
+                }) {
+                    status
+                    message
+                }
+            }
+        `;
+        return this.query(mutation, { extension, did, cid });
+    }
+
+    /**
+     * Apply configuration (reload Asterisk)
+     * @returns {Promise<Object>} Mutation result
+     */
+    async applyConfig() {
+        const mutation = `
+            mutation {
+                doreload(input: { clientMutationId: "gemini-phone" }) {
+                    status
+                    message
+                }
+            }
+        `;
+        return this.query(mutation);
+    }
+
+    /**
      * Test connectivity and credentials
      * @returns {Promise<{ valid: boolean, error?: string }>} True if connection is valid
      */

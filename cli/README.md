@@ -33,7 +33,7 @@ Select this when setting up a Raspberry Pi or dedicated voice box that connects 
 
 **What it asks for:**
 
-1. 3CX SIP domain and registrar
+1. FreePBX SIP domain and registrar
 2. API server IP and port (where gemini-api-server runs)
 3. ElevenLabs API key and default voice ID
 4. OpenAI API key (for Whisper STT)
@@ -67,7 +67,7 @@ Select this for a single machine running everything.
 
 1. ElevenLabs API key and default voice ID
 2. OpenAI API key
-3. 3CX SIP domain and registrar
+3. FreePBX SIP domain and registrar
 4. Device configuration
 5. Server LAN IP, API port, and HTTP port
 
@@ -81,7 +81,7 @@ Select this for a single machine running everything.
 On Raspberry Pi, the setup wizard:
 
 - Recommends "Voice Server" mode if you select "Both"
-- Checks for 3CX SBC on port 5060 and auto-configures drachtio to use 5070 to avoid conflicts
+- Checks for an existing SBC on port 5060 and auto-configures drachtio to use 5070 to avoid conflicts
 - Uses optimized settings for Pi hardware
 
 ## Commands
@@ -162,7 +162,7 @@ All configuration is stored in `~/.gemini-phone/`:
     "openai": { "apiKey": "...", "validated": true }
   },
   "sip": {
-    "domain": "your-3cx.3cx.us",
+    "domain": "pbx.example.com",
     "registrar": "192.168.1.100",
     "transport": "udp"
   },

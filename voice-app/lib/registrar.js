@@ -1,9 +1,8 @@
 const Srf = require('drachtio-srf');
 
 /**
- * Handles SIP Registration (UAC) with 3CX
- * 
- * 3CX requires:
+ * Handles SIP Registration (UAC) with the PBX
+ * FreePBX/Asterisk requires:
  * - From/To/Contact: Use EXTENSION NUMBER (e.g., 5756)
  * - Auth credentials: Use AUTH ID + PASSWORD (e.g., pEmNzYscb4)
  */
@@ -15,12 +14,12 @@ class Registrar {
     // Extension number for From/To/Contact headers
     this.extension = config.extension;
 
-    // Auth credentials (separate from extension)
+    // SIP Authentication for extension registration
     this.authId = config.auth_id;
     this.password = config.password;
 
     // Server addresses
-    this.domain = config.domain; // 3CX server address
+    this.domain = config.domain; // PBX server address
     this.registrar = config.registrar; // Usually same as domain
     this.registrarPort = config.registrar_port || 5060;
 
@@ -58,7 +57,7 @@ class Registrar {
   _attemptRegistration() {
     const registrarUri = 'sip:' + this.registrar + ':' + this.registrarPort;
 
-    // From/To use EXTENSION number, not auth ID
+    // Format SIP URI for FreePBX
     const fromUri = 'sip:' + this.extension + '@' + this.domain;
 
     // Contact uses local address
@@ -79,7 +78,8 @@ class Registrar {
           'User-Agent': 'NetworkChuck-VoiceServer/1.0'
         },
         auth: {
-          username: this.authId, // AUTH ID, not extension
+          username: this.authId, // AUTH * - authId: Authentication ID for SIP REGISTER
+          // * - password: Authentication password
           password: this.password
         }
       }, (err, req) => {

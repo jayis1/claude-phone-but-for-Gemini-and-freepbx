@@ -38,14 +38,14 @@ Start here for most problems:
 - Free tier has limited characters/month
 - Check [elevenlabs.io/subscription](https://elevenlabs.io/subscription)
 
-### "Can't detect 3CX SBC"
+### "Can't connect to PBX"
 
-**Symptom:** Setup can't connect to your 3CX server.
+**Symptom:** Setup can't connect to your PBX server.
 
 **Solutions:**
 
-1. Verify 3CX FQDN is correct (e.g., `yourcompany.3cx.us`)
-2. Ensure 3CX SBC (Session Border Controller) is enabled
+1. Verify PBX FQDN is correct (e.g., `pbx.example.com`)
+2. Ensure API access is enabled
 3. Check firewall allows port 5060 (SIP) outbound
 4. Try using port 5070 if 5060 is blocked
 
@@ -87,7 +87,7 @@ sudo usermod -aG docker pi
 
 **Checklist:**
 
-1. Is the extension registered with 3CX?
+1. Is the extension registered with the PBX?
 
    ```bash
    gemini-phone status
@@ -98,11 +98,11 @@ sudo usermod -aG docker pi
 
    ```bash
    gemini-phone config show
-   # Check sip.domain matches your 3CX FQDN
+   # Check sip.domain matches your PBX FQDN
    ```
 
 3. Are credentials correct?
-   - Log into 3CX admin panel
+   - Log into FreePBX admin panel
    - Check extension auth ID and password match config
 
 4. Is drachtio container running?
@@ -111,16 +111,16 @@ sudo usermod -aG docker pi
    docker ps | grep drachtio
    ```
 
-### Extension not registering with 3CX
+### Extension not registering
 
 **Symptom:** `<gemini-phone status` shows SIP registration failed.
 
 **Solutions:**
 
-1. Verify extension exists in 3CX
+1. Verify extension exists in PBX
 2. Check auth ID matches (usually same as extension number)
 3. Verify password is correct
-4. Ensure SBC is enabled in 3CX settings
+4. Ensure API is enabled in FreePBX settings
 5. Check if another device is using the same extension
 
 ### Calls connect but no audio
@@ -146,11 +146,11 @@ ip addr show | grep "inet " | grep -v 127.0.0.1
 - NAT issues (server can't receive return audio)
 - FreeSWITCH container unhealthy
 
-### RTP Port Conflict (3CX SBC)
+### Port Conflict (SBC/Proxy)
 
 **Symptom:** Calls fail with "INCOMPATIBLE_DESTINATION" error. Logs show `AUDIO RTP REPORTS ERROR: [Bind Error! IP:port]`.
 
-**Cause:** 3CX SBC uses RTP ports 20000-20099. If FreeSWITCH uses the same range, it can't bind.
+**Cause:** A PBX SBC/Proxy might be using RTP ports 20000-20099. If FreeSWITCH uses the same range, it can't bind.
 
 **Fix:** Gemini Phone uses ports 30000-30100 by default. If you upgraded from an older version:
 

@@ -177,10 +177,10 @@ async function startVoiceServer(config, isPiMode) {
     if (error.message.includes('port') || error.message.includes('address already in use')) {
       console.log(chalk.yellow('\n⚠️  Port conflict detected\n'));
       console.log(chalk.gray('Possible causes:'));
-      console.log(chalk.gray('  • 3CX SBC is running on the configured port'));
-      console.log(chalk.gray('  • Another service is using the port'));
-      console.log(chalk.gray('\nSuggested fixes:'));
-      console.log(chalk.gray('  1. If 3CX SBC is on port 5060, run "gemini-phone setup" again'));
+      console.log(chalk.gray('  • Another PBX/SBC is running on the configured port'));
+      console.log(chalk.gray('  • A firewall is blocking the registration port'));
+      console.log(chalk.gray('\n  Possible fixes:'));
+      console.log(chalk.gray('  1. If a PBX/SBC is on port 5060, run "gemini-phone setup" again'));
       console.log(chalk.gray('  2. Check running containers: docker ps'));
       console.log(chalk.gray('  3. Stop conflicting services: docker compose down\n'));
     }

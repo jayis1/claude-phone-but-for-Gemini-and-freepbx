@@ -11,12 +11,7 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      drachtio
-      --contact "sip:*:5060;transport=tcp,udp"
-      --external-ip ${EXTERNAL_IP}
-      --secret ${DRACHTIO_SECRET:-cymru}
-      --port 9022
-      --loglevel info
+      drachtio --contact "sip:*:5060;transport=tcp,udp" --external-ip ${EXTERNAL_IP} --secret ${DRACHTIO_SECRET:-cymru} --port 9022 --loglevel info
     # Ports (for reference - host mode doesn't need port mapping):
     # - 5060: SIP UDP/TCP
     # - 9022: Admin/App Port
@@ -27,22 +22,16 @@ services:
     restart: unless-stopped
     network_mode: host
     command: >
-      freeswitch
-      --sip-port 5080
-      --rtp-range-start 30000
-      --rtp-range-end 30100
-      --ext-rtp-ip ${EXTERNAL_IP}
-      --ext-sip-ip ${EXTERNAL_IP}
-      --advertise-external-ip
+      freeswitch --sip-port 5080 --rtp-range-start 30000 --rtp-range-end 30100 --ext-rtp-ip ${EXTERNAL_IP} --ext-sip-ip ${EXTERNAL_IP} --advertise-external-ip
     environment:
       # CRITICAL: Set this to your server's LAN IP
-      # This IP goes into SDP packets so 3CX knows where to send audio
+      # This IP goes into SDP packets so the PBX knows where to send audio
       # Note: drachtio-freeswitch-mrf only accepts CLI flags, not env vars
       - EXTERNAL_IP=${EXTERNAL_IP}
     # Ports (for reference):
     # - 8021: ESL (Event Socket Library)
     # - 5080: Internal SIP
-    # - 30000-30100: RTP Audio (changed from 20000-20100 to avoid conflict with 3CX SBC)
+    # - 30000-30100: RTP Audio (changed from 20000-20100 to avoid conflict with standard PBX SBC ports)
 
   voice-app:
     build: ./voice-app
