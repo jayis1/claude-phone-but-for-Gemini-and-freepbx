@@ -667,12 +667,13 @@ function generateSecret() {
  */
 function createDefaultConfig() {
   return {
-    version: '2.1.1',
+    version: '2.1.2',
     api: {
       elevenlabs: { apiKey: '', defaultVoiceId: '', validated: false },
       openai: { apiKey: '', validated: false },
       gemini: { apiKey: '' },
-      n8n: { webhookUrl: '' }
+      n8n: { webhookUrl: '' },
+      freepbx: { apiKey: '', apiSecret: '', apiUrl: '' }
     },
     sip: {
       domain: '',
@@ -727,6 +728,33 @@ async function setupAPIKeys(config) {
 
   if (!config.api.n8n) config.api.n8n = {};
   config.api.n8n.webhookUrl = n8nAnswers.webhookUrl;
+
+  // FreePBX API (Optional)
+  const freePBXAnswers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'apiKey',
+      message: 'FreePBX API Key (optional):',
+      default: config.api.freepbx?.apiKey || '',
+    },
+    {
+      type: 'password',
+      name: 'apiSecret',
+      message: 'FreePBX API Secret (optional):',
+      default: config.api.freepbx?.apiSecret || '',
+    },
+    {
+      type: 'input',
+      name: 'apiUrl',
+      message: 'FreePBX API Graphql URL (optional, e.g. https://ip/admin/api/graphql):',
+      default: config.api.freepbx?.apiUrl || '',
+    }
+  ]);
+
+  if (!config.api.freepbx) config.api.freepbx = {};
+  config.api.freepbx.apiKey = freePBXAnswers.apiKey;
+  config.api.freepbx.apiSecret = freePBXAnswers.apiSecret;
+  config.api.freepbx.apiUrl = freePBXAnswers.apiUrl;
 
   // ElevenLabs API Key
   const elevenLabsAnswers = await inquirer.prompt([
@@ -867,7 +895,7 @@ async function setupSIP(config) {
     {
       type: 'input',
       name: 'domain',
-      message: '3CX domain (e.g., your-3cx.3cx.us):',
+      message: 'FreePBX domain or IP (e.g., your-freepbx.org):',
       default: config.sip.domain,
       validate: (input) => {
         if (!input || input.trim() === '') {
@@ -882,7 +910,7 @@ async function setupSIP(config) {
     {
       type: 'input',
       name: 'registrar',
-      message: '3CX registrar IP (e.g., 192.168.1.100):',
+      message: 'FreePBX registrar IP (same as domain if unsure):',
       default: config.sip.registrar,
       validate: (input) => {
         if (!input || input.trim() === '') {
