@@ -116,7 +116,7 @@ console.log('[STARTUP] API keys loaded:', apiKeys.join(', '));
 const sessions = new Map();
 
 // Model selection - Sonnet for balanced speed/quality
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.0-pro';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 function parseGeminiStdout(stdout) {
   // Gemini Code CLI may output JSONL; when it does, extract the `result` message.
