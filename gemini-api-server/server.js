@@ -226,11 +226,12 @@ Example response:
 
 CALLBACKS: When the caller asks to be called back (e.g., "call me back in 5 minutes", "schedule a call"):
 1. Acknowledge the request in VOICE_RESPONSE.
-2. Output a CALLBACK line with the target phone number or extension.
+2. Look for "[SYSTEM] Current Caller ID: <number>" in the context.
+3. Output a CALLBACK line with that number.
 Example:
 🗣️ VOICE_RESPONSE: I'll call you back in 5 minutes. Talk soon!
-🗣️ CALLBACK: 31426562
-🎯 COMPLETED: Scheduled callback for 31426562.
+🗣️ CALLBACK: <caller_id_from_context>
+🎯 COMPLETED: Scheduled callback.
 
 `;
 

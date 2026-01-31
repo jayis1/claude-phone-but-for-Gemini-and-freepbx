@@ -110,7 +110,7 @@ function extractVoiceLine(response) {
  * @param {Object} deviceConfig - Device configuration (name, prompt, voiceId, etc.) or null for default
  */
 async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfig) {
-  const { ttsService, whisperClient, geminiBridge, wsPort, audioForkServer, activeCalls, n8nConfig, srf, mediaServer } = options;
+  const { ttsService, whisperClient, geminiBridge, wsPort, audioForkServer, activeCalls, n8nConfig, srf, mediaServer, callerId } = options;
 
   let session = null;
   let forkRunning = false;
@@ -125,7 +125,7 @@ async function conversationLoop(endpoint, dialog, callUuid, options, deviceConfi
     : "Hello! I'm your server. How can I help you today?";
 
   // Add system instruction for callback capability
-  const systemContext = `\n[SYSTEM] You have the ability to call people back. If the user asks you to call a number or return a call, reply with: "I'll call them right now. 🗣️ CALLBACK: <number>" (replace <number> with the actual number).`;
+  const systemContext = `\n[SYSTEM] Current Caller ID: ${callerId}.\nYou have the ability to call people back. If the user asks you to call a number or return a call, reply with: "I'll call them right now. 🗣️ CALLBACK: <number>" (replace <number> with the actual number).`;
 
   try {
     console.log('[' + new Date().toISOString() + '] CONVERSATION Starting (session: ' + callUuid + ', device: ' + deviceName + ', voice: ' + voiceId + ')...');
