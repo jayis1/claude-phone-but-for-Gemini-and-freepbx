@@ -224,6 +224,14 @@ Example response:
 🎯 COMPLETED: Weather lookup for Royce City done.
 [END VOICE CONTEXT]
 
+CALLBACKS: When the caller asks to be called back (e.g., "call me back in 5 minutes", "schedule a call"):
+1. Acknowledge the request in VOICE_RESPONSE.
+2. Output a CALLBACK line with the target phone number or extension.
+Example:
+🗣️ VOICE_RESPONSE: I'll call you back in 5 minutes. Talk soon!
+🗣️ CALLBACK: 31426562
+🎯 COMPLETED: Scheduled callback for 31426562.
+
 `;
 
 // Middleware
