@@ -146,7 +146,7 @@ function parseGeminiStdout(stdout) {
   return { response, sessionId };
 }
 
-function runGeminiOnce({ fullPrompt, callId, timestamp }) {
+function runGeminiOnce({ fullPrompt, callId, timestamp, model }) {
   const startTime = Date.now();
 
   // Updated arguments for modern gemini/claude-code CLI
@@ -155,7 +155,7 @@ function runGeminiOnce({ fullPrompt, callId, timestamp }) {
   const args = [
     '--yolo',
     '-p', fullPrompt,
-    '--model', GEMINI_MODEL,
+    '--model', model || GEMINI_MODEL, // Use passed model or default
     '--output-format', 'json'
   ];
 
@@ -192,6 +192,36 @@ function runGeminiOnce({ fullPrompt, callId, timestamp }) {
       resolve({ code, stdout, stderr, duration_ms });
     });
   });
+}
+
+/**
+ * Wrapper for runGeminiOnce with fallback logic
+ */
+async function queryGeminiWithFallback({ fullPrompt, callId, timestamp, model }) {
+  try {
+    const result = await runGeminiOnce({ fullPrompt, callId, timestamp, model: model || GEMINI_MODEL });
+
+    // Check for success but stderr containing 429/quota error (CLI sometimes exits 0 but logs error)
+    if (result.stderr && (result.stderr.includes('429') || result.stderr.includes('Quota exceeded') || result.stderr.includes('quota'))) {
+      throw new Error('Quota exceeded detected in stderr: ' + result.stderr);
+    }
+
+    return result;
+  } catch (err) {
+    // Check if error is quota related
+    const isQuotaError = err.message && (
+      err.message.includes('429') ||
+      err.message.includes('Quota exceeded') ||
+      err.message.includes('quota')
+    );
+
+    const currentModel = model || GEMINI_MODEL;
+    if (isQuotaError && currentModel !== 'gemini-1.5-flash') {
+      console.warn(`[GEMINI] Quota exceeded for ${currentModel}, falling back to gemini-1.5-flash...`);
+      return await runGeminiOnce({ fullPrompt, callId, timestamp, model: 'gemini-1.5-flash' });
+    }
+    throw err;
+  }
 }
 
 /**
@@ -303,7 +333,7 @@ app.post('/ask', async (req, res) => {
     fullPrompt += VOICE_CONTEXT;
     fullPrompt += prompt;
 
-    const { code, stdout, stderr, duration_ms } = await runGeminiOnce({ fullPrompt, callId, timestamp });
+    const { code, stdout, stderr, duration_ms } = await queryGeminiWithFallback({ fullPrompt, callId, timestamp });
 
     if (code !== 0) {
       console.error(`[${new Date().toISOString()}] ERROR: Gemini CLI exited with code ${code}`);
@@ -403,7 +433,7 @@ app.post('/ask-structured', async (req, res) => {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       attemptsMade = attempt + 1;
-      const { code, stdout, stderr, duration_ms } = await runGeminiOnce({ fullPrompt, callId, timestamp });
+      const { code, stdout, stderr, duration_ms } = await queryGeminiWithFallback({ fullPrompt, callId, timestamp });
       totalDuration += duration_ms;
 
       if (code !== 0) {
