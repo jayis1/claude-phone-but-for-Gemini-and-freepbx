@@ -149,21 +149,24 @@ function parseGeminiStdout(stdout) {
 function runGeminiOnce({ fullPrompt, callId, timestamp }) {
   const startTime = Date.now();
 
+  // Updated arguments for modern gemini/claude-code CLI
+  // -y / --yolo: Automatically accept all actions (replaces dangerously-skip-permissions)
+  // --output-format json: Ensure we get machine-readable output including session_id
   const args = [
-    '--dangerously-skip-permissions',
+    '--yolo',
     '-p', fullPrompt,
-    '--model', GEMINI_MODEL
+    '--model', GEMINI_MODEL,
+    '--output-format', 'json'
   ];
 
-  if (callId) {
-    if (sessions.has(callId)) {
-      args.push('--resume', callId);
-      console.log(`[${timestamp}] Resuming session: ${callId}`);
-    } else {
-      args.push('--session-id', callId);
-      sessions.set(callId, true);
-      console.log(`[${timestamp}] Starting new session: ${callId}`);
-    }
+  if (callId && sessions.has(callId)) {
+    // Resume existing session using the CLI-generated ID stored in our map
+    const geminiSessionId = sessions.get(callId);
+    args.push('--resume', geminiSessionId);
+    console.log(`[${timestamp}] Resuming session: ${geminiSessionId} (Call: ${callId})`);
+  } else {
+    // Let CLI generate a new session ID, which we will capture from the JSON output
+    console.log(`[${timestamp}] Starting new session for call: ${callId}`);
   }
 
   return new Promise((resolve, reject) => {
